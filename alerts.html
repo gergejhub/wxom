@@ -1,224 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>WxMonitor – Alert Guide</title>
-<link href="assets/styles.css?v=50.OM1" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/styles.css?v=67.guide"/>
 </head>
 <body>
 <header class="top">
-<div class="brand">
-<div class="brand__row">
-<div class="brand__title" id="brandTitle">Wizz Air METAR/TAF Monitor</div>
-<div class="brand__spacer"></div>
-<button class="viewpill" id="viewBtn" title="Toggle TV view (Shift+T)" type="button">
-<span class="viewpill__k">VIEW</span>
-<span class="viewpill__v" id="viewBtnLabel">AUTO</span>
-</button>
-<a class="viewpill viewpill--link" href="stat/" title="Open Stats">
-<span class="viewpill__k">STATS</span>
-</a>
-<a class="viewpill viewpill--link" href="settings.html" title="Open Settings">
-<span class="viewpill__k">SETTINGS</span>
-</a>
-<a class="viewpill viewpill--link" href="alerts.html" title="Alert guide">
-  <span class="viewpill__k">GUIDE</span>
-</a>
-</div>
-<div class="brand__sub">METAR + TAF monitor (aviationweather.gov via GitHub Actions) · OM-A/OM-B policy layer (advisory)</div>
-</div>
-<div class="tiles" id="tiles">
-<button class="tile" data-filter="eng" type="button">
-<div class="tile__k">ENG ICE OPS</div>
-<div class="tile__v" id="tileEngCount">0</div>
-<div class="tile__s">triggered</div><div class="tile__iata" id="tileEngIata"></div>
-</button>
-<button class="tile" data-filter="crit" type="button">
-<div class="tile__k">CRITICAL</div>
-<div class="tile__v" id="tileCritCount">0</div>
-<div class="tile__s">score ≥ 70</div><div class="tile__iata" id="tileCritIata"></div>
-</button>
-<button class="tile" data-filter="vis300" type="button">
-<div class="tile__k">VIS/RVR &lt; 300</div>
-<div class="tile__v" id="tileVis300Count">0</div>
-<div class="tile__s">worst (M/TAF)</div><div class="tile__iata" id="tileVis300Iata"></div>
-</button>
-<button class="tile" data-filter="ts" type="button">
-<div class="tile__k">TS / CB</div>
-<div class="tile__v" id="tileTsCount">0</div>
-<div class="tile__s">METAR/TAF</div><div class="tile__iata" id="tileTsIata"></div>
-</button>
-<button class="tile" data-filter="wind" type="button">
-<div class="tile__k">WIND</div>
-<div class="tile__v" id="tileWindCount">0</div>
-<div class="tile__s">gust ≥ 25 kt</div><div class="tile__iata" id="tileWindIata"></div>
-</button>
-<button class="tile" data-filter="snow" type="button">
-<div class="tile__k">SNOW</div>
-<div class="tile__v" id="tileSnowCount">0</div>
-<div class="tile__s">METAR/TAF</div><div class="tile__iata" id="tileSnowIata"></div>
-</button>
-<!-- OM-A/OM-B advisory tiles -->
-<button class="tile" data-filter="toProhib" type="button">
-<div class="tile__k">TO PROHIB</div>
-<div class="tile__v" id="tileToProhibCount">0</div>
-<div class="tile__s">TS/+SN/FZRA/GR…</div><div class="tile__iata" id="tileToProhibIata"></div>
-</button>
-<button class="tile" data-filter="lvto" type="button">
-<div class="tile__k">LVTO</div>
-<div class="tile__v" id="tileLvtoCount">0</div>
-<div class="tile__s">RVR/VIS &lt; 550</div><div class="tile__iata" id="tileLvtoIata"></div>
-</button>
-<button class="tile" data-filter="xwind" type="button">
-<div class="tile__k">XWIND</div>
-<div class="tile__v" id="tileXwindCount">0</div>
-<div class="tile__s">best RWY exceed</div><div class="tile__iata" id="tileXwindIata"></div>
-</button>
-<button class="tile" data-filter="va" type="button">
-<div class="tile__k">VA</div>
-<div class="tile__v" id="tileVACount">0</div>
-<div class="tile__s">ash detected</div><div class="tile__iata" id="tileVAIata"></div>
-</button>
-<!-- Dataset + Reset are the last two tiles -->
-<button class="tile" disabled="" id="tileDataset" type="button">
-<div class="tile__k">DATASET</div>
-<div class="tile__v" id="tileDatasetState">—</div>
-<div class="tile__s" id="tileDatasetSub">Last update: —</div>
-</button>
-<button class="tile tile--reset" id="tileReset" title="Reset filters" type="button">
-<div class="tile__k">RESET</div>
-<div class="tile__v" id="tileResetCount">↺</div>
-<div class="tile__s">clear filters</div>
-</button>
-</div><div class="toolbar">
-<div class="toolbar__left">
-<input autocomplete="off" class="q" id="q" placeholder="Search ICAO / IATA / name" type="search"/>
-<select class="sel" id="cond">
-<option value="all">All conditions</option>
-<optgroup label="Core">
-<option value="eng">ENG ICE OPS</option>
-<option value="crit">Critical (≥70)</option>
-<option value="vis175">VIS ≤175</option>
-</optgroup>
-<optgroup label="Weather">
-<option value="fog">FG / BR / FZFG</option>
-<option value="snow">SN</option>
-<option value="rain">RA / DZ</option>
-<option value="ts">TS / CB</option>
-<option value="gust40">GUST ≥40KT</option>
-<option value="gust30">GUST ≥30KT</option>
-<option value="gust25">GUST ≥25KT</option>
-<option value="cig500">CIG &lt; 500</option>
-</optgroup>
-<optgroup label="Minima / Policy (OM-A/OM-B advisory)">
-<option value="toProhib">TO/LND PROHIBITED (TS / heavy precip)</option>
-<option value="lvto">LVTO (RVR/VIS &lt; 550)</option>
-<option value="lvp">LVP required (RVR &lt; 400)</option>
-<option value="rvr125">RVR &lt; 125 (absolute min)</option>
-<option value="xwind">XWIND exceed (best RWY)</option>
-<option value="va">Volcanic Ash (VA)</option>
-<option value="coldcorr">Cold corrections (OAT ≤ 0°C)</option>
-</optgroup>
-</select>
-<select class="sel" id="alert">
-<option value="all">Any alert</option>
-<option value="OK">OK</option>
-<option value="WARN">WARN</option>
-<option value="CRIT">CRIT</option>
-</select>
-<label class="chk">
-<input checked="" id="sortPri" type="checkbox"/>
-<span>Priority sort</span>
-</label>
-</div>
-<div class="toolbar__right">
-</div>
-</div>
-<div class="status">
-<div class="status__left" id="statCounts">ICAO: 0 | METAR: 0 | TAF: 0</div>
-<div class="status__right" id="statUpdated">Last update: —</div>
-</div>
-</header>
-<main class="wrap">
-  <h1 class="h1">How alerts are triggered</h1>
-  <p class="muted">Reference guide for alerts, triggers, and operational limits used by this dashboard (OM‑A/OM‑B derived, advisory unless stated).</p>
-  <section class="explain" id="explain">
-<h2>How alerts are triggered and what limits apply</h2>
-<p class="explain__lead">
-This dashboard is an operational awareness tool. It highlights conditions derived from METAR/TAF and applies selected Wizz Air OM-A/OM-B rules as <strong>advisory flags</strong>.
-Always validate against the latest operational documentation (OM-B, airfield specific minima, NOTAM/SNOWTAM, ATC, and aircraft configuration).
-</p>
-<div class="explain__grid">
-<div class="explain__card">
-<h3>Data and refresh</h3>
-<ul>
-<li><strong>Source:</strong> AviationWeather METAR/TAF (ingested by GitHub Actions).</li>
-<li><strong>Dataset tile:</strong> shows the time of the last successful ingestion.</li>
-<li><strong>Station staleness:</strong> a METAR can be old even if the dataset is fresh (station not reporting).</li>
-</ul>
-</div>
-<div class="explain__card">
-<h3>Take-off / Landing Prohibited (OM-A 8.3.8)</h3>
-<ul>
-<li><strong>Thunderstorm / CB:</strong> flagged when METAR/TAF contains TS, CB or TCU.</li>
-<li><strong>Heavy precip (TO prohibited):</strong> +SN, +GS, +SG, +PL, FZRA/+FZRA, GR/+GR.</li>
-<li><strong>Outcome:</strong> highlighted as <span class="tag tag--stop">TO/LND PROHIB</span>.</li>
-</ul>
-</div>
-<div class="explain__card">
-<h3>Minima (OM-A 8.1.4)</h3>
-<ul>
-<li><strong>Standard take-off:</strong> RVR/VIS ≥ 550 m.</li>
-<li><strong>LVTO:</strong> RVR/VIS &lt; 550 m.</li>
-<li><strong>LVP required:</strong> RVR &lt; 400 m.</li>
-<li><strong>Absolute minimum (TO):</strong> RVR ≥ 125 m (subject to lighting/markings/LVP requirements).</li>
-</ul>
-</div>
-<div class="explain__card">
-<h3>Crosswind advisory (OM-B 1.3.1)</h3>
-<ul>
-<li><strong>Automatic runway headings:</strong> taken from OurAirports runways dataset (no manual input).</li>
-<li><strong>Gust included:</strong> wind speed uses max(sustained, gust).</li>
-<li><strong>Narrow RWY:</strong> width &lt; 45 m applies narrow crosswind limits.</li>
-<li><strong>Runway condition:</strong> estimated from METAR/TAF precipitation groups (Dry/Wet/Contaminated). For exact RWYCC/SNOWTAM-based assessment, use operational sources.</li>
-<li><strong>Flag:</strong> <span class="tag tag--warn">XWIND</span> shown if estimated crosswind exceeds the applicable company limit.</li>
-</ul>
-</div>
-<div class="explain__card">
-<h3>Volcanic ash (OM-A 8.3.8.6)</h3>
-<ul>
-<li><strong>Trigger:</strong> VA present in METAR/TAF.</li>
-<li><strong>Operational note:</strong> contamination zones (low/medium/high) require dedicated VA products; this dashboard only detects the textual VA signal.</li>
-</ul>
-</div>
-<div class="explain__card">
-<h3>Cold temperature corrections (OM-A 8.1.2.8)</h3>
-<ul>
-<li><strong>Trigger:</strong> OAT ≤ 0°C in METAR temperature group.</li>
-<li><strong>Note:</strong> Published minima corrections remain a pilot responsibility.</li>
-</ul>
-</div>
-<div class="explain__card">
-<h3>Ceiling (CIG) interpretation</h3>
-<ul>
-<li><strong>What it is:</strong> lowest <strong>BKN</strong>, <strong>OVC</strong> or <strong>VV</strong> base in feet AGL parsed from METAR/TAF.</li>
-<li><strong>Displayed value:</strong> the <strong>worst (lowest)</strong> ceiling found across METAR and TAF.</li>
-<li><strong>Operational use:</strong> supports quick screening against approach / circling constraints (final minima still depend on procedure, NOTAM and aircraft capability).</li>
-</ul>
-</div>
-<div class="explain__card">
-<h3>Score and alert level</h3>
-<ul>
-<li><strong>Score (0–100):</strong> a composite severity index derived from METAR and TAF.</li>
-<li><strong>Inputs:</strong> low visibility, low ceiling, weather codes (TS, FZFG/FG, SN, RA, BR) and gusts.</li>
-<li><strong>Combination:</strong> station score = <strong>max(METAR score, 0.85 × TAF score)</strong>; ENG ICE OPS forces 100.</li>
-<li><strong>Alert bands:</strong> OK &lt; 20 · MED ≥ 20 · HIGH ≥ 45 · CRIT ≥ 70.</li>
-</ul>
-</div>
-</div>
-</section>
-</main>
+  <div class="brand">
+    <div class="brand__row">
+      <div class="brand__title">Wizz Air METAR/TAF Monitor</div>
+      <div class="brand__spacer"></div>
 
+      <a class="viewpill viewpill--link" href="./" title="Vissza a Dashboard-ra">
+        <span class="viewpill__k">BACK</span>
+      </a>
+      <a class="viewpill viewpill--link" href="stat/" title="Open Stats">
+        <span class="viewpill__k">STATS</span>
+      </a>
+      <a class="viewpill viewpill--link" href="settings.html" title="Open Settings">
+        <span class="viewpill__k">SETTINGS</span>
+      </a>
+    </div>
+    <div class="brand__sub">How alerts are triggered · OM-A/OM-B policy layer (advisory)</div>
+  </div>
+</header>
+
+<main class="page">
+  <section class="card">
+    <h1 style="margin:0 0 8px 0;">How alerts are triggered</h1>
+    <p style="margin:0 0 10px 0; opacity:.9;">
+      Ez az oldal összefoglalja, hogy a dashboard csempéi és a táblázatban lévő „Trigger” címkék mit jelentenek,
+      <b>miért</b> riasztanak, és mik a kapcsolódó (OM-A/OM-B) limitek. A logika automatikus METAR/TAF + (runway) adat alapján fut.
+    </p>
+    <p style="margin:0; opacity:.85;">
+      Fontos: RWYCC / pontos runway contamination SNOWTAM nélkül nem állapítható meg. A „runway condition” jelzések ezért konzervatív, METAR/TAF-alapú becslések.
+      Ez a rendszer <b>támogató (advisory)</b> jellegű, nem helyettesíti az operatív döntéshozatalt és az OM/QRH használatát.
+    </p>
+    <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:8px;">
+      <a class="chip" href="#score">Score</a>
+      <a class="chip" href="#cig">CIG (Ceiling)</a>
+      <a class="chip" href="#tiles">Csempék / riasztások</a>
+      <a class="chip" href="#om">OM-A/OM-B policy tagek</a>
+      <a class="chip" href="#data">Adatfrissítés</a>
+    </div>
+  </section>
+
+  <section class="card" id="score">
+    <h2 style="margin:0 0 8px 0;">Score – mit jelent és hogyan számolódik?</h2>
+    <p style="margin:0 0 10px 0; opacity:.9;">
+      A <b>Score</b> egy 0–100 közötti, egyszerűsített „üzemeltetési kockázat” index. Célja: gyors sorrendképzés a hálózaton.
+      Nem egy hivatalos OM-metrika, hanem a dashboard belső összesítő mutatója.
+    </p>
+    <ul style="margin:0; padding-left:18px; opacity:.9;">
+      <li><b>VIS/RVR</b> romlás → Score nő</li>
+      <li><b>CIG (ceiling)</b> alacsonyabb → Score nő</li>
+      <li><b>WX</b> (pl. TS/CB, FZ, SN, RA) → Score nő</li>
+      <li><b>WIND/GUST</b> nagyobb → Score nő</li>
+    </ul>
+    <p style="margin:10px 0 0 0; opacity:.9;">
+      A Score a <b>METAR</b> pillanatnyi állapotát és a <b>TAF</b> előrejelzést is figyelembe veszi (konzervatív „worst” szemlélet).
+      A riasztási szintek a Score alapján:
+      <b>OK &lt; 20</b>, <b>MED ≥ 20</b>, <b>HIGH ≥ 45</b>, <b>CRIT ≥ 70</b>.
+    </p>
+  </section>
+
+  <section class="card" id="cig">
+    <h2 style="margin:0 0 8px 0;">CIG / Ceiling – értelmezés</h2>
+    <p style="margin:0 0 10px 0; opacity:.9;">
+      A <b>Ceiling (CIG)</b> a legalsó olyan felhőalap (ft AGL), ami <b>BKN</b> vagy <b>OVC</b> (illetve <b>VV</b> vertikális látás). 
+      A dashboard a METAR/TAF nyers szövegéből a legkritikusabb értéket veszi („worst case”).
+    </p>
+    <ul style="margin:0; padding-left:18px; opacity:.9;">
+      <li><b>BKNxxx</b> / <b>OVCxxx</b> → ceiling = xxx × 100 ft</li>
+      <li><b>VVxxx</b> → ceiling = xxx × 100 ft</li>
+      <li>Ha nincs BKN/OVC/VV → ceiling „n/a” (nem a CAVOK érték)</li>
+    </ul>
+  </section>
+
+  <section class="card" id="tiles">
+    <h2 style="margin:0 0 8px 0;">Csempék / riasztások – részletes leírás</h2>
+
+    <h3 style="margin:10px 0 6px 0;">Critical</h3>
+    <p style="margin:0; opacity:.9;">
+      A „Critical” csempe a legmagasabb kockázati sávba eső reptereket gyűjti (Score ≥ 70 vagy több súlyos trigger együtt).
+      A cél: azonnal kiemelje az operatív szempontból legsürgősebb pontokat.
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">Visibility / RVR (VIS)</h3>
+    <p style="margin:0; opacity:.9;">
+      A „VIS” csempe alacsony látást jelez. Küszöbök (OM-A 8.1.4):
+      <b>CAT II minimum RVR 300 m</b>. Ezért a csempe jelzést ad, ha a „worst” VIS/RVR < 300 m.
+      Emellett LVTO/LVP külön policy tagekben jelenik meg (lásd lent).
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">Thunderstorm (TS/CB)</h3>
+    <p style="margin:0; opacity:.9;">
+      TS/CB jelzés METAR/TAF alapján. OM-A 8.3.8 szerint: <b>take-off/landing PROHIBITED</b>, ha zivatar overhead vagy approaching.
+      A dashboard ezt konzervatívan „TO/LND PROHIB” policy tagként is jelzi.
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">Wind</h3>
+    <p style="margin:0; opacity:.9;">
+      Erős szél/lökés figyelmeztetés. A tile küszöbértéke operatív „early warning”.
+      A konkrét OM-B crosswind limit ellenőrzés az <b>XWIND</b> policy tag alatt jelenik meg (runway alapján számolva).
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">Snow / Winter WX</h3>
+    <p style="margin:0; opacity:.9;">
+      Hó/jeges csapadék jelzések (SN, SG, GS, PL, FZ… stb.). 
+      A „Snow” csempe meteorológiai jelenlétet/előrejelzést mutat, míg a <b>TO PROHIB</b> policy tag a konkrét OM tiltásokat jelzi (+SN, +PL, FZRA, GR…).
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">Engine Ice Ops</h3>
+    <p style="margin:0; opacity:.9;">
+      „Engine Ice Ops” jelzés akkor aktiválódik, ha a meteo helyzet jegesedési kockázatot sugall (pl. alacsony hőmérséklet + látható nedvesség).
+      Ez támogatói jelzés (advisory), nem helyettesíti az eljárásokat.
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">Dataset / Delayed</h3>
+    <p style="margin:0; opacity:.9;">
+      A dataset csempe a frissességet mutatja: mikor készült a legutóbbi <code>data/latest.json</code>. 
+      Ha a frissítés késik (pl. Actions hiba / API rate limit), „Delayed” jelenik meg.
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">Reset</h3>
+    <p style="margin:0; opacity:.9;">
+      UI reset: szűrők/keresők törlése a dashboardon.
+    </p>
+  </section>
+
+  <section class="card" id="om">
+    <h2 style="margin:0 0 8px 0;">OM-A / OM-B policy tagek (advisory)</h2>
+
+    <h3 style="margin:10px 0 6px 0;">OM: TO/LND PROHIB</h3>
+    <p style="margin:0; opacity:.9;">
+      OM-A 8.3.8 alapján <b>tiltó</b> jelzés, ha METAR/TAF-ben TS/CB vagy heavy precipitation tiltó esemény van:
+      <b>+SN, +GS, +SG, +PL, FZRA/+FZRA, GR/+GR</b>. (Take-off prohibited.)
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">OM: LVTO / LVP / RVR&lt;125</h3>
+    <p style="margin:0; opacity:.9;">
+      OM-A 8.1.4 Take-off minima logika:
+      <b>Standard RVR ≥ 550 m</b>;
+      <b>LVP required</b> ha RVR &lt; 400 m;
+      <b>Absolute minimum RVR 125 m</b> (megfelelő fények / eljárások esetén).
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">OM: XWIND exceed</h3>
+    <p style="margin:0; opacity:.9;">
+      OM-B 1.3.1 crosswind limit ellenőrzés. A rendszer automatikusan lekéri a runway headinget és szélességet (OurAirports),
+      majd a METAR wind (+ gust) alapján kiszámolja a crosswind komponenseket runway-enként, és a „best runway” értéket hasonlítja a limithez.
+      RWY condition (RWYCC/SNOWTAM) hiányában a limit választás konzervatív, METAR-alapú becslés (Dry/Wet/Contam).
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">OM: VA</h3>
+    <p style="margin:0; opacity:.9;">
+      Volcanic ash jelzés (VA) METAR/TAF alapján. OM-A szerint medium/high contamination tervezése kerülendő; a dashboard VA esetén kiemel.
+    </p>
+
+    <h3 style="margin:12px 0 6px 0;">OM: COLD CORR</h3>
+    <p style="margin:0; opacity:.9;">
+      OM-A 8.1.2.8: 0°C vagy hidegebb esetén a published minimum heights korrekciója szükséges (extreme cold esetek külön).
+      A dashboard egyszerűen jelzi, ha METAR-ben OAT ≤ 0°C.
+    </p>
+  </section>
+
+  <section class="card" id="data">
+    <h2 style="margin:0 0 8px 0;">Adatforrás és frissítés</h2>
+    <p style="margin:0; opacity:.9;">
+      A rendszer GitHub Actions-szel frissít. A fő adatfájl: <code>data/latest.json</code> (METAR/TAF + parsed mezők).
+      A runway adatok automatikusan generálódnak: <code>data/runways.json</code> (OurAirports runways.csv alapján).
+    </p>
+    <p style="margin:10px 0 0 0; opacity:.9;">
+      Ha nincs friss adat: ellenőrizd az Actions tabon az update workflow-t (sikeres futás, commit/push), és a Pages deploy futását.
+    </p>
+    <div style="margin-top:12px;">
+      <a class="viewpill viewpill--link" href="./" title="Vissza a Dashboard-ra">
+        <span class="viewpill__k">BACK TO DASHBOARD</span>
+      </a>
+    </div>
+  </section>
+
+</main>
 </body>
 </html>
