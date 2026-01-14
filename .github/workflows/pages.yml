@@ -1,0 +1,58 @@
+name: Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepare dist
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          cp -f index.html dist/
+          cp -f settings.html dist/
+          cp -rf assets dist/assets
+          cp -rf stat dist/stat
+          cp -rf config dist/config
+          if [ -d "data" ]; then cp -rf data dist/data; fi
+          if [ -f "favicon.ico" ]; then cp -f favicon.ico dist/; fi
+          if [ -f "robots.txt" ]; then cp -f robots.txt dist/; fi
+          echo "Dist size:"; du -sh dist || true
+          test -f dist/index.html
+          test -f dist/settings.html
+          test -f dist/stat/index.html
+          test -f dist/stat/app.js
+          test -f dist/assets/app.js
+          test -f dist/data/latest.json || echo "WARNING: data/latest.json missing (will appear after first update run)."
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
