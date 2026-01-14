@@ -1103,41 +1103,30 @@ function updateTiles(currentList){
   const wind = currentList.filter(s=> (s.met.gustMax !== null && s.met.gustMax >= 25) || (s.taf.gustMax !== null && s.taf.gustMax >= 25));
   const snow = currentList.filter(s=>s.met.hz.sn || s.taf.hz.sn);
 
-  const omaToProhib = currentList.filter(s=>s.om && s.om.takeoffProhibitedWx);
-  const omaTsProhib = currentList.filter(s=>s.om && s.om.tsCb);
-  const omaLvto = currentList.filter(s=>s.om && s.om.lvto);
-  const omaBelowCat1 = currentList.filter(s=>s.om && s.om.belowCat1);
-  const omaVa = currentList.filter(s=>s.om && s.om.volcanicAsh);
-  const omaCold = currentList.filter(s=>s.om && s.om.coldTemp);
-
-
-  $("tileEngCount").textContent = String(eng.length);
-  $("tileCritCount").textContent = String(crit.length);
-  $("tileVis175Count").textContent = String(vis175.length);
-  $("tileTsCount").textContent = String(ts.length);
-  $("tileWindCount").textContent = String(wind.length);
-  $("tileSnowCount").textContent = String(snow.length);
+  // OM-A/OM-B advisory flags (computed in assets/om_policy.js)
   const toProhib = currentList.filter(s=>s.om && s.om.toProhib);
   const lvto = currentList.filter(s=>s.om && s.om.lvto);
   const xwind = currentList.filter(s=>s.om && s.om.xwindExceed);
   const va = currentList.filter(s=>s.om && s.om.va);
 
   const setIf = (id,val)=>{ const el=document.getElementById(id); if (el) el.textContent=String(val); };
+
+  setIf("tileEngCount", eng.length);
+  setIf("tileCritCount", crit.length);
+  setIf("tileVis175Count", vis175.length);
+  setIf("tileTsCount", ts.length);
+  setIf("tileWindCount", wind.length);
+  setIf("tileSnowCount", snow.length);
+
   setIf("tileToProhibCount", toProhib.length);
   setIf("tileLvtoCount", lvto.length);
   setIf("tileXwindCount", xwind.length);
   setIf("tileVACount", va.length);
 
-  $("tileToProhibCount").textContent = String(omaToProhib.length);
-  $("tileLvtoCount").textContent = String(omaLvto.length);
-  $("tileVACount").textContent = String(omaVa.length);
-
-
-
   function uniqIata(list){
     const seen = new Map();
     for (const st of list){
-      const code = (st.iata || st.icao || "").toUpperCase();
+      const code = st.iata || st.icao;
       if (!code) continue;
       const rr = (typeof st.roleRank === "number") ? st.roleRank : roleRank(getRole(st.icao));
       const prev = seen.get(code);
@@ -1149,7 +1138,7 @@ function updateTiles(currentList){
   }
 
   function renderIata(elId, list){
-    const el = $(elId);
+    const el = document.getElementById(elId);
     if (!el) return;
     const codes = uniqIata(list);
     const max = (viewMode === "tv" ? 18 : 10);
@@ -1167,8 +1156,13 @@ function updateTiles(currentList){
   renderIata("tileWindIata", wind);
   renderIata("tileSnowIata", snow);
 
-
+  renderIata("tileToProhibIata", toProhib);
+  renderIata("tileLvtoIata", lvto);
+  renderIata("tileXwindIata", xwind);
+  renderIata("tileVAIata", va);
 }
+
+
 
 function render(){
   const tbody = $("rows");
