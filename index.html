@@ -17,18 +17,15 @@
 <span class="viewpill__k">VIEW</span>
 <span class="viewpill__v" id="viewBtnLabel">AUTO</span>
 </button>
-
-<a class="viewpill viewpill--link" href="stat/" title="Open Stats" >
-  <span class="viewpill__k">STATS</span>
+<a class="viewpill viewpill--link" href="stat/" title="Open Stats">
+<span class="viewpill__k">STATS</span>
 </a>
-<a class="viewpill viewpill--link" href="settings.html" title="Open Settings" >
-  <span class="viewpill__k">SETTINGS</span>
+<a class="viewpill viewpill--link" href="settings.html" title="Open Settings">
+<span class="viewpill__k">SETTINGS</span>
 </a>
-
 </div>
 <div class="brand__sub">METAR + TAF monitor (aviationweather.gov via GitHub Actions) · OM-A/OM-B policy layer (advisory)</div>
 </div>
-
 <div class="tiles" id="tiles">
 <button class="tile" data-filter="eng" type="button">
 <div class="tile__k">ENG ICE OPS</div>
@@ -41,7 +38,7 @@
 <div class="tile__s">score ≥ 70</div><div class="tile__iata" id="tileCritIata"></div>
 </button>
 <button class="tile" data-filter="vis300" type="button">
-<div class="tile__k">VIS/RVR < 300</div>
+<div class="tile__k">VIS/RVR &lt; 300</div>
 <div class="tile__v" id="tileVis300Count">0</div>
 <div class="tile__s">worst (M/TAF)</div><div class="tile__iata" id="tileVis300Iata"></div>
 </button>
@@ -92,78 +89,7 @@
 <div class="tile__v" id="tileResetCount">↺</div>
 <div class="tile__s">clear filters</div>
 </button>
-</div><div class="toolbar">
-<div class="toolbar__left">
-<input autocomplete="off" class="q" id="q" placeholder="Search ICAO / IATA / name" type="search"/>
-<select class="sel" id="cond">
-<option value="all">All conditions</option>
-<optgroup label="Core">
-<option value="eng">ENG ICE OPS</option>
-<option value="crit">Critical (≥70)</option>
-<option value="vis175">VIS ≤175</option>
-</optgroup>
-<optgroup label="Weather">
-<option value="fog">FG / BR / FZFG</option>
-<option value="snow">SN</option>
-<option value="rain">RA / DZ</option>
-<option value="ts">TS / CB</option>
-<option value="gust40">GUST ≥40KT</option>
-<option value="gust30">GUST ≥30KT</option>
-<option value="gust25">GUST ≥25KT</option>
-<option value="cig500">CIG &lt; 500</option>
-</optgroup>
-<optgroup label="Minima / Policy (OM-A/OM-B advisory)">
-<option value="toProhib">TO/LND PROHIBITED (TS / heavy precip)</option>
-<option value="lvto">LVTO (RVR/VIS &lt; 550)</option>
-<option value="lvp">LVP required (RVR &lt; 400)</option>
-<option value="rvr125">RVR &lt; 125 (absolute min)</option>
-<option value="xwind">XWIND exceed (best RWY)</option>
-<option value="va">Volcanic Ash (VA)</option>
-<option value="coldcorr">Cold corrections (OAT ≤ 0°C)</option>
-</optgroup>
-</select>
-<select class="sel" id="alert">
-<option value="all">Any alert</option>
-<option value="OK">OK</option>
-<option value="WARN">WARN</option>
-<option value="CRIT">CRIT</option>
-</select>
-<label class="chk">
-<input checked="" id="sortPri" type="checkbox"/>
-<span>Priority sort</span>
-</label>
-</div>
-<div class="toolbar__right">
-</div>
-</div>
-<div class="status">
-<div class="status__left" id="statCounts">ICAO: 0 | METAR: 0 | TAF: 0</div>
-<div class="status__right" id="statUpdated">Last update: —</div>
-</div>
-</header>
-<main class="main">
-<div class="contentSplit">
-<div class="contentSplit__main">
-<div class="alert" id="alert"></div>
-<table class="tbl">
-<thead>
-<tr>
-<th>Airport</th>
-<th>Alert</th>
-<th>Triggers</th>
-<th>Worst VIS</th>
-<th>RVR</th>
-<th>Ceiling</th>
-<th>METAR</th>
-<th>TAF</th>
-<th>Ages</th>
-</tr>
-</thead>
-<tbody id="rows"></tbody>
-</table>
-</div>
-<aside class="contentSplit__aside">
-<section class="explain" id="explain">
+</div><section class="explain" id="explain">
 <h2>How alerts are triggered and what limits apply</h2>
 <p class="explain__lead">
 This dashboard is an operational awareness tool. It highlights conditions derived from METAR/TAF and applies selected Wizz Air OM-A/OM-B rules as <strong>advisory flags</strong>.
@@ -219,7 +145,6 @@ Always validate against the latest operational documentation (OM-B, airfield spe
 <li><strong>Note:</strong> Published minima corrections remain a pilot responsibility.</li>
 </ul>
 </div>
-
 <div class="explain__card">
 <h3>Ceiling (CIG) interpretation</h3>
 <ul>
@@ -228,7 +153,6 @@ Always validate against the latest operational documentation (OM-B, airfield spe
 <li><strong>Operational use:</strong> supports quick screening against approach / circling constraints (final minima still depend on procedure, NOTAM and aircraft capability).</li>
 </ul>
 </div>
-
 <div class="explain__card">
 <h3>Score and alert level</h3>
 <ul>
@@ -239,9 +163,75 @@ Always validate against the latest operational documentation (OM-B, airfield spe
 </ul>
 </div>
 </div>
-</section>
-</aside>
+</section><div class="toolbar">
+<div class="toolbar__left">
+<input autocomplete="off" class="q" id="q" placeholder="Search ICAO / IATA / name" type="search"/>
+<select class="sel" id="cond">
+<option value="all">All conditions</option>
+<optgroup label="Core">
+<option value="eng">ENG ICE OPS</option>
+<option value="crit">Critical (≥70)</option>
+<option value="vis175">VIS ≤175</option>
+</optgroup>
+<optgroup label="Weather">
+<option value="fog">FG / BR / FZFG</option>
+<option value="snow">SN</option>
+<option value="rain">RA / DZ</option>
+<option value="ts">TS / CB</option>
+<option value="gust40">GUST ≥40KT</option>
+<option value="gust30">GUST ≥30KT</option>
+<option value="gust25">GUST ≥25KT</option>
+<option value="cig500">CIG &lt; 500</option>
+</optgroup>
+<optgroup label="Minima / Policy (OM-A/OM-B advisory)">
+<option value="toProhib">TO/LND PROHIBITED (TS / heavy precip)</option>
+<option value="lvto">LVTO (RVR/VIS &lt; 550)</option>
+<option value="lvp">LVP required (RVR &lt; 400)</option>
+<option value="rvr125">RVR &lt; 125 (absolute min)</option>
+<option value="xwind">XWIND exceed (best RWY)</option>
+<option value="va">Volcanic Ash (VA)</option>
+<option value="coldcorr">Cold corrections (OAT ≤ 0°C)</option>
+</optgroup>
+</select>
+<select class="sel" id="alert">
+<option value="all">Any alert</option>
+<option value="OK">OK</option>
+<option value="WARN">WARN</option>
+<option value="CRIT">CRIT</option>
+</select>
+<label class="chk">
+<input checked="" id="sortPri" type="checkbox"/>
+<span>Priority sort</span>
+</label>
 </div>
+<div class="toolbar__right">
+</div>
+</div>
+<div class="status">
+<div class="status__left" id="statCounts">ICAO: 0 | METAR: 0 | TAF: 0</div>
+<div class="status__right" id="statUpdated">Last update: —</div>
+</div>
+</header>
+<main class="main">
+
+<div class="alert" id="alert"></div>
+<table class="tbl">
+<thead>
+<tr>
+<th>Airport</th>
+<th>Alert</th>
+<th>Triggers</th>
+<th>Worst VIS</th>
+<th>RVR</th>
+<th>Ceiling</th>
+<th>METAR</th>
+<th>TAF</th>
+<th>Ages</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+
 </main>
 <!-- Drawer -->
 <div class="scrim hidden" id="scrim"></div>
