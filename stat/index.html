@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>WX Monitor – Stats</title>
+  <link rel="stylesheet" href="../assets/styles.css?v=51"/>
+  <link rel="stylesheet" href="styles.css?v=51"/>
+</head>
+<body>
+  <header class="statTop">
+    <div class="statTop__left">
+      <div class="statTop__title">WX Monitor / Stats</div>
+      <div class="statTop__sub">Health, refresh verification, and an at‑a‑glance change atlas for non‑technical viewers.</div>
+    </div>
+    <div class="statTop__right">
+      <a class="btn btn--ghost" href="../index.html">Back</a>
+      <button class="btn btn--primary" id="btnNow" type="button">Refresh now</button>
+    </div>
+  </header>
+
+  <main class="statMain">
+
+    <section class="card statCard">
+      <div class="statGrid">
+        <div class="statMetric">
+          <div class="statMetric__k">Latest dataset</div>
+          <div class="statMetric__v" id="genAt">–</div>
+          <div class="statMetric__s" id="genAge">–</div>
+        </div>
+        <div class="statMetric">
+          <div class="statMetric__k">Refresh health</div>
+          <div class="statMetric__v" id="verdict">–</div>
+          <div class="statMetric__s" id="verdictSub">–</div>
+        </div>
+        <div class="statMetric">
+          <div class="statMetric__k">Average interval</div>
+          <div class="statMetric__v" id="avgInt">–</div>
+          <div class="statMetric__s" id="avgIntSub">–</div>
+        </div>
+        <div class="statMetric">
+          <div class="statMetric__k">Stations / coverage</div>
+          <div class="statMetric__v" id="counts">–</div>
+          <div class="statMetric__s" id="countsSub">–</div>
+        </div>
+      </div>
+
+      <div class="statRow">
+        <span class="pill" id="expectedPill">Expected ~10 min updates</span>
+        <span class="muted" id="storageNote">Change Atlas uses local history (this browser) and records only when new METAR/TAF arrives (generatedAt changes).</span>
+      </div>
+
+      <div class="statCharts">
+        <div class="statChart">
+          <div class="statChart__k">Refresh trend</div>
+          <div class="statChart__s muted" id="refreshSub">Intervals between dataset updates (this browser)</div>
+          <canvas id="sparkRefresh" width="520" height="86"></canvas>
+        </div>
+        <div class="statChart">
+          <div class="statChart__k">Coverage trend</div>
+          <div class="statChart__s muted" id="coverageSub">Missing METAR / TAF counts over time</div>
+          <canvas id="sparkCoverage" width="520" height="86"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="card atlasCard">
+      <div class="atlasHead">
+        <div>
+          <div class="atlasHead__title" id="atlasTitle">Change Atlas</div>
+          <div class="atlasHead__sub" id="atlasSub">A time‑matrix of detected changes per airport. Left column is sticky; scroll horizontally for time.</div>
+        </div>
+        <div class="atlasControls">
+          <input id="atlasSearch" class="input" type="text" placeholder="Search ICAO/IATA…" autocomplete="off"/>
+          <select id="atlasWindow" class="select">
+            <option value="60">Last 60 min</option>
+            <option value="120">Last 120 min</option>
+            <option value="240" selected>Last 240 min</option>
+          </select>
+          <select id="atlasMetric" class="select">
+            <option value="ALL" selected>All metrics</option>
+            <option value="VIS">Visibility</option>
+            <option value="RVR">RVR</option>
+            <option value="CIG">Ceiling</option>
+            <option value="GUST">Wind</option>
+            <option value="WX">Weather</option>
+            <option value="SN">Snow</option>
+          </select>
+          <select id="atlasDir" class="select">
+            <option value="ALL" selected>All directions</option>
+            <option value="WORSE">Got worse</option>
+            <option value="BETTER">Improved</option>
+          </select>
+          <select id="atlasRole" class="select">
+            <option value="ALL" selected>All roles</option>
+            <option value="BASE">Base</option>
+            <option value="DEST">Destination</option>
+            <option value="ALT">Alternate</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="atlasKpis" id="atlasKpis"></div>
+
+      <div class="atlasTableWrap" id="atlasTableWrap">
+        <div class="atlasTable" id="atlasTable"></div>
+        <div class="atlasEmpty" id="atlasEmpty" style="display:none;">
+          No history yet in this browser. Leave this page open for a few minutes until new METAR/TAF arrives.
+        </div>
+      </div>
+
+      <div class="atlasLegend">
+        <span class="legendItem"><span class="legendGlyph worse">▼</span> Got worse</span>
+        <span class="legendItem"><span class="legendGlyph better">▲</span> Improved</span>
+        <span class="legendItem"><span class="legendGlyph mixed">◆</span> Change / mixed</span>
+        <span class="muted">Bigger glyph ≈ higher impact. Vertical grid = 10 min.</span>
+      </div>
+
+      <div class="atlasPinned">
+        <div class="atlasPinned__left">
+          <div class="atlasPinned__k">Pinned airport</div>
+          <div class="atlasPinned__title" id="atlasBadges">–</div>
+          <canvas id="miniCanvas" width="520" height="70"></canvas>
+          <div class="trendBox">
+            <canvas id="trendCanvas" width="520" height="170"></canvas>
+            <div id="trendStack" class="trendStack" style="display:none;"></div>
+            <div id="trendFallback" class="trendFallback" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="atlasPinned__right">
+          <div class="atlasPinned__k">What happened?</div>
+          <div id="atlasEvents" class="atlasEvents"></div>
+        </div>
+      </div>
+
+      <div id="atlasTooltip" class="atlasTooltip" style="display:none;"></div>
+    </section>
+
+    <section class="card logCard">
+      <div class="logHead">
+        <div class="logHead__title">Recent refresh log</div>
+        <div class="muted">Shows generatedAt changes observed by this browser.</div>
+      </div>
+      <div class="logTable">
+        <table>
+          <thead><tr><th>Time</th><th>generatedAt</th><th>Stations</th><th>Missing METAR</th><th>Missing TAF</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js?v=53"></script>
+</body>
+</html>

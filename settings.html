@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Settings · Wizz Air METAR/TAF Monitor</title>
+  <link rel="stylesheet" href="assets/styles.css?v=50.OM1"/>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="brand__row">
+      <div class="brand__title">Settings</div>
+      <div class="brand__spacer"></div>
+      <a class="btn btn--ghost" href="./">Back</a>
+    </div>
+    <div class="brand__sub">This build is zero‑manual configuration. Runway headings are sourced automatically (OurAirports) during dataset updates.</div>
+  </div>
+</header>
+
+<main class="main">
+  <div class="card">
+    <h2>Data sources</h2>
+    <ul>
+      <li>METAR/TAF: aviationweather.gov (server-side fetch via GitHub Actions)</li>
+      <li>Runway geometry (heading/width): OurAirports runways.csv (server-side; used for crosswind advisory)</li>
+    </ul>
+    <p class="muted">Operational decisions remain the responsibility of the flight crew/dispatcher. This tool provides advisory flags based on OM extracts and available data.</p>
+  </div>
+
+  <div class="card">
+    <h2>Links</h2>
+    <ul>
+      <li><a href="./">Main monitor</a></li>
+      <li><a href="stat/">Stats / health</a></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>About OM policy layer</h2>
+    <p>
+      Some OM rules require inputs not available in METAR/TAF (e.g., RWYCC / SNOWTAM, selected runway).
+      Where data is missing, the tool applies conservative heuristics or marks values as N/A.
+    </p>
+  </div>
+</main>
+</body>
+</html>
