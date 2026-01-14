@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Wizz Air METAR/TAF Monitor</title>
+<title>WxMonitor – Alert Guide</title>
 <link href="assets/styles.css?v=50.OM1" rel="stylesheet"/>
 </head>
 <body>
@@ -141,56 +140,85 @@
 <div class="status__right" id="statUpdated">Last update: —</div>
 </div>
 </header>
-<main class="main">
-
-<div class="alert" id="alert"></div>
-<table class="tbl">
-<thead>
-<tr>
-<th>Airport</th>
-<th>Alert</th>
-<th>Triggers</th>
-<th>Worst VIS</th>
-<th>RVR</th>
-<th>Ceiling</th>
-<th>METAR</th>
-<th>TAF</th>
-<th>Ages</th>
-</tr>
-</thead>
-<tbody id="rows"></tbody>
-</table>
-
+<main class="wrap">
+  <h1 class="h1">How alerts are triggered</h1>
+  <p class="muted">Reference guide for alerts, triggers, and operational limits used by this dashboard (OM‑A/OM‑B derived, advisory unless stated).</p>
+  <section class="explain" id="explain">
+<h2>How alerts are triggered and what limits apply</h2>
+<p class="explain__lead">
+This dashboard is an operational awareness tool. It highlights conditions derived from METAR/TAF and applies selected Wizz Air OM-A/OM-B rules as <strong>advisory flags</strong>.
+Always validate against the latest operational documentation (OM-B, airfield specific minima, NOTAM/SNOWTAM, ATC, and aircraft configuration).
+</p>
+<div class="explain__grid">
+<div class="explain__card">
+<h3>Data and refresh</h3>
+<ul>
+<li><strong>Source:</strong> AviationWeather METAR/TAF (ingested by GitHub Actions).</li>
+<li><strong>Dataset tile:</strong> shows the time of the last successful ingestion.</li>
+<li><strong>Station staleness:</strong> a METAR can be old even if the dataset is fresh (station not reporting).</li>
+</ul>
+</div>
+<div class="explain__card">
+<h3>Take-off / Landing Prohibited (OM-A 8.3.8)</h3>
+<ul>
+<li><strong>Thunderstorm / CB:</strong> flagged when METAR/TAF contains TS, CB or TCU.</li>
+<li><strong>Heavy precip (TO prohibited):</strong> +SN, +GS, +SG, +PL, FZRA/+FZRA, GR/+GR.</li>
+<li><strong>Outcome:</strong> highlighted as <span class="tag tag--stop">TO/LND PROHIB</span>.</li>
+</ul>
+</div>
+<div class="explain__card">
+<h3>Minima (OM-A 8.1.4)</h3>
+<ul>
+<li><strong>Standard take-off:</strong> RVR/VIS ≥ 550 m.</li>
+<li><strong>LVTO:</strong> RVR/VIS &lt; 550 m.</li>
+<li><strong>LVP required:</strong> RVR &lt; 400 m.</li>
+<li><strong>Absolute minimum (TO):</strong> RVR ≥ 125 m (subject to lighting/markings/LVP requirements).</li>
+</ul>
+</div>
+<div class="explain__card">
+<h3>Crosswind advisory (OM-B 1.3.1)</h3>
+<ul>
+<li><strong>Automatic runway headings:</strong> taken from OurAirports runways dataset (no manual input).</li>
+<li><strong>Gust included:</strong> wind speed uses max(sustained, gust).</li>
+<li><strong>Narrow RWY:</strong> width &lt; 45 m applies narrow crosswind limits.</li>
+<li><strong>Runway condition:</strong> estimated from METAR/TAF precipitation groups (Dry/Wet/Contaminated). For exact RWYCC/SNOWTAM-based assessment, use operational sources.</li>
+<li><strong>Flag:</strong> <span class="tag tag--warn">XWIND</span> shown if estimated crosswind exceeds the applicable company limit.</li>
+</ul>
+</div>
+<div class="explain__card">
+<h3>Volcanic ash (OM-A 8.3.8.6)</h3>
+<ul>
+<li><strong>Trigger:</strong> VA present in METAR/TAF.</li>
+<li><strong>Operational note:</strong> contamination zones (low/medium/high) require dedicated VA products; this dashboard only detects the textual VA signal.</li>
+</ul>
+</div>
+<div class="explain__card">
+<h3>Cold temperature corrections (OM-A 8.1.2.8)</h3>
+<ul>
+<li><strong>Trigger:</strong> OAT ≤ 0°C in METAR temperature group.</li>
+<li><strong>Note:</strong> Published minima corrections remain a pilot responsibility.</li>
+</ul>
+</div>
+<div class="explain__card">
+<h3>Ceiling (CIG) interpretation</h3>
+<ul>
+<li><strong>What it is:</strong> lowest <strong>BKN</strong>, <strong>OVC</strong> or <strong>VV</strong> base in feet AGL parsed from METAR/TAF.</li>
+<li><strong>Displayed value:</strong> the <strong>worst (lowest)</strong> ceiling found across METAR and TAF.</li>
+<li><strong>Operational use:</strong> supports quick screening against approach / circling constraints (final minima still depend on procedure, NOTAM and aircraft capability).</li>
+</ul>
+</div>
+<div class="explain__card">
+<h3>Score and alert level</h3>
+<ul>
+<li><strong>Score (0–100):</strong> a composite severity index derived from METAR and TAF.</li>
+<li><strong>Inputs:</strong> low visibility, low ceiling, weather codes (TS, FZFG/FG, SN, RA, BR) and gusts.</li>
+<li><strong>Combination:</strong> station score = <strong>max(METAR score, 0.85 × TAF score)</strong>; ENG ICE OPS forces 100.</li>
+<li><strong>Alert bands:</strong> OK &lt; 20 · MED ≥ 20 · HIGH ≥ 45 · CRIT ≥ 70.</li>
+</ul>
+</div>
+</div>
+</section>
 </main>
-<!-- Drawer -->
-<div class="scrim hidden" id="scrim"></div>
-<aside aria-modal="true" class="drawer hidden" id="drawer" role="dialog">
-<div class="drawer__top">
-<div class="drawer__title" id="dAirport">—</div>
-<button class="drawer__close" id="drawerClose" type="button">×</button>
-</div>
-<div class="drawer__body" id="drawerBody">
-<div class="kv">
-<div class="kv__row"><div class="kv__k">Summary</div><div class="kv__v" id="dSub">—</div></div>
-<div class="kv__row"><div class="kv__k">Alert</div><div class="kv__v" id="dAlert">—</div></div>
-<div class="kv__row"><div class="kv__k">Severity</div><div class="kv__v" id="dSev">—</div></div>
-<div class="kv__row"><div class="kv__k">Worst visibility</div><div class="kv__v" id="dWorstVis">—</div></div>
-<div class="kv__row"><div class="kv__k">Visibility</div><div class="kv__v" id="dVis">—</div></div>
-<div class="kv__row"><div class="kv__k">RVR</div><div class="kv__v" id="dRvr">—</div></div>
-<div class="kv__row"><div class="kv__k">Ceiling</div><div class="kv__v" id="dCig">—</div></div>
-<div class="kv__row"><div class="kv__k">Triggers</div><div class="kv__v" id="dTriggers">—</div></div>
-</div>
-<div class="raw">
-<div class="raw__h">METAR <span class="raw__age" id="dMetAge"></span></div>
-<div class="raw__dec" id="dMetDec"></div>
-<pre class="raw__box" id="dMetRaw"></pre>
-<div class="raw__h">TAF <span class="raw__age" id="dTafAge"></span></div>
-<div class="raw__dec" id="dTafDec"></div>
-<pre class="raw__box" id="dTafRaw"></pre>
-</div>
-</div>
-</aside>
-<script src="assets/om_policy.js?v=50.OM1"></script>
-<script src="assets/app.js?v=50.OM1"></script>
+
 </body>
 </html>

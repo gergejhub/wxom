@@ -819,7 +819,20 @@ a.viewpill{ text-decoration:none; }
 }
 
 /* Ages cell */
-.ages{ display:flex; flex-direction:column; gap:4px; }
+.col-ages{ white-space:nowrap; }
+.ages{ display:flex; flex-direction:row; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:nowrap; }
+.agepill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  font-family:var(--mono);
+  font-size:12px;
+  line-height:1;
+}
 .age__k{
   display:inline-block;
   width: 14px;
@@ -832,3 +845,16 @@ a.viewpill{ text-decoration:none; }
 
 /* AUTO view: do not pin the tiles/header while scrolling */
 body.view-auto header.top{ position:static; top:auto; }
+
+
+/* Table column nowrap fixes */
+.tbl th:nth-child(4), .tbl td:nth-child(4){ white-space:nowrap; }
+.tbl th:nth-child(9), .tbl td:nth-child(9){ white-space:nowrap; }
+.tbl th:nth-child(4){ min-width:110px; }
+.tbl td:nth-child(4){ min-width:110px; }
+.tbl th:nth-child(9){ min-width:140px; }
+.tbl td:nth-child(9){ min-width:140px; }
+
+.worst{ display:flex; align-items:center; gap:10px; white-space:nowrap; }
+.worst__v{ min-width:40px; text-align:right; }
+

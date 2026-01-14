@@ -978,18 +978,20 @@ function rowHtml(st){
     </td>
     <td><span class="pill pill--${st.alert.toLowerCase()}">${escapeHtml(alertLabel(st.alert))}</span></td>
     <td><div class="triggers">${lowVisTagHtml}${trigHtml}</div></td>
-    <td>
-      <span class="mono">${escapeHtml(String(st.worstVis ?? st.met.vis ?? "—"))}</span>
-      <span class="trend ${trend.cls}">${trend.text}</span>
+    <td class="col-worst">
+      <div class="worst">
+        <span class="mono worst__v">${escapeHtml(String(st.worstVis ?? st.met.vis ?? "—"))}</span>
+        <span class="trend ${trend.cls}">${trend.text}</span>
+      </div>
     </td>
     <td><span class="mono">${escapeHtml(st.rvrMinAll !== null ? String(st.rvrMinAll) : "—")}</span></td>
     <td><span class="mono">${escapeHtml(st.cigAll !== null ? String(st.cigAll) : "—")}</span></td>
     <td class="col-raw"><div class="raw">${metRaw}</div></td>
     <td class="col-raw"><div class="raw">${tafRaw}</div></td>
-    <td>
+    <td class="col-ages">
       <div class="ages">
-        <div><span class="age__k">M</span>${metAge}</div>
-        <div><span class="age__k">T</span>${tafAge}</div>
+        <span class="agepill"><span class="age__k">M</span>${metAge}</span>
+        <span class="agepill"><span class="age__k">T</span>${tafAge}</span>
       </div>
     </td>
   </tr>`;
