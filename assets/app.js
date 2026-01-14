@@ -383,28 +383,12 @@ function hasAny(raw, tokens){
 }
 
 function hazardFlags(raw){
-  if(!raw) return {
-    fzfg: /\bFZFG\b/.test(up),
-    fg: /\bFG\b/.test(up) || hasWx("FG"),
-    br: /\bBR\b/.test(up) || hasWx("BR"),
-    blsn: /\bBLSN\b/.test(up) || hasWx("BLSN"),
-    sn: /\bSN\b/.test(up) || /\bSHSN\b/.test(up) || /\bBLSN\b/.test(up) || hasWx("SN"),
-    ra: /\bRA\b/.test(up) || /\bDZ\b/.test(up) || hasWx("RA") || hasWx("DZ"),
-    ts: /\bTS\b/.test(up) || /\bTSRA\b/.test(up) || /\bTSGR\b/.test(up) || hasWx("TS"),
-
-    // OM-related: additional hazards/tokens
-    cb: /\bCB\b/.test(up) || /\bTCU\b/.test(up) || wxToks.some(t=>t.includes("CB") || t.includes("TCU")),
-    va: /\bVA\b/.test(up) || hasWx("VA"),
-    fzra: /\bFZRA\b/.test(up) || wxToks.some(t=>t.includes("FZRA")),
-    fzdz: /\bFZDZ\b/.test(up) || wxToks.some(t=>t.includes("FZDZ")),
-    gr: /\bGR\b/.test(up) || wxToks.some(t=>t.includes("GR")),
-    pl: /\bPL\b/.test(up) || wxToks.some(t=>t.includes("PL")),
-    gs: /\bGS\b/.test(up) || wxToks.some(t=>t.includes("GS")),
-    sg: /\bSG\b/.test(up) || wxToks.some(t=>t.includes("SG")),
-    heavySn: wxToks.some(t=>t.includes("+SN") || t.includes("+SHSN")),
-    heavyFzra: wxToks.some(t=>t.includes("+FZRA")),
-
-    heavyHail: wxToks.some(t=>t.includes("+GR")),
+  if (!raw) return {
+    fzfg:false, fg:false, br:false, blsn:false,
+    sn:false, ra:false, ts:false,
+    cb:false, va:false,
+    fzra:false, fzdz:false, gr:false, pl:false, gs:false, sg:false,
+    heavySn:false, heavyFzra:false, heavyHail:false,
   };
 
   const up = String(raw).toUpperCase();
