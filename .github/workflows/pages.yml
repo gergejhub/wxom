@@ -18,9 +18,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,25 +31,48 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Prepare dist
+        shell: bash
         run: |
+          set -euo pipefail
           rm -rf dist
           mkdir -p dist
+
+          # Core pages (MUST exist)
+          test -f index.html
           cp -f index.html dist/
-          cp -f settings.html dist/
-          cp -rf assets dist/assets
-          cp -rf stat dist/stat
-          cp -rf config dist/config
-          if [ -d "data" ]; then cp -rf data dist/data; fi
+
+          # Optional top-level pages
+          if [ -f "alerts.html" ]; then cp -f alerts.html dist/; fi
+          if [ -f "settings.html" ]; then cp -f settings.html dist/; fi
+
+          # Static folders (copy only if they exist)
+          if [ -d "assets" ]; then cp -R assets dist/assets; fi
+          if [ -d "stat" ]; then cp -R stat dist/stat; fi
+          if [ -d "config" ]; then cp -R config dist/config; fi
+          if [ -d "data" ]; then cp -R data dist/data; fi
+
+          # Optional root files
           if [ -f "favicon.ico" ]; then cp -f favicon.ico dist/; fi
           if [ -f "robots.txt" ]; then cp -f robots.txt dist/; fi
-          echo "Dist size:"; du -sh dist || true
-          test -f dist/index.html
-          test -f dist/settings.html
-          test -f dist/stat/index.html
-          test -f dist/stat/app.js
-          test -f dist/assets/app.js
-          test -f dist/data/latest.json || echo "WARNING: data/latest.json missing (will appear after first update run)."
 
+          echo "---- DIST TREE (top 200 files) ----"
+          find dist -type f | head -n 200
+
+          # Sanity checks to prevent silent 404s
+          test -f dist/index.html
+          if [ -f "alerts.html" ]; then test -f dist/alerts.html; fi
+          if [ -f "settings.html" ]; then test -f dist/settings.html; fi
+
+          # If stat folder exists, enforce required files
+          if [ -d "dist/stat" ]; then
+            test -f dist/stat/index.html
+            test -f dist/stat/app.js
+          fi
+
+          # If assets folder exists, enforce required files
+          if [ -d "dist/assets" ]; then
+            test -f dist/assets/app.js
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
