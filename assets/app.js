@@ -1128,12 +1128,9 @@ function updateTiles(currentList){
   setIf("tileXwindCount", xwind.length);
   setIf("tileVACount", va.length);
 
-  $("tileOmaToProhibCount").textContent = String(omaToProhib.length);
-  $("tileOmaTsProhibCount").textContent = String(omaTsProhib.length);
-  $("tileOmaLvtoCount").textContent = String(omaLvto.length);
-  $("tileOmaBelowCat1Count").textContent = String(omaBelowCat1.length);
-  $("tileOmaVaCount").textContent = String(omaVa.length);
-  $("tileOmaColdCount").textContent = String(omaCold.length);
+  $("tileToProhibCount").textContent = String(omaToProhib.length);
+  $("tileLvtoCount").textContent = String(omaLvto.length);
+  $("tileVACount").textContent = String(omaVa.length);
 
 
 
@@ -1170,12 +1167,6 @@ function updateTiles(currentList){
   renderIata("tileWindIata", wind);
   renderIata("tileSnowIata", snow);
 
-  renderIata("tileOmaToProhibIata", omaToProhib);
-  renderIata("tileOmaTsProhibIata", omaTsProhib);
-  renderIata("tileOmaLvtoIata", omaLvto);
-  renderIata("tileOmaBelowCat1Iata", omaBelowCat1);
-  renderIata("tileOmaVaIata", omaVa);
-  renderIata("tileOmaColdIata", omaCold);
 
 }
 
