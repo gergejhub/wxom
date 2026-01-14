@@ -948,6 +948,7 @@ function rowHtml(st){
 
   const vis = (st.met.vis !== null ? st.met.vis : (st.worstVis ?? null));
   const lowVis = buildLowVisTag(st);
+  const lowVisTagHtml = lowVis ? `<span class="tag tag--vis" data-icao="${st.icao}" data-open="1">${escapeHtml(lowVis)}</span>` : "";
 
   const trigHtml = st.triggers.map(t=>{
     const srcBadge = t.src ? `<span class="tag tag--src">${t.src === "MT" ? "M+T" : t.src}</span>` : "";
@@ -976,16 +977,21 @@ function rowHtml(st){
       </div>
     </td>
     <td><span class="pill pill--${st.alert.toLowerCase()}">${escapeHtml(alertLabel(st.alert))}</span></td>
+    <td><div class="triggers">${lowVisTagHtml}${trigHtml}</div></td>
     <td>
-      <span class="mono">${escapeHtml(String(vis ?? (st.met.vis ?? st.worstVis ?? "—")))}</span>
+      <span class="mono">${escapeHtml(String(st.worstVis ?? st.met.vis ?? "—"))}</span>
       <span class="trend ${trend.cls}">${trend.text}</span>
     </td>
-    <td><span class="tag tag--vis">${escapeHtml(lowVis)}</span></td>
-    <td><div class="triggers">${trigHtml}</div></td>
-    <td>${metAge}</td>
-    <td>${tafAge}</td>
+    <td><span class="mono">${escapeHtml(st.rvrMinAll !== null ? String(st.rvrMinAll) : "—")}</span></td>
+    <td><span class="mono">${escapeHtml(st.cigAll !== null ? String(st.cigAll) : "—")}</span></td>
     <td class="col-raw"><div class="raw">${metRaw}</div></td>
     <td class="col-raw"><div class="raw">${tafRaw}</div></td>
+    <td>
+      <div class="ages">
+        <div><span class="age__k">M</span>${metAge}</div>
+        <div><span class="age__k">T</span>${tafAge}</div>
+      </div>
+    </td>
   </tr>`;
 }
 
@@ -1016,7 +1022,11 @@ function applyFilters(list){
       case "vis500": if (!(st.worstVis !== null && st.worstVis <= 500)) return false; break;
       case "vis300": if (!(st.worstVis !== null && st.worstVis <= 300)) return false; break;
       case "vis250": if (!(st.worstVis !== null && st.worstVis <= 250)) return false; break;
-      case "vis175": if (!(st.worstVis !== null && st.worstVis <= 175)) return false; break;
+      case "vis300": {
+        const v = st.worstVis;
+        const r = st.rvrMinAll;
+        if (!((v !== null && v < 300) || (r !== null && r < 300))) return false;
+      } break;
       case "vis150": if (!(st.worstVis !== null && st.worstVis <= 150)) return false; break;
 
       case "rvr500": if (!(st.rvrMinAll !== null && st.rvrMinAll <= 500)) return false; break;
@@ -1098,7 +1108,7 @@ function sortList(list){
 function updateTiles(currentList){
   const eng = currentList.filter(s=>s.engIceOps);
   const crit = currentList.filter(s=>s.alert==="CRIT");
-  const vis175 = currentList.filter(s=>s.worstVis !== null && s.worstVis <= 175);
+  const vis300 = currentList.filter(s=> (s.worstVis !== null && s.worstVis < 300) || (s.rvrMinAll !== null && s.rvrMinAll < 300));
   const ts = currentList.filter(s=>s.met.hz.ts || s.taf.hz.ts);
   const wind = currentList.filter(s=> (s.met.gustMax !== null && s.met.gustMax >= 25) || (s.taf.gustMax !== null && s.taf.gustMax >= 25));
   const snow = currentList.filter(s=>s.met.hz.sn || s.taf.hz.sn);
@@ -1113,7 +1123,7 @@ function updateTiles(currentList){
 
   setIf("tileEngCount", eng.length);
   setIf("tileCritCount", crit.length);
-  setIf("tileVis175Count", vis175.length);
+  setIf("tileVis300Count", vis300.length);
   setIf("tileTsCount", ts.length);
   setIf("tileWindCount", wind.length);
   setIf("tileSnowCount", snow.length);
@@ -1151,7 +1161,7 @@ function updateTiles(currentList){
 
   renderIata("tileEngIata", eng);
   renderIata("tileCritIata", crit);
-  renderIata("tileVis175Iata", vis175);
+  renderIata("tileVis300Iata", vis300);
   renderIata("tileTsIata", ts);
   renderIata("tileWindIata", wind);
   renderIata("tileSnowIata", snow);
@@ -1425,7 +1435,7 @@ function bind(){
     const f = btn.getAttribute("data-filter");
     if (!f) return;
     // toggle: clicking same filter again resets to all
-    const map = {eng:"eng", crit:"crit", vis175:"vis175", ts:"ts", wind:"gust25", snow:"snow", toProhib:"toProhib", lvto:"lvto", xwind:"xwind", va:"va"};
+    const map = {eng:"eng", crit:"crit", vis300:"vis300", ts:"ts", wind:"gust25", snow:"snow", toProhib:"toProhib", lvto:"lvto", xwind:"xwind", va:"va"};
     const target = map[f] || "all";
     view.cond = (view.cond === target ? "all" : target);
     $("cond").value = view.cond;

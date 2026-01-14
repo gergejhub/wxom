@@ -17,6 +17,14 @@
 <span class="viewpill__k">VIEW</span>
 <span class="viewpill__v" id="viewBtnLabel">AUTO</span>
 </button>
+
+<a class="viewpill viewpill--link" href="stat/" title="Open Stats" >
+  <span class="viewpill__k">STATS</span>
+</a>
+<a class="viewpill viewpill--link" href="settings.html" title="Open Settings" >
+  <span class="viewpill__k">SETTINGS</span>
+</a>
+
 </div>
 <div class="brand__sub">METAR + TAF monitor (aviationweather.gov via GitHub Actions) · OM-A/OM-B policy layer (advisory)</div>
 </div>
@@ -32,10 +40,10 @@
 <div class="tile__v" id="tileCritCount">0</div>
 <div class="tile__s">score ≥ 70</div><div class="tile__iata" id="tileCritIata"></div>
 </button>
-<button class="tile" data-filter="vis175" type="button">
-<div class="tile__k">VIS ≤ 175</div>
-<div class="tile__v" id="tileVis175Count">0</div>
-<div class="tile__s">worst (M/TAF)</div><div class="tile__iata" id="tileVis175Iata"></div>
+<button class="tile" data-filter="vis300" type="button">
+<div class="tile__k">VIS/RVR < 300</div>
+<div class="tile__v" id="tileVis300Count">0</div>
+<div class="tile__s">worst (M/TAF)</div><div class="tile__iata" id="tileVis300Iata"></div>
 </button>
 <button class="tile" data-filter="ts" type="button">
 <div class="tile__k">TS / CB</div>
@@ -126,9 +134,6 @@
 </label>
 </div>
 <div class="toolbar__right">
-<button class="btn" id="copyBrief">Copy brief</button>
-<a class="btn btn--ghost" href="stat/">Stats</a>
-<a class="btn btn--ghost" href="settings.html">Settings</a>
 </div>
 </div>
 <div class="status">
@@ -137,6 +142,8 @@
 </div>
 </header>
 <main class="main">
+<div class="contentSplit">
+<div class="contentSplit__main">
 <div class="alert" id="alert"></div>
 <table class="tbl">
 <thead>
@@ -153,7 +160,10 @@
 </tr>
 </thead>
 <tbody id="rows"></tbody>
-</table><section class="explain" id="explain">
+</table>
+</div>
+<aside class="contentSplit__aside">
+<section class="explain" id="explain">
 <h2>How alerts are triggered and what limits apply</h2>
 <p class="explain__lead">
 This dashboard is an operational awareness tool. It highlights conditions derived from METAR/TAF and applies selected Wizz Air OM-A/OM-B rules as <strong>advisory flags</strong>.
@@ -209,8 +219,29 @@ Always validate against the latest operational documentation (OM-B, airfield spe
 <li><strong>Note:</strong> Published minima corrections remain a pilot responsibility.</li>
 </ul>
 </div>
+
+<div class="explain__card">
+<h3>Ceiling (CIG) interpretation</h3>
+<ul>
+<li><strong>What it is:</strong> lowest <strong>BKN</strong>, <strong>OVC</strong> or <strong>VV</strong> base in feet AGL parsed from METAR/TAF.</li>
+<li><strong>Displayed value:</strong> the <strong>worst (lowest)</strong> ceiling found across METAR and TAF.</li>
+<li><strong>Operational use:</strong> supports quick screening against approach / circling constraints (final minima still depend on procedure, NOTAM and aircraft capability).</li>
+</ul>
+</div>
+
+<div class="explain__card">
+<h3>Score and alert level</h3>
+<ul>
+<li><strong>Score (0–100):</strong> a composite severity index derived from METAR and TAF.</li>
+<li><strong>Inputs:</strong> low visibility, low ceiling, weather codes (TS, FZFG/FG, SN, RA, BR) and gusts.</li>
+<li><strong>Combination:</strong> station score = <strong>max(METAR score, 0.85 × TAF score)</strong>; ENG ICE OPS forces 100.</li>
+<li><strong>Alert bands:</strong> OK &lt; 20 · MED ≥ 20 · HIGH ≥ 45 · CRIT ≥ 70.</li>
+</ul>
+</div>
 </div>
 </section>
+</aside>
+</div>
 </main>
 <!-- Drawer -->
 <div class="scrim hidden" id="scrim"></div>
