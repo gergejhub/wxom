@@ -4,6 +4,9 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Update METAR/TAF Dataset"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -16,6 +19,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -58,18 +62,16 @@ jobs:
           echo "---- DIST TREE (top 200 files) ----"
           find dist -type f | head -n 200
 
-          # Sanity checks to prevent silent 404s
+          # Sanity checks
           test -f dist/index.html
           if [ -f "alerts.html" ]; then test -f dist/alerts.html; fi
           if [ -f "settings.html" ]; then test -f dist/settings.html; fi
 
-          # If stat folder exists, enforce required files
           if [ -d "dist/stat" ]; then
             test -f dist/stat/index.html
             test -f dist/stat/app.js
           fi
 
-          # If assets folder exists, enforce required files
           if [ -d "dist/assets" ]; then
             test -f dist/assets/app.js
           fi
