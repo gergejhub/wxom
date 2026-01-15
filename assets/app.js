@@ -7,6 +7,204 @@
 
 const $ = (id) => document.getElementById(id);
 
+// Tile tooltips (policy/trigger quick help) ---------------------------------
+// Shows a small "bubble" when hovering a tile, summarizing what triggers it
+// and which OM section it maps to. Content mirrors the GUIDE page (alerts.html)
+// but stays compact for at-a-glance usage.
+
+const TILE_TIPS = {
+  eng: {
+    title: "Engine Anti-Ice Ops (advisory)",
+    om: "Ops advisory",
+    lines: [
+      "Highlights stations where engine anti-ice operations are likely required.",
+      "Cue is derived from METAR/TAF freezing/frozen precipitation / icing risk signals.",
+    ],
+    triggers: ["FZFG / FZRA / FZDZ", "SN / SG / GS", "OAT ≤ 0°C cues (advisory)"]
+  },
+  crit: {
+    title: "Critical (severity score ≥ 70)",
+    om: "Scoring model (advisory)",
+    lines: [
+      "Composite score derived from operationally relevant hazards (VIS/RVR, CIG, TS/CB, wind gusts, wx codes, policy flags).",
+      "Use to triage; always verify raw METAR/TAF and local procedures."
+    ],
+    triggers: ["Score ≥ 70"]
+  },
+  vis300: {
+    title: "Low VIS / RVR (worst < 300 m)",
+    om: "OM-A 8.1.4 (minima cues)",
+    lines: [
+      "Uses the worst (METAR or TAF) visibility / RVR when present.",
+      "Designed as a rapid operational impact cue."
+    ],
+    triggers: ["Worst VIS < 300 m", "or worst RVR < 300 m"]
+  },
+  ts: {
+    title: "Thunderstorm / Convective (TS / CB)",
+    om: "OM-A 8.3.8.1",
+    lines: [
+      "Thunderstorm activity is a flight safety risk.",
+      "This cue flags convective signals in METAR/TAF."
+    ],
+    triggers: ["TS", "CB", "TCU (risk cue)"]
+  },
+  wind: {
+    title: "Wind (gust ≥ 25 kt)",
+    om: "Ops cue (limits per OM-B/airport)",
+    lines: [
+      "Flags airports with gusts at/above the configured threshold.",
+      "Crosswind limitation assessment is available via XWIND policy tile (runway-aware)."
+    ],
+    triggers: ["Gust ≥ 25 kt"]
+  },
+  snow: {
+    title: "Snow present / forecast",
+    om: "OM-A 8.3.8.7 (heavy precip take-off prohibited)",
+    lines: [
+      "Highlights snow in METAR/TAF. Use alongside runway condition / SNOWTAM when available.",
+      "Heavy snow (+SN) is also a TO/LND PROHIB policy flag."
+    ],
+    triggers: ["SN / +SN", "SG / GS (when present)"]
+  },
+  toProhib: {
+    title: "Take-off / Landing prohibited (policy flags)",
+    om: "OM-A 8.3.8",
+    lines: [
+      "Company policy: take-off is prohibited in specific heavy precipitation conditions.",
+      "Also flags TS presence as a risk cue for take-off/landing planning."
+    ],
+    triggers: ["+SN, +GS, +SG, +PL", "FZRA / +FZRA", "GR / +GR", "TS (risk cue)"]
+  },
+  lvto: {
+    title: "LVTO / Minima cues", 
+    om: "OM-A 8.1.4",
+    lines: [
+      "Low Visibility Take-off (LVTO) cue based on reported VIS/RVR.",
+      "Highlights additional procedural cues for LVP and absolute minimum RVR."
+    ],
+    triggers: ["LVTO: RVR/VIS < 550 m", "LVP required: RVR < 400 m", "Absolute minimum: RVR < 125 m"]
+  },
+  xwind: {
+    title: "Crosswind exceedance (runway-aware)",
+    om: "OM-B 1.3.1",
+    lines: [
+      "Evaluates best-available runway alignment (from runways.json) against reported wind.",
+      "Assumes dry runway unless runway condition data is available (advisory)."
+    ],
+    triggers: ["Best RWY crosswind exceeds company limit"]
+  },
+  va: {
+    title: "Volcanic ash detected", 
+    om: "OM-A 8.3.8.6",
+    lines: [
+      "Flags volcanic ash / ash cloud cues in METAR/TAF.",
+      "Company policy: avoid planning/flight into medium/high contamination zones."
+    ],
+    triggers: ["VA", "VOLCANIC ASH"]
+  }
+};
+
+function initTileTooltips(){
+  // Create a single tooltip element (reused)
+  let tip = document.getElementById('tileTip');
+  if (!tip){
+    tip = document.createElement('div');
+    tip.id = 'tileTip';
+    tip.className = 'tiletip';
+    tip.setAttribute('role','tooltip');
+    tip.hidden = true;
+    document.body.appendChild(tip);
+  }
+
+  const tiles = Array.from(document.querySelectorAll('.tiles .tile[data-filter]'));
+  if (!tiles.length) return;
+
+  let active = null;
+  let raf = 0;
+
+  const hide = ()=>{
+    active = null;
+    tip.hidden = true;
+    tip.innerHTML = '';
+  };
+
+  const clamp = (v, lo, hi)=>Math.max(lo, Math.min(hi, v));
+
+  const position = (anchor)=>{
+    if (!anchor || tip.hidden) return;
+    const r = anchor.getBoundingClientRect();
+    const pad = 10;
+    const vw = window.innerWidth || 1200;
+    const vh = window.innerHeight || 800;
+
+    // Ensure tip has measurable size
+    const tr = tip.getBoundingClientRect();
+    let top = r.bottom + 10;
+    let left = r.left;
+
+    // Prefer below; if it would overflow, place above
+    if (top + tr.height + pad > vh){
+      top = r.top - tr.height - 10;
+      tip.classList.add('tiletip--above');
+    } else {
+      tip.classList.remove('tiletip--above');
+    }
+
+    left = clamp(left, pad, vw - tr.width - pad);
+    top = clamp(top, pad, vh - tr.height - pad);
+
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  };
+
+  const renderTip = (key)=>{
+    const t = TILE_TIPS[key];
+    if (!t) return '';
+    const trig = (t.triggers || []).map(x=>`<span class="tiletip__chip">${escapeHtml(x)}</span>`).join('');
+    const lines = (t.lines || []).map(x=>`<div class="tiletip__p">${escapeHtml(x)}</div>`).join('');
+    return `
+      <div class="tiletip__hdr">
+        <div class="tiletip__title">${escapeHtml(t.title || key)}</div>
+        <div class="tiletip__om">${escapeHtml(t.om || '')}</div>
+      </div>
+      <div class="tiletip__body">
+        ${lines}
+        ${trig ? `<div class="tiletip__chips">${trig}</div>` : ''}
+      </div>
+    `;
+  };
+
+  const showFor = (btn)=>{
+    const f = btn.getAttribute('data-filter');
+    if (!f) return;
+    const html = renderTip(f);
+    if (!html) return;
+    active = btn;
+    tip.innerHTML = html;
+    tip.hidden = false;
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(()=>position(btn));
+  };
+
+  tiles.forEach(btn=>{
+    btn.addEventListener('mouseenter', ()=>showFor(btn));
+    btn.addEventListener('mouseleave', hide);
+    btn.addEventListener('focusin', ()=>showFor(btn));
+    btn.addEventListener('focusout', hide);
+  });
+
+  window.addEventListener('scroll', ()=>{ if (active) position(active); }, { passive:true });
+  window.addEventListener('resize', ()=>{ if (active) position(active); });
+  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hide(); });
+  // Hide if user clicks elsewhere
+  document.addEventListener('pointerdown', (e)=>{
+    if (!active) return;
+    if (e.target && (e.target.closest('.tiletip') || e.target.closest('.tile'))) return;
+    hide();
+  });
+}
+
 // Base airport priority list ------------------------------------------------
 // Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
 // across tiles and the table.
@@ -1452,6 +1650,7 @@ function bind(){
   $("alert").addEventListener("change", (e)=>{ view.alert = e.target.value; render(); });
   $("sortPri").addEventListener("change", (e)=>{ view.sortPri = e.target.checked; render(); });
   initViewModeUI();
+  initTileTooltips();
 
 
   // tile filters
