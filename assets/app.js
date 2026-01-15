@@ -7,6 +7,171 @@
 
 const $ = (id) => document.getElementById(id);
 
+// Base airport priority list ------------------------------------------------
+// Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
+// across tiles and the table.
+const BASE_LIST_URL = "base.txt";
+let baseAirports = new Set();
+let baseAirportsLoaded = false;
+async function fetchBaseAirportsOnce(){
+  if (baseAirportsLoaded) return baseAirports;
+  baseAirportsLoaded = true;
+  try{
+    const res = await fetch(BASE_LIST_URL + "?cb=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const txt = await res.text();
+    const set = new Set();
+    txt.split(/\r?\n/)
+      .map(x => x.trim())
+      .filter(Boolean)
+      .forEach(x => set.add(x.toUpperCase()));
+    baseAirports = set;
+  } catch (e) {
+    // Non-fatal: if base.txt is missing, the app should still work.
+    baseAirports = new Set();
+  }
+  return baseAirports;
+}
+function isBaseAirport(code){
+  if (!code) return false;
+  return baseAirports.has(String(code).toUpperCase());
+}
+
+// Base airport priority list ------------------------------------------------
+// Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
+// across tiles and the table.
+const BASE_LIST_URL = "base.txt";
+let baseAirports = new Set();
+let baseAirportsLoaded = false;
+async function fetchBaseAirportsOnce(){
+  if (baseAirportsLoaded) return baseAirports;
+  baseAirportsLoaded = true;
+  try{
+    const res = await fetch(BASE_LIST_URL + "?cb=" + Date.now(), {cache:"no-store"});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const txt = await res.text();
+    const set = new Set();
+    txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(x=>set.add(x.toUpperCase()));
+    baseAirports = set;
+  }catch(e){
+    // Non-fatal: if base.txt is missing, the app should still work.
+    baseAirports = new Set();
+  }
+  return baseAirports;
+}
+function isBaseAirport(code){
+  if (!code) return false;
+  return baseAirports.has(String(code).toUpperCase());
+}
+
+// Base airport priority list ------------------------------------------------
+// Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
+// across tiles and the table.
+const BASE_LIST_URL = "base.txt";
+let baseAirports = new Set();
+let baseAirportsLoaded = false;
+async function fetchBaseAirportsOnce(){
+  if (baseAirportsLoaded) return baseAirports;
+  baseAirportsLoaded = true;
+  try{
+    const res = await fetch(BASE_LIST_URL + "?cb=" + Date.now(), {cache:"no-store"});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const txt = await res.text();
+    const set = new Set();
+    txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(x=>set.add(x.toUpperCase()));
+    baseAirports = set;
+  }catch(e){
+    // Non-fatal: if base.txt is missing, the app should still work.
+    baseAirports = new Set();
+  }
+  return baseAirports;
+}
+function isBaseAirport(code){
+  if (!code) return false;
+  return baseAirports.has(String(code).toUpperCase());
+}
+
+// Base airport priority list ------------------------------------------------
+// Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
+// across tiles and the table.
+const BASE_LIST_URL = "base.txt";
+let baseAirports = new Set();
+let baseAirportsLoaded = false;
+async function fetchBaseAirportsOnce(){
+  if (baseAirportsLoaded) return baseAirports;
+  baseAirportsLoaded = true;
+  try{
+    const res = await fetch(BASE_LIST_URL + "?cb=" + Date.now(), {cache:"no-store"});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const txt = await res.text();
+    const set = new Set();
+    txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(x=>set.add(x.toUpperCase()));
+    baseAirports = set;
+  }catch(e){
+    // Non-fatal: if base.txt is missing, the app should still work.
+    baseAirports = new Set();
+  }
+  return baseAirports;
+}
+function isBaseAirport(code){
+  if (!code) return false;
+  return baseAirports.has(String(code).toUpperCase());
+}
+
+// Base airport priority list ------------------------------------------------
+// Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
+// across tiles and the table.
+const BASE_LIST_URL = "base.txt";
+let baseAirports = new Set();
+let baseAirportsLoaded = false;
+async function fetchBaseAirportsOnce(){
+  if (baseAirportsLoaded) return baseAirports;
+  baseAirportsLoaded = true;
+  try{
+    const res = await fetch(BASE_LIST_URL + "?cb=" + Date.now(), {cache:"no-store"});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const txt = await res.text();
+    const set = new Set();
+    txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(x=>set.add(x.toUpperCase()));
+    baseAirports = set;
+  }catch(e){
+    // Non-fatal: if base.txt is missing, the app should still work.
+    baseAirports = new Set();
+  }
+  return baseAirports;
+}
+function isBaseAirport(code){
+  if (!code) return false;
+  return baseAirports.has(String(code).toUpperCase());
+}
+
+// Base airport priority list ------------------------------------------------
+// Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
+// across tiles and the table.
+const BASE_LIST_URL = "base.txt";
+let baseAirports = new Set();
+let baseAirportsLoaded = false;
+async function fetchBaseAirportsOnce(){
+  if (baseAirportsLoaded) return baseAirports;
+  baseAirportsLoaded = true;
+  try{
+    const res = await fetch(BASE_LIST_URL + "?cb=" + Date.now(), {cache:"no-store"});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const txt = await res.text();
+    const set = new Set();
+    txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(x=>set.add(x.toUpperCase()));
+    baseAirports = set;
+  }catch(e){
+    // Non-fatal: if base.txt is missing, the app should still work.
+    baseAirports = new Set();
+  }
+  return baseAirports;
+}
+function isBaseAirport(code){
+  if (!code) return false;
+  return baseAirports.has(String(code).toUpperCase());
+}
+
 
 // View mode (Auto / TV) ----------------------------------------------------
 const VIEW_MODE_KEY = "wizz_viewMode"; // "auto" | "tv"
@@ -971,7 +1136,7 @@ function rowHtml(st){
       <div class="airport">
         <div class="airport__codes">
           <div class="airport__icao">${escapeHtml(st.icao)}</div>
-          <div class="airport__iata">${escapeHtml((st.iata||"—").toUpperCase())}</div>
+          <div class="airport__iata ${isBaseAirport(st.iata)?"base":""}">${escapeHtml((st.iata||"—").toUpperCase())}</div>
         </div>
         <div class="airport__name">${escapeHtml(st.name||"")}</div>
       </div>
@@ -1145,7 +1310,7 @@ function updateTiles(currentList){
       if (!prev || rr < prev.rr) seen.set(code, {code, rr});
     }
     return Array.from(seen.values())
-      .sort((a,b)=> (a.rr-b.rr) || a.code.localeCompare(b.code))
+      .sort((a,b)=> (Number(isBaseAirport(b.code)) - Number(isBaseAirport(a.code))) || (a.rr-b.rr) || a.code.localeCompare(b.code))
       .map(x=>x.code);
   }
 
@@ -1157,7 +1322,7 @@ function updateTiles(currentList){
     const shown = codes.slice(0, max);
     const rest = codes.length - shown.length;
     el.innerHTML =
-      shown.map(x=>`<span>${escapeHtml(x)}</span>`).join("") +
+      shown.map(x=>`<span class="${isBaseAirport(x)?"iata base":"iata"}">${escapeHtml(x)}</span>`).join("") +
       (rest > 0 ? `<span>+${rest}</span>` : "");
   }
 
@@ -1384,6 +1549,7 @@ async function updateDatasetTile(){
 async function refreshData(force=false){
   const tbody = $("rows");
   try{
+    await fetchBaseAirportsOnce();
     await fetchRoles();
     await fetchRunways();
     const res = await fetch("data/latest.json?cb=" + Date.now(), {cache:"no-store"});
