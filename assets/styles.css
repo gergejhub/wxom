@@ -24,10 +24,16 @@ html{color-scheme:dark;}
 
   --top-h: 0px;
 }
-ourier New", monospace;
-}
 
 *{box-sizing:border-box}
+
+/*
+  Utility: initial state helpers
+  Several UI elements (drawer + scrim) rely on the `hidden` class.
+  If it's missing, the scrim becomes visible on first paint and blocks the page
+  until the first click closes it.
+*/
+.hidden{display:none !important;}
 body{
   margin:0;
   font-family:var(--sans);

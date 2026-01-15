@@ -163,8 +163,15 @@
 
 </main>
 <!-- Drawer -->
-<div class="scrim hidden" id="scrim"></div>
-<aside aria-modal="true" class="drawer hidden" id="drawer" role="dialog">
+<!--
+  IMPORTANT:
+  The scrim visibility is controlled via the element's native `hidden` attribute
+  in app.js (scrim.hidden = true/false). Do not rely on a CSS-only `.hidden` class
+  here, otherwise the scrim can render on first paint (blocking the page) or never
+  render when the drawer opens.
+-->
+<div class="scrim" id="scrim" hidden></div>
+<aside aria-modal="true" aria-hidden="true" class="drawer" id="drawer" role="dialog">
 <div class="drawer__top">
 <div class="drawer__title" id="dAirport">—</div>
 <button class="drawer__close" id="drawerClose" type="button">×</button>
