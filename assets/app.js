@@ -1288,24 +1288,39 @@ case "gust25":
         if (!(st.cigAll !== null && st.cigAll < 500)) return false;
         break;
       
-case "oma_to_prohib":
-  if (!(st.om && st.om.takeoffProhibitedWx)) return false;
-  break;
-case "oma_ts_prohib":
-  if (!(st.om && st.om.tsCb)) return false;
-  break;
-case "oma_lvto":
-  if (!(st.om && st.om.lvto)) return false;
-  break;
-case "oma_below_cat1":
-  if (!(st.om && st.om.belowCat1)) return false;
-  break;
-case "oma_va":
-  if (!(st.om && st.om.volcanicAsh)) return false;
-  break;
-case "oma_cold":
-  if (!(st.om && st.om.coldTemp)) return false;
-  break;
+      // OM-A/OM-B advisory (derived from METAR/TAF only; no manual inputs)
+      // Note: These keys intentionally match both the dropdown values and the tile data-filter values.
+      case "toProhib":
+      case "oma_to_prohib":
+        if (!(st.om && st.om.toProhib)) return false;
+        break;
+
+      case "lvto":
+      case "oma_lvto":
+        if (!(st.om && st.om.lvto)) return false;
+        break;
+
+      case "lvp":
+        if (!(st.om && st.om.lvp)) return false;
+        break;
+
+      case "rvr125":
+        if (!(st.om && st.om.rvr125)) return false;
+        break;
+
+      case "xwind":
+        if (!(st.om && st.om.xwindExceed)) return false;
+        break;
+
+      case "va":
+        if (!(st.om && st.om.va)) return false;
+        break;
+
+      case "coldcorr":
+      case "oma_cold":
+        if (!(st.om && st.om.coldcorr)) return false;
+        break;
+
 case "dataset":
   // dataset tile is informational; do not filter
   break;
@@ -1645,8 +1660,21 @@ async function load(){
 
 
 function bind(){
+  const TILE_TO_COND = {eng:"eng", crit:"crit", vis300:"vis300", ts:"ts", wind:"gust25", snow:"snow", toProhib:"toProhib", lvto:"lvto", xwind:"xwind", va:"va"};
+
+  const syncActiveTile = ()=>{
+    const tiles = Array.from(document.querySelectorAll('#tiles .tile[data-filter]'));
+    tiles.forEach(btn=>{
+      const f = btn.getAttribute('data-filter');
+      const target = TILE_TO_COND[f] || null;
+      const on = (target && view.cond === target);
+      btn.classList.toggle('tile--active', !!on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  };
+
   $("q").addEventListener("input", (e)=>{ view.q = e.target.value; render(); });
-  $("cond").addEventListener("change", (e)=>{ view.cond = e.target.value; render(); });
+  $("cond").addEventListener("change", (e)=>{ view.cond = e.target.value; syncActiveTile(); render(); });
   $("alert").addEventListener("change", (e)=>{ view.alert = e.target.value; render(); });
   $("sortPri").addEventListener("change", (e)=>{ view.sortPri = e.target.checked; render(); });
   initViewModeUI();
@@ -1660,17 +1688,22 @@ function bind(){
     if (btn.id === "tileReset"){
       view.q=""; view.cond="all"; view.alert="all"; view.sortPri=true;
       $("q").value=""; $("cond").value="all"; $("alert").value="all"; $("sortPri").checked=true;
+      syncActiveTile();
       render();
       return;
     }
     const f = btn.getAttribute("data-filter");
     if (!f) return;
     // toggle: clicking same filter again resets to all
-    const map = {eng:"eng", crit:"crit", vis300:"vis300", ts:"ts", wind:"gust25", snow:"snow", toProhib:"toProhib", lvto:"lvto", xwind:"xwind", va:"va"};
-    const target = map[f] || "all";
+    const target = TILE_TO_COND[f] || "all";
     view.cond = (view.cond === target ? "all" : target);
     $("cond").value = view.cond;
+    syncActiveTile();
     render();
+
+    // UX: ensure the table is in view after selecting a tile filter
+    const table = document.getElementById('table');
+    if (table){ table.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 
   $("drawerClose").addEventListener("click", closeDrawer);
