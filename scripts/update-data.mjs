@@ -11,6 +11,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 const ROOT = process.cwd();
 const AIRPORTS_TXT = path.join(ROOT, 'airports.txt');
@@ -24,6 +25,13 @@ const OURAIRPORTS_RUNWAYS_CSV_URL = 'https://ourairports.com/runways.csv';
 
 const AWC_METAR = 'https://aviationweather.gov/api/data/metar';
 const AWC_TAF = 'https://aviationweather.gov/api/data/taf';
+
+// Cache files are recommended by AWC for frequent access.
+// METAR cache updates once a minute; TAF cache updates every 10 minutes (XML only).
+const AWC_METAR_CACHE_CSV_GZ = 'https://aviationweather.gov/data/cache/metars.cache.csv.gz';
+
+// We fetch METAR every run; TAF is throttled to every 10 minutes (per AWC cache cadence).
+const TAF_MIN_INTERVAL_MS = 10 * 60 * 1000;
 
 // Core hazards to highlight (extend as desired)
 const HAZARDS = [
@@ -285,7 +293,8 @@ function highlightRaw(text, visTokensToHighlight = new Set(), visThreshold_m = 8
   return html;
 }
 
-async function fetchText(url){
+
+async function fetchBuffer(url){
   const res = await fetch(url, {
     headers: {
       // AWC guidance: use a custom UA to prevent automated filtering issues
@@ -296,29 +305,58 @@ async function fetchText(url){
     const body = await res.text().catch(()=> '');
     throw new Error(`Fetch failed ${res.status} ${res.statusText}: ${body.slice(0,200)}`);
   }
-  return await res.text();
+  const ab = await res.arrayBuffer();
+  return Buffer.from(ab);
+}
+
+async function fetchGzipText(url){
+  const buf = await fetchBuffer(url);
+  const out = zlib.gunzipSync(buf);
+  return out.toString('utf8');
+}
+
+async function fetchText(url){
+  const buf = await fetchBuffer(url);
+  return buf.toString('utf8');
 }
 
 async function fetchMetars(icaos){
+  const want = new Set(icaos.map(s => String(s).toUpperCase()));
   const map = new Map();
-  for(const c of chunk(icaos, 50)){
-    const ids = encodeURIComponent(c.join(','));
-    const url = `${AWC_METAR}?ids=${ids}&format=raw`;
-    const txt = await fetchText(url);
-    for(const line of txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)){
-      // Example: "METAR EGLC ...." or "SPECI EDDM ..."
-      const parts = line.split(/\s+/);
-      const idx = (parts[0] === 'METAR' || parts[0] === 'SPECI') ? 1 : 0;
-      const icao = parts[idx];
-      if(icao) map.set(icao.toUpperCase(), line);
-    }
+
+  // One request per run, using cache file updated once a minute.
+  const csv = await fetchGzipText(AWC_METAR_CACHE_CSV_GZ);
+  const lines = csv.split(/\r?\n/).filter(Boolean);
+  if(!lines.length) return map;
+
+  const header = parseCsvLine(lines[0]).map(h => (h || '').trim());
+  const idxStation = header.findIndex(h => h === 'station_id' || h === 'stationId' || h === 'icao' || h === 'icao_id');
+  const idxRaw = header.findIndex(h => h === 'raw_text' || h === 'rawText' || h === 'raw');
+
+  if(idxStation < 0 || idxRaw < 0){
+    throw new Error(`METAR cache CSV: unexpected header (station/raw columns not found). Columns: ${header.slice(0,20).join(', ')}`);
   }
+
+  for(let i=1;i<lines.length;i++){
+    const cols = parseCsvLine(lines[i]);
+    const icao = (cols[idxStation] || '').toUpperCase().trim();
+    if(!icao || !want.has(icao)) continue;
+
+    let raw = (cols[idxRaw] || '').trim();
+    if(!raw) continue;
+
+    // Normalize: keep UX consistent with other views.
+    if(!/^((METAR|SPECI)\s+)/.test(raw)) raw = `METAR ${raw}`;
+
+    map.set(icao, raw);
+  }
+
   return map;
 }
 
 async function fetchTafs(icaos){
   const map = new Map();
-  for(const c of chunk(icaos, 50)){
+  for(const c of chunk(icaos, 200)){
     const ids = encodeURIComponent(c.join(','));
     const url = `${AWC_TAF}?ids=${ids}&format=raw`;
     const txt = await fetchText(url);
@@ -474,22 +512,51 @@ async function main(){
     console.log("Runways: failed to refresh runways.json (will keep previous if present):", String(e));
   }
 
+  // Load previous dataset (if present) so we can throttle TAF fetches to every 10 minutes
+  // while still updating METAR as frequently as the workflow runs.
+  let prev = null;
+  try{
+    if(fs.existsSync(OUT_LATEST)){
+      prev = JSON.parse(fs.readFileSync(OUT_LATEST, 'utf8'));
+    }
+  }catch{ prev = null; }
 
   let metars = new Map();
   let tafs = new Map();
 
+  // METAR: fetch every run (using cache updated once per minute)
+  let metarFetchedAt = new Date().toISOString();
   try {
-    console.log(`Fetching METAR for ${icaos.length} stations…`);
+    console.log(`Fetching METAR for ${icaos.length} stations (AWC cache)…`);
     metars = await fetchMetars(icaos);
   } catch (e) {
     errors.push(`METAR fetch failed: ${String(e?.message ?? e)}`);
   }
 
-  try {
-    console.log(`Fetching TAF for ${icaos.length} stations…`);
-    tafs = await fetchTafs(icaos);
-  } catch (e) {
-    errors.push(`TAF fetch failed: ${String(e?.message ?? e)}`);
+  // TAF: fetch at most every 10 minutes; otherwise reuse previous TAFs from latest.json
+  let tafFetchedAt = prev?.tafFetchedAt ?? null;
+  const prevTafAgeMs = tafFetchedAt ? (Date.now() - Date.parse(tafFetchedAt)) : Infinity;
+  const shouldFetchTaf = !(prev && Array.isArray(prev?.stations)) || !(prevTafAgeMs >= 0 && prevTafAgeMs < TAF_MIN_INTERVAL_MS);
+
+  if(shouldFetchTaf){
+    try {
+      console.log(`Fetching TAF for ${icaos.length} stations…`);
+      tafs = await fetchTafs(icaos);
+      tafFetchedAt = new Date().toISOString();
+    } catch (e) {
+      errors.push(`TAF fetch failed: ${String(e?.message ?? e)}`);
+      // fallback to previous if available
+      if(prev && Array.isArray(prev?.stations)){
+        for(const s of prev.stations){
+          if(s?.icao && s?.tafRaw) tafs.set(String(s.icao).toUpperCase(), s.tafRaw);
+        }
+      }
+    }
+  } else {
+    console.log(`Skipping TAF fetch (last fetched ${tafFetchedAt}); reusing previous TAFs.`);
+    for(const s of (prev?.stations ?? [])){
+      if(s?.icao && s?.tafRaw) tafs.set(String(s.icao).toUpperCase(), s.tafRaw);
+    }
   }
 
   const stations = icaos.map(icao => {
@@ -543,7 +610,7 @@ async function main(){
     missingTaf: stations.filter(s => !s.tafRaw).length
   };
 
-  const out = { generatedAt, stations, stats, errors };
+  const out = { generatedAt, metarFetchedAt, tafFetchedAt, stations, stats, errors };
   fs.writeFileSync(OUT_LATEST, JSON.stringify(out, null, 2));
   writeStatus({ generatedAt, stats, errors });
   console.log(`Wrote ${OUT_LATEST} with ${stations.length} stations.`);
