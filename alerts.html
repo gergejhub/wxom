@@ -71,7 +71,10 @@
 
     /* Filtered view when searching */
     .is-hidden{ display:none !important; }
-  </style>
+  
+    .langbtn{ cursor:pointer; }
+    .langbtn.is-active{ box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset, 0 0 0 2px rgba(0,0,0,.35) inset; }
+</style>
 </head>
 <body>
   <header class="top">
@@ -84,6 +87,8 @@
         </a>
         <a class="viewpill viewpill--link" href="stat/" title="Open Stats"><span class="viewpill__k">STATS</span></a>
         <a class="viewpill viewpill--link" href="alerts.html" aria-current="page" title="Alert guide"><span class="viewpill__k">GUIDE</span></a>
+        <button class="viewpill viewpill--link langbtn" type="button" data-lang="en" aria-pressed="true" title="English"><span class="viewpill__k">ENG</span></button>
+        <button class="viewpill viewpill--link langbtn" type="button" data-lang="hu" aria-pressed="false" title="Magyar"><span class="viewpill__k">HUN</span></button>
       </div>
       <div class="brand__sub">How alerts are triggered · OM-A / OM-B policy layer (advisory)</div>
     </div>
@@ -360,5 +365,202 @@
       q.addEventListener('input', apply);
     })();
   </script>
+<script>
+    (function(){
+      const BTN_SEL = '.langbtn';
+      const KEY = 'wxomGuideLang';
+      const buttons = Array.from(document.querySelectorAll(BTN_SEL));
+
+      // mapping: selector -> Hungarian innerHTML
+      const HU = new Map([
+        ['title', 'WxMonitor – Riasztási útmutató'],
+        ['.brand__sub', 'Hogyan triggerelődnek a riasztások · OM-A / OM-B policy réteg (tájékoztató)'],
+        ['.guide-title', 'Riasztási útmutató'],
+        ['.guide-sub', 'Áttekinthető, operatív magyarázat minden dashboard KPI csempéhez: mi triggereli, mely OM bekezdésen alapul, és hogyan értelmezd a táblázat mezőit, például a <b>CIG</b>-et és a <b>Score</b>-t.'],
+
+        // hero quick links
+        ['.guide-actions a[href="#tiles"] .viewpill__k', 'CSEMPÉK'],
+        ['.guide-actions a[href="#columns"] .viewpill__k', 'OSZLOPOK'],
+        ['.guide-actions a[href="#notes"] .viewpill__k', 'MEGJEGYZÉS'],
+
+        // tip + search
+        ['.backrow .pill b', 'Tipp'],
+        ['.backrow .pill .muted', 'Használd a keresőt, hogy gyorsan megtalálj egy csempét vagy fogalmat.'],
+        ['#guideQ@placeholder', 'Keresés az útmutatóban (pl. LVTO, CIG, Score, TS, RVR 125)'],
+
+        // toc
+        ['#toc a[href="#concepts"]', '<b>Alapfogalmak</b><span class="muted">CIG, Score, VIS/RVR</span>'],
+        ['#toc a[href="#colors"]', '<b>Színmagyarázat</b><span class="muted">keretek & címkék</span>'],
+        ['#toc a[href="#tiles"]', '<b>Csempék</b><span class="muted">triggerek & OM hivatkozások</span>'],
+        ['#toc a[href="#columns"]', '<b>Táblázat oszlopai</b><span class="muted">hogyan olvasd</span>'],
+
+        // advisory box
+        ['aside .pill b', 'Tájékoztató'],
+        ['aside .pill .muted', 'Ez a dashboard helyzetértékelő eszköz. Operatív döntéseket a személyzet és az OCC eljárások szerint kell meghozni.'],
+        ['aside .muted', 'Ha teljes részletesség kell, használd a <span class="mono">GUIDE</span> oldalt az aktuális OM verzióval és a helyi eljárásokkal együtt.'],
+
+        // sections titles
+        ['#concepts h2', 'Alapfogalmak'],
+        ['#colors h2', 'Színmagyarázat'],
+        ['#tiles h2', 'Csempék és triggereik'],
+        ['#columns h2', 'Táblázat oszlopai'],
+        ['#notes h2', 'Megjegyzések'],
+
+        // concepts summaries & bodies
+        ['#concepts details:nth-of-type(1) summary .pill .muted', 'Felhőalap'],
+        ['#concepts details:nth-of-type(1) summary > .muted', 'Hogyan számoljuk a CIG-et'],
+        ['#concepts details:nth-of-type(1) .acc__body .muted', 'A CIG <b>láb AGL</b>-ben értendő. A rendszer METAR esetén a legalacsonyabb <span class="mono">BKN/OVC/VV</span> rétegből származtatja, TAF-ban pedig a legrosszabb ésszerű jelzést veszi (BKN/OVC/VV + TEMPO/PROB csoportok).'],
+        ['#concepts details:nth-of-type(1) .acc__body .kgrid .pill:nth-child(1)', '<b>Példa</b><span class="mono">BKN002</span><span class="muted">→ CIG 200 ft</span>'],
+        ['#concepts details:nth-of-type(1) .acc__body .kgrid .pill:nth-child(2)', '<b>Trigger</b><span class="muted">pl. CIG &lt; 500 ft (tájékoztató)</span>'],
+
+        ['#concepts details:nth-of-type(2) summary .pill .muted', '0–100'],
+        ['#concepts details:nth-of-type(2) summary > .muted', 'Mit jelent és hogyan számoljuk'],
+        ['#concepts details:nth-of-type(2) .acc__body .muted', 'A Score egy összetett súlyozott index gyors priorizáláshoz. Olyan operatív szempontból fontos jelzéseket súlyoz, mint a VIS/RVR, CIG, időjárási jelenségek és széllökések. A megjelenített súlyosság így számolódik:'],
+        ['#concepts details:nth-of-type(2) .acc__body .pill:nth-of-type(1)', '<b>Kombinált</b><span class="mono">max(METAR, 0.85 × TAF)</span>'],
+
+        ['#concepts details:nth-of-type(3) summary .pill .muted', 'minimum jelzések'],
+        ['#concepts details:nth-of-type(3) summary > .muted', 'Hogyan értelmezi a rendszer a látástávolságot és az RVR-t'],
+        ['#concepts details:nth-of-type(3) .acc__body .muted', 'A VIS a METAR láthatóságból és a releváns TAF csoportokból származik. Az RVR a METAR futópálya-látástávolság csoportokból kerül kiolvasásra, ha elérhető. A minima jelzésekhez a rendszer LVTO és abszolút minimum küszöböket emel ki (tájékoztató) az OM-A 8.1.4 alapján.'],
+
+        // colors section
+        ['#colors > .muted', 'A dashboard kétféleképp használ színt: <b>súlyossági keretek</b> (OK/MED/HIGH/CRIT) és <b>kategória címkék</b> (milyen jellegű a jelzés). Ezzel a jelmagyarázattal első ránézésre értelmezhető a vizuális keretezés.'],
+        ['#colors .kgrid > div:nth-child(1) .pill:nth-child(1)', '<b>Súlyossági keretek</b><span class="muted">sor / badge keretezés</span>'],
+        ['#colors .kgrid > div:nth-child(1) .muted:last-child', 'A súlyosságot elsősorban a <b>Score</b> és a fő minima jelzések (VIS/RVR, CIG, WX, széllökés) adják. Ez triage segítség, nem döntéshelyettesítő.' ],
+        ['#colors .kgrid > div:nth-child(2) .pill:nth-child(1)', '<b>Kategória címkék</b><span class="muted">mire vonatkozik a jelzés</span>'],
+        ['#colors .kgrid > div:nth-child(2) .muted:nth-of-type(1)', 'A címkék önmagukban nem jelentenek súlyosságot; azt mutatják, hogy a METAR/TAF mely mező(i) felelősek a kiemelt jelzésért.' ],
+        ['#colors .kgrid > div:nth-child(2) .pill:nth-of-type(2)', '<b>OM policy címkék</b><span class="muted">tájékoztató limitek</span>'],
+        ['#colors .kgrid > div:nth-child(2) .muted:nth-of-type(2)', 'Ezek a címkék OM-A/OM-B kivonatokból (tájékoztató) származnak, és abban segítenek, hogy gyorsan észrevedd a külön figyelmet igénylő körülményeket.' ],
+
+        ['#colors .pill b:nth-child(1)', 'BASE repterek'],
+        ['#colors .pill .muted', 'prioritás kiemelés'],
+        ['#colors .pill + .muted', 'A <span class="mono">base.txt</span>-ben felsorolt repterek prioritást élveznek. A csempék IATA listáiban előre kerülnek, és külön kiemeléssel jelennek meg:' ],
+
+        // tiles section detail bodies
+        ['#tiles details:nth-of-type(1) summary > .muted', 'Felszállás/leszállás tiltott (policy jelzések)'],
+        ['#tiles details:nth-of-type(1) .acc__body .muted', 'Akkor triggerel, ha a következők bármelyike megjelenik METAR/TAF-ban:'],
+        ['#tiles details:nth-of-type(1) .acc__body .kgrid .pill:nth-child(1)', '<b>Erős csapadék (TO tiltott)</b><span class="mono">+SN +GS +SG +PL FZRA +FZRA GR +GR</span>'],
+        ['#tiles details:nth-of-type(1) .acc__body .kgrid .pill:nth-child(2)', '<b>Zivatar jelen</b><span class="mono">TS</span><span class="muted">(CB/TCU kockázati jelzés)</span>'],
+
+        ['#tiles details:nth-of-type(2) summary > .muted', 'Alacsony látástávolságú felszállás és minima jelzések'],
+        ['#tiles details:nth-of-type(2) .acc__body .kgrid .pill:nth-child(1)', '<b>LVTO</b><span class="muted">RVR/VIS &lt; 550 m</span>'],
+        ['#tiles details:nth-of-type(2) .acc__body .kgrid .pill:nth-child(2)', '<b>LVP szükséges</b><span class="muted">RVR &lt; 400 m</span>'],
+        ['#tiles details:nth-of-type(2) .acc__body .kgrid .pill:nth-child(3)', '<b>Abszolút minimum RVR</b><span class="muted">RVR &lt; 125 m</span>'],
+        ['#tiles details:nth-of-type(2) .acc__body .kgrid .pill:nth-child(4)', '<b>Approach ban jelzés</b><span class="muted">minima alatt 1000 ft AAL-nél (tájékoztató)</span>'],
+
+        ['#tiles details:nth-of-type(3) summary > .muted', 'Oldalszél limit túllépés (futópálya-tudatos)'],
+        ['#tiles details:nth-of-type(3) .acc__body .muted', 'TÁJÉKOZTATÓ jelzés, ha a számolt oldalszél (legjobban illeszkedő futópálya) meghaladja a company limiteket. A RWY condition nem érhető el automatikusan; ezért a rendszer konzervatív feltételezéseket használ és túllépést jelzésként emeli ki.' ],
+
+        ['#tiles details:nth-of-type(4) summary > .muted', 'Vulkáni hamu jelzés'],
+        ['#tiles details:nth-of-type(4) .acc__body .muted', 'Jelzi, ha vulkáni hamuhoz kapcsolódó kódok/utalások megjelennek jelentésekben/előrejelzésben. Látható hamu kerülése kötelező; közepes/magas kontaminációs zónába tervezés tiltott (policy).' ],
+
+        ['#tiles details:nth-of-type(5) summary > .muted', 'Hideg hőmérsékleti korrekció emlékeztető'],
+        ['#tiles details:nth-of-type(5) .acc__body .muted', 'Emlékeztető, ha OAT ≤ 0°C: a publikált minimum magasságok (MDA/DA, MSA stb.) hidegkorrekciót igényelnek a pilóta részéről (policy; tájékoztató).' ],
+
+        ['#tiles details:nth-of-type(6) summary > .muted', 'Score-alapú súlyosság (≥ 70)'],
+        ['#tiles details:nth-of-type(6) .acc__body .muted', 'A CRITICAL egy gyors triage állapot a kompozit Score alapján. Használd prioritásra, majd validáld a nyers METAR/TAF alapján és az operatív eljárások szerint.' ],
+
+        ['#tiles details:nth-of-type(7) summary > .muted', 'CAT II alatti jelzés'],
+        ['#tiles details:nth-of-type(7) .acc__body .muted', 'TÁJÉKOZTATÓ jelzés, ha a legrosszabb (METAR/TAF) VIS/RVR 300 m alá esik (CAT II minimum RVR). A tényleges minima a konkrét megközelítéstől/futópályától és engedélyektől függ.' ],
+
+        ['#tiles details:nth-of-type(8) summary > .muted', 'Zivatar / konvektív jelzések'],
+        ['#tiles details:nth-of-type(8) .acc__body .muted', 'Jelzi a METAR/TAF-ban a zivatart (<span class="mono">TS</span>) és a konvektív felhő jelzéseket (<span class="mono">CB/TCU</span>). Company policy: TS aktivitást kerülni; overhead/approaching esetén TO/LND nem javasolt.' ],
+
+        ['#tiles details:nth-of-type(9) summary > .muted', 'Széllökés jelzés'],
+        ['#tiles details:nth-of-type(9) .acc__body .muted', 'Operatív jelzés széllökés küszöb alapján (alapértelmezés ≥ 25 kt). Az oldalszél limit túllépést az XWIND kezeli külön (runway-aware).' ],
+
+        ['#tiles details:nth-of-type(10) summary > .muted', 'Hó jelenlét/előrejelzés'],
+        ['#tiles details:nth-of-type(10) .acc__body .muted', 'Jelzi, ha hó jelen van vagy várható. Futópálya állapot és fékhatás (SNOWTAM/RWYCC) további forrásokat igényel, itt automatikusan nem áll rendelkezésre.' ],
+
+        ['#tiles details:nth-of-type(11) summary > .muted', 'Hajtómű jegesedési műveleti jelzés'],
+        ['#tiles details:nth-of-type(11) .acc__body .muted', 'Jelzi a hajtómű jegesedési kockázathoz kapcsolódó kombinációkat (pl. nagyon alacsony látás + FZFG). Mindig validáld az aktuális eljárásokkal és a valós felszíni körülményekkel.' ],
+
+        // columns section
+        ['#columns details:nth-of-type(1) summary > .muted', 'IATA / ICAO'],
+        ['#columns details:nth-of-type(1) .acc__body .muted', 'ICAO és a hozzárendelt IATA (ha elérhető). A BASE repterek kiemeltek és a csempékben priorizáltak.' ],
+        ['#columns details:nth-of-type(2) summary > .muted', 'Miért jelzett'],
+        ['#columns details:nth-of-type(2) .acc__body .muted', 'Badge-ek mutatják a pontos trigger jelzéseket, amelyek METAR/TAF alapján aktiválódtak.' ],
+        ['#columns details:nth-of-type(3) summary > .muted', 'Legrosszabb látás + trend'],
+        ['#columns details:nth-of-type(3) .acc__body .muted', 'A legrosszabb láthatóság (METAR + releváns TAF csoportok) és a trend nyíl mint rövidtávú jelzés.' ],
+        ['#columns details:nth-of-type(4) summary > .muted', 'Operatív szempontból fontos mezők'],
+        ['#columns details:nth-of-type(4) .acc__body .muted', 'RVR (ha riportált), CIG lábban származtatva, ages: METAR (M) és TAF (T) frissessége.' ],
+
+        // notes
+        ['#notes > .muted', 'Ez az útmutató szándékosan nem igényel manuális runway heading vagy runway contamination adatokat. Bizonyos policy elemek (pl. RWYCC, fékhatás, SNOWTAM) további forrásokat igényelnek, és itt automatikusan nem kerülnek feldolgozásra.' ],
+        ['#notes .backrow a .viewpill__k', 'VISSZA'],
+        ['#notes .backrow .muted', 'A dashboard builddel együtt frissítve.' ],
+
+        // header nav label
+        ['header .brand__row a[href="./"] .viewpill__k', 'FŐOLDAL'],
+      ]);
+
+      function setTextOrHtml(sel, huVal){
+        const isAttr = sel.includes('@');
+        if(isAttr){
+          const [q, attr] = sel.split('@');
+          const el = document.querySelector(q);
+          if(!el) return;
+          if(!el.dataset.enAttr){ el.dataset.enAttr = el.getAttribute(attr) || ''; }
+          if(currentLang === 'hu') el.setAttribute(attr, huVal);
+          else el.setAttribute(attr, el.dataset.enAttr);
+          return;
+        }
+        const el = document.querySelector(sel);
+        if(!el) return;
+        if(!el.dataset.enHtml){ el.dataset.enHtml = el.innerHTML; }
+        el.innerHTML = (currentLang === 'hu') ? huVal : el.dataset.enHtml;
+      }
+
+      let currentLang = 'en';
+
+      function applyLang(lang){
+        currentLang = (lang === 'hu') ? 'hu' : 'en';
+        document.documentElement.lang = currentLang;
+        document.title = (currentLang === 'hu') ? HU.get('title') : 'WxMonitor – Alert Guide';
+
+        // apply all mappings
+        for (const [sel, huVal] of HU.entries()){
+          if(sel === 'title') continue;
+          setTextOrHtml(sel, huVal);
+        }
+
+        // toggle buttons
+        buttons.forEach(btn => {
+          const isOn = btn.dataset.lang === currentLang;
+          btn.classList.toggle('is-active', isOn);
+          btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+        });
+
+        // reset guide search filter to avoid hiding translated sections unexpectedly
+        const q = document.getElementById('guideQ');
+        if(q){
+          const term = q.value;
+          // trigger input event so filter re-runs on translated text
+          q.dispatchEvent(new Event('input'));
+          q.value = term;
+        }
+      }
+
+      function init(){
+        // store original for any element we modify early
+        const saved = localStorage.getItem(KEY);
+        applyLang(saved === 'hu' ? 'hu' : 'en');
+
+        buttons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const lang = btn.dataset.lang || 'en';
+            localStorage.setItem(KEY, lang);
+            applyLang(lang);
+          });
+        });
+      }
+
+      if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', init);
+      }else{
+        init();
+      }
+    })();
+  </script>
+
 </body>
 </html>
