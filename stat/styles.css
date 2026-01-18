@@ -1,206 +1,112 @@
+/* v79 – Stats facelift: dashboard-aligned design + airport dropdown (no atlas table) */
 
-/* v46 – integrated sticky Airport column + arrow glyph atlas */
 :root{
-  --card: rgba(255,255,255,.06);
-  --stroke: rgba(255,255,255,.10);
-  --muted: rgba(255,255,255,.68);
-  --muter: rgba(255,255,255,.52);
-  --better: #30f0c8;
-  --worse: #ff4fb4;
-  --mixed: #66a3ff;
+  --stat-card: rgba(255,255,255,.02);
+  --stat-stroke: rgba(255,255,255,.10);
+  --stat-muted: rgba(255,255,255,.68);
+  --stat-muter: rgba(255,255,255,.52);
 }
 
-.statTop{
-  display:flex; align-items:flex-start; justify-content:space-between;
-  padding:18px 18px 6px 18px;
-}
-.statTop__title{ font-size:28px; font-weight:800; letter-spacing:.2px; }
-.statTop__sub{ margin-top:2px; color:var(--muted); max-width:950px; }
-.statTop__right{ display:flex; gap:10px; align-items:center; }
+/* Use the same top bar language as index.html */
+.top.top--stat{ padding-bottom: 10px; }
+.top.top--stat .tiles{ display:none; }
 
-.btn{
-  border:1px solid var(--stroke);
-  background: rgba(255,255,255,.06);
-  color:#fff;
-  padding:10px 14px;
+.statMain{
+  padding: 12px 16px 34px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* Section cards: keep dashboard card look but slightly roomier */
+.statMain > .card{
+  border-radius: 16px;
+  padding: 14px 14px;
+}
+
+.muted{ color: var(--stat-muted); }
+
+/* KPI grid */
+.statGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap:10px;
+}
+.statMetric{
+  border:1px solid rgba(255,255,255,.08);
   border-radius:14px;
-  cursor:pointer;
-  text-decoration:none;
-  font-weight:700;
+  background: rgba(0,0,0,.10);
+  padding:10px 12px;
 }
-.btn--ghost{ background: rgba(255,255,255,.04); }
-.btn--primary{ background: rgba(255,56,170,.14); border-color: rgba(255,56,170,.32); }
+.statMetric__k{ color: var(--stat-muted); font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.7px; }
+.statMetric__v{ font-size:18px; font-weight:900; margin-top:4px; }
+.statMetric__s{ color: var(--stat-muter); margin-top:2px; font-size:12px; }
 
-.statMain{ padding: 10px 18px 34px 18px; display:flex; flex-direction:column; gap:14px; }
-.card{ background: var(--card); border:1px solid var(--stroke); border-radius:18px; padding:14px; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
-.muted{ color: var(--muted); }
+.statRow{ display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+.pill{ display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.14); font-weight:900; }
 
-.statGrid{ display:grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap:10px; }
-.statMetric{ padding:10px 12px; border:1px solid rgba(255,255,255,.08); border-radius:16px; background: rgba(0,0,0,.16); }
-.statMetric__k{ color: var(--muted); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.6px;}
-.statMetric__v{ font-size:18px; font-weight:800; margin-top:4px; }
-.statMetric__s{ color: var(--muter); margin-top:2px; font-size:12px; }
-
-.statRow{ display:flex; gap:10px; align-items:center; margin-top:10px; }
-.pill{ display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); font-weight:700; }
-
-/* Small, always-on charts for non-technical viewers */
-.statCharts{ margin-top:12px; display:grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap:10px; }
-.statChart{ padding:12px 12px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.16); }
-.statChart__k{ font-weight:900; font-size:13px; text-transform:uppercase; letter-spacing:.6px; color: rgba(255,255,255,.90); }
+/* Trends */
+.statCharts{ margin-top:12px; display:grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap:10px; }
+.statChart{ padding:12px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.10); }
+.statChart__k{ font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.7px; color: rgba(255,255,255,.92); }
 .statChart__s{ margin-top:2px; font-size:12px; }
-.statChart canvas{ margin-top:10px; width:100%; height:86px; display:block; border-radius:12px; background: rgba(0,0,0,.14); }
+.statChart canvas{ margin-top:10px; width:100%; height:96px; display:block; border-radius:12px; background: rgba(0,0,0,.10); }
 
-.atlasHead{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
-.atlasHead__title{ font-size:22px; font-weight:900; }
-.atlasHead__sub{ color: var(--muted); margin-top:3px; max-width:900px; }
+/* Airport picker */
+.airportHead{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+.airportHead__title{ font-size:18px; font-weight:900; }
+.airportHead__sub{ margin-top:3px; max-width: 820px; }
 
-.atlasControls{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.airportControls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.pickWrap{ display:flex; flex-direction:column; gap:6px; min-width: 260px; }
+.pickHint{ font-size:12px; }
+
+/* Inputs aligned with dashboard theme */
 .input, .select{
   border:1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.22);
-  color:#fff;
-  padding:9px 12px;
+  background: rgba(0,0,0,.16);
+  color: rgba(255,255,255,.92);
+  padding:10px 12px;
   border-radius:14px;
   outline:none;
-  font-weight:700;
-}
-.input{ min-width: 210px; }
-
-.atlasKpis{ margin-top:12px; display:grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap:10px; }
-.kpi{
-  padding:12px 12px;
-  border-radius:16px;
-  background: rgba(0,0,0,.18);
-  border:1px solid rgba(255,255,255,.08);
-}
-.kpi__k{ color: var(--muted); font-weight:800; font-size:12px; text-transform:uppercase; letter-spacing:.6px;}
-.kpi__v{ font-size:30px; font-weight:900; margin-top:2px; }
-.kpi__s{ color: var(--muter); font-size:12px; margin-top:0; }
-
-.atlasTableWrap{
-  margin-top:12px;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:18px;
-  overflow:auto;
-  max-height: 520px;
-  position:relative;
-  background: rgba(0,0,0,.16);
-}
-.atlasTable{
-  display:grid;
-  grid-auto-rows: 34px;
-  min-width: 980px;
-}
-.cell{
-  display:flex; align-items:center; justify-content:center;
-  border-right:1px solid rgba(255,255,255,.06);
-  border-bottom:1px solid rgba(255,255,255,.06);
   font-weight:900;
-  user-select:none;
 }
-.cell.h{
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: rgba(0,0,0,.45);
-  font-size:11px;
-  letter-spacing:0;
-  color: rgba(255,255,255,.78);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.cell.h.span{ justify-content:center; }
-.cell.h.air{
-  left: 0;
-  z-index: 7;
-  justify-content:flex-start;
-  padding-left:12px;
-}
-.cell.air{
-  position: sticky;
-  left: 0;
-  z-index: 4;
-  background: rgba(0,0,0,.30);
-  justify-content:flex-start;
-  padding-left:12px;
-  gap:10px;
-  cursor:pointer;
-}
-.airMain{ font-weight:900; }
-.airRole{
-  font-size:11px;
-  font-weight:900;
-  padding:3px 8px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.82);
-}
-.airRole.base{ border-color: rgba(255,56,170,.35); background: rgba(255,56,170,.10); }
-.airRole.dest{ border-color: rgba(150,255,180,.25); background: rgba(150,255,180,.08); }
-.airRole.alt{ border-color: rgba(120,200,255,.25); background: rgba(120,200,255,.08); }
+.input::placeholder{ color: rgba(255,255,255,.55); }
 
-.glyph{ line-height:1; }
-.glyph.better{ color: var(--better); }
-.glyph.worse{ color: var(--worse); }
-.glyph.mixed{ color: var(--mixed); }
+/* Selected airport layout */
+.airportPinned{ margin-top:12px; display:grid; grid-template-columns: 1.25fr .75fr; gap:12px; }
+.airportPinned__k{ color: var(--stat-muted); font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.7px; }
+.airportPinned__title{ font-size:22px; font-weight:900; margin-top:4px; }
 
-.sz1{ font-size:14px; }
-.sz2{ font-size:18px; }
-.sz3{ font-size:22px; }
-
-.atlasLegend{ margin-top:10px; display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
-.legendItem{ display:flex; align-items:center; gap:6px; color: rgba(255,255,255,.86); font-weight:800;}
-.legendGlyph{ font-weight:900; }
-.legendGlyph.worse{ color: var(--worse); }
-.legendGlyph.better{ color: var(--better); }
-.legendGlyph.mixed{ color: var(--mixed); }
-
-.atlasPinned{ margin-top:12px; display:grid; grid-template-columns: 1.2fr .8fr; gap:12px; }
-.atlasPinned__k{ color: var(--muted); font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.7px;}
-.atlasPinned__title{ font-size:22px; font-weight:900; margin-top:4px; }
-.trendBox{ margin-top:10px; padding:10px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.18); }
-
+.trendBox{ margin-top:10px; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.10); }
 .trendStack{ display:flex; flex-direction:column; gap:10px; }
-.trendRow{ border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.14); border-radius:14px; padding:8px 10px; }
-.trendRow__hdr{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }
+
+.trendRow{ border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.10); border-radius:14px; padding:10px 10px; }
+.trendRow__hdr{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
 .trendRow__lbl{ display:flex; align-items:center; gap:8px; font-weight:900; font-size:12px; letter-spacing:.02em; color: rgba(255,255,255,.92); }
 .trendSwatch{ width:10px; height:10px; border-radius:3px; box-shadow:0 0 0 1px rgba(255,255,255,.18) inset; }
-.trendRow__val{ font-size:12px; color: rgba(255,255,255,.70); font-weight:800; white-space:nowrap; }
-.trendRow canvas{ width:100%; height:64px; display:block; }
-.trendFallback{ color: var(--muted); font-weight:800; font-size:13px; }
+.trendRow__val{ font-size:12px; color: rgba(255,255,255,.72); font-weight:900; white-space:nowrap; }
+.trendRow canvas{ width:100%; height:72px; display:block; border-radius:12px; background: rgba(0,0,0,.08); }
+.trendFallback{ color: var(--stat-muted); font-weight:900; font-size:13px; padding:8px 4px; }
 
+/* What happened */
 .atlasEvents{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
-.ev{
-  padding:10px 10px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.08);
-  background: rgba(0,0,0,.16);
-}
+.ev{ padding:10px 10px; border-radius:14px; border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.10); }
 .ev__t{ font-weight:900; }
-.ev__s{ color: var(--muted); margin-top:2px; font-size:12px; }
+.ev__s{ color: var(--stat-muted); margin-top:2px; font-size:12px; }
 
-.atlasTooltip{
-  position:fixed;
-  z-index: 50;
-  max-width: 380px;
-  padding:10px 10px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.78);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 14px 50px rgba(0,0,0,.55);
-  color:#fff;
-  font-size:12px;
-  pointer-events:none;
-}
-
+/* Log */
 .logHead{ display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
-.logHead__title{ font-size:18px; font-weight:900; }
+.logHead__title{ font-size:16px; font-weight:900; }
 .logTable{ margin-top:10px; overflow:auto; border-radius:14px; border:1px solid rgba(255,255,255,.08); }
 .logTable table{ width:100%; border-collapse:collapse; }
 .logTable th, .logTable td{ padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; }
 .logTable th{ color: rgba(255,255,255,.80); font-size:12px; text-transform:uppercase; letter-spacing:.7px; }
-.logTable td{ color: rgba(255,255,255,.86); font-weight:700; font-size:12px; }
+.logTable td{ color: rgba(255,255,255,.86); font-weight:800; font-size:12px; }
+
+@media (max-width: 980px){
+  .statGrid{ grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+  .statCharts{ grid-template-columns: 1fr; }
+  .airportPinned{ grid-template-columns: 1fr; }
+  .pickWrap{ min-width: 220px; }
+}

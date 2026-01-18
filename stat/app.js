@@ -41,6 +41,7 @@ const BUCKET_MIN = 10;
 let lastGeneratedAt = null;
 let rolesMap = {};
 let pinnedIcao = null;
+let airportIndex = [];
 
 function nowMs(){ return Date.now(); }
 
@@ -225,6 +226,54 @@ function roleRank(role){
   if(role==="DEST") return 1;
   if(role==="ALT") return 2;
   return 3;
+}
+
+function buildAirportIndex(){
+  const snaps = loadJson(KEY_SNAP, {});
+  const arr = [];
+  for(const [icao0, snap] of Object.entries(snaps||{})){
+    const icao = String(icao0||"").toUpperCase();
+    if(!icao) continue;
+    const iata = String(snap?.iata||"").toUpperCase() || null;
+    const role = roleOf(icao);
+    arr.push({ icao, iata, role });
+  }
+  arr.sort((a,b)=>{
+    const ra = roleRank(a.role), rb = roleRank(b.role);
+    if(ra!==rb) return ra-rb;
+    const ai = a.iata||"ZZZ";
+    const bi = b.iata||"ZZZ";
+    if(ai!==bi) return ai.localeCompare(bi);
+    return a.icao.localeCompare(b.icao);
+  });
+  airportIndex = arr;
+}
+
+function updateAirportPicker(){
+  const dl = $("airportList");
+  const hint = $("airportHint");
+  if(!dl) return;
+  buildAirportIndex();
+  dl.innerHTML = airportIndex.map(a=>{
+    const label = `${a.iata?`${a.iata} / `:""}${a.icao} · ${a.role}`;
+    // datalist uses the value for matching; keep it short & predictable
+    const value = a.iata ? `${a.iata}` : `${a.icao}`;
+    return `<option value="${escapeHtml(value)}" label="${escapeHtml(label)}"></option>`;
+  }).join("");
+  if(hint){
+    hint.textContent = airportIndex.length ? `${airportIndex.length} airports indexed (local)` : "No airport history yet.";
+  }
+}
+
+function resolveAirportToken(token){
+  const t = String(token||"").trim().toUpperCase();
+  if(!t) return null;
+  // direct match by ICAO/IATA
+  const byIcao = airportIndex.find(a=>a.icao===t);
+  if(byIcao) return byIcao.icao;
+  const byIata = airportIndex.find(a=>a.iata===t);
+  if(byIata) return byIata.icao;
+  return null;
 }
 
 async function loadRoles(){
@@ -1392,8 +1441,6 @@ if(drawn===0){
 function renderPinned(){
   const badge = $("atlasBadges");
   const evBox = $("atlasEvents");
-  const mini = $("miniCanvas");
-  const trend = $("trendCanvas");
   const stack = $("trendStack");
   const fallback = $("trendFallback");
 
@@ -1411,21 +1458,12 @@ function renderPinned(){
   badge.textContent = `${name} · ${role}`;
 
   // events (last 12, filtered by current selectors)
-  const metricSel = $("atlasMetric").value;
-  const dirSel = $("atlasDir").value;
-  const windowMin = parseInt($("atlasWindow").value,10);
+  const dirSel = $("atlasDir")?.value || "ALL";
+  const windowMin = parseInt($("atlasWindow")?.value || "240",10);
   const cut = Date.now() - windowMin*60_000;
 
   const evs = getEvents(pinnedIcao).filter(ev=>{
     if(ev.t < cut) return false;
-    const cat = metricCategory(ev.metric);
-    if(metricSel!=="ALL"){
-      if(metricSel==="SN"){
-        if(!(cat==="SN" || (cat==="WX" && (String(ev.metric).toUpperCase().includes("SN"))))) return false;
-      }else{
-        if(cat !== metricSel) return false;
-      }
-    }
     if(dirSel==="WORSE" && ev.dir!=="WORSE") return false;
     if(dirSel==="BETTER" && ev.dir!=="BETTER") return false;
     return true;
@@ -1440,47 +1478,33 @@ function renderPinned(){
     }).join("");
   }
 
-  // series trend
+  // series trend: always render stacked per-metric charts for consistency
   const series = getSeries(pinnedIcao);
-  drawMiniTimeline(mini, series);
-
-  // Single-metric mode keeps the combined trend canvas.
-  // ALL mode renders a vertical stack of per-metric mini charts (clearer than multi-line normalization).
   let ok = false;
-  if(metricSel === "ALL"){
-    trend.style.display = "none";
-    if(stack) stack.style.display = "flex";
-    if(stack) stack.innerHTML = "";
+  if(stack) stack.innerHTML = "";
 
-    const show = METRICS.filter(m=>m.id!=="VIS"); // VIS already shown above as the pinned mini timeline
-    for(const m of show){
-      if(!stack) continue;
-      const row = document.createElement("div");
-      row.className = "trendRow";
-      const last = (()=>{ 
-        for(let i=series.length-1;i>=0;i--){
-          const v = series[i][m.key];
-          if(typeof v === "number") return v;
-        }
-        return null;
-      })();
-      const vtxt = (last===null) ? "–" : (m.unit==="0/1" ? (last ? "YES" : "NO") : `${Math.round(last)} ${m.unit}`);
-      row.innerHTML = `
-        <div class="trendRow__hdr">
-          <div class="trendRow__lbl"><span class="trendSwatch" style="background:${m.color}"></span>${escapeHtml(m.label)}</div>
-          <div class="trendRow__val">${escapeHtml(vtxt)}</div>
-        </div>
-        <canvas width="520" height="64" aria-label="${escapeHtml(m.label)} trend"></canvas>
-      `;
-      const c = row.querySelector("canvas");
-      stack.appendChild(row);
-      ok = drawSmallMetric(c, series, m.id) || ok;
-    }
-
-  }else{
-    if(stack) stack.style.display = "none";
-    trend.style.display = "block";
-    ok = drawTrend(trend, series, metricSel);
+  for(const m of METRICS){
+    if(!stack) break;
+    const row = document.createElement("div");
+    row.className = "trendRow";
+    const last = (()=>{
+      for(let i=series.length-1;i>=0;i--){
+        const v = series[i][m.key];
+        if(typeof v === "number") return v;
+      }
+      return null;
+    })();
+    const vtxt = (last===null) ? "–" : (m.unit==="0/1" ? (last ? "YES" : "NO") : `${Math.round(last)} ${m.unit}`);
+    row.innerHTML = `
+      <div class="trendRow__hdr">
+        <div class="trendRow__lbl"><span class="trendSwatch" style="background:${m.color}"></span>${escapeHtml(m.label)}</div>
+        <div class="trendRow__val">${escapeHtml(vtxt)}</div>
+      </div>
+      <canvas width="520" height="72" aria-label="${escapeHtml(m.label)} trend"></canvas>
+    `;
+    const c = row.querySelector("canvas");
+    stack.appendChild(row);
+    ok = drawSmallMetric(c, series, m.id) || ok;
   }
 
   if(ok){
@@ -1494,7 +1518,8 @@ function renderPinned(){
 function pinAirport(icao, rerender=true){
   pinnedIcao = (icao||"").toUpperCase();
   renderPinned();
-  if(rerender) renderAtlas();
+  // No atlas table in v79; keep rerender for future expansion.
+  if(rerender){ /* noop */ }
 }
 
 async function fetchLatest(){
@@ -1511,7 +1536,7 @@ async function refresh(force=false){
     console.error("Stats fetch failed:", err);
     // still render what we have
     renderLog();
-    renderAtlas();
+    updateAirportPicker();
     renderPinned();
     return;
   }
@@ -1556,47 +1581,34 @@ async function refresh(force=false){
 
   renderTopHealth(data);
   renderLog();
-  renderAtlas();
+  updateAirportPicker();
+  // default pin: prefer BASE, then first airport
+  if(!pinnedIcao && airportIndex.length){
+    const base = airportIndex.find(a=>a.role==="BASE");
+    pinAirport((base?base.icao:airportIndex[0].icao), false);
+  }
   renderPinned();
 }
 
 function bind(){
   $("btnNow").addEventListener("click", ()=>refresh(true));
-  ["atlasWindow","atlasMetric","atlasDir","atlasRole"].forEach(id=>{
-    $(id).addEventListener("change", ()=>{ renderAtlas(); renderPinned(); });
+  ["atlasWindow","atlasDir"].forEach(id=>{
+    const el = $(id);
+    if(el) el.addEventListener("change", ()=>{ renderPinned(); });
   });
 
-  let searchTimer=null;
-  $("atlasSearch").addEventListener("input", ()=>{
-    const q = ($("atlasSearch").value||"").trim().toUpperCase();
-    clearTimeout(searchTimer);
-    searchTimer=setTimeout(()=>{ renderAtlas(); }, 60);
-    if(!q) return;
-    const snapsMap = loadJson(KEY_SNAP, {});
-    // exact ICAO match
-    if(snapsMap[q]){ pinAirport(q,false); renderPinned(); return; }
-    // exact IATA match (first hit)
-    for(const [icao,snap] of Object.entries(snapsMap)){
-      if((snap && (snap.iata||"").toUpperCase())===q){
-        pinAirport(icao,false); renderPinned(); return;
-      }
-    }
-  });
-  $("atlasSearch").addEventListener("keydown",(e)=>{
-    if(e.key==="Enter"){
-      // pin exact match if exists after render
-      const q = ($("atlasSearch").value||"").trim().toUpperCase();
-      if(!q) return;
-      const allEventsMap = loadJson(KEY_EVENTS, {});
-      const snapsMap = loadJson(KEY_SNAP, {});
-      if(snapsMap[q]){ pinAirport(q); return; }
-      // try IATA exact match
-      for(const [icao,snap] of Object.entries(snapsMap)){
-        if((snap && (snap.iata||"").toUpperCase())===q){ pinAirport(icao); return; }
-      }
-      if(allEventsMap[q]){ pinAirport(q); }
-    }
-  });
+  const pick = $("airportPick");
+  if(pick){
+    const apply = ()=>{
+      updateAirportPicker();
+      const tok = (pick.value||"").trim();
+      const resolved = resolveAirportToken(tok);
+      if(resolved){ pinAirport(resolved, false); }
+    };
+    pick.addEventListener("change", apply);
+    pick.addEventListener("keydown", (e)=>{ if(e.key==="Enter") apply(); });
+    pick.addEventListener("blur", apply);
+  }
 }
 
 (async function init(){
