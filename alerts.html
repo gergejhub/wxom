@@ -83,7 +83,6 @@
           <span class="viewpill__k">DASHBOARD</span>
         </a>
         <a class="viewpill viewpill--link" href="stat/" title="Open Stats"><span class="viewpill__k">STATS</span></a>
-        <a class="viewpill viewpill--link" href="settings.html" title="Open Settings"><span class="viewpill__k">SETTINGS</span></a>
         <a class="viewpill viewpill--link" href="alerts.html" aria-current="page" title="Alert guide"><span class="viewpill__k">GUIDE</span></a>
       </div>
       <div class="brand__sub">How alerts are triggered · OM-A / OM-B policy layer (advisory)</div>
@@ -113,6 +112,7 @@
         </div>
         <div class="toc" id="toc">
           <a class="pill" href="#concepts"><b>Core concepts</b><span class="muted">CIG, Score, VIS/RVR</span></a>
+          <a class="pill" href="#colors"><b>Color legend</b><span class="muted">frames & tags</span></a>
           <a class="pill" href="#tiles"><b>Tiles</b><span class="muted">triggers & OM refs</span></a>
           <a class="pill" href="#columns"><b>Table columns</b><span class="muted">how to read</span></a>
         </div>
@@ -157,6 +157,49 @@
           </div>
         </details>
       </div>
+    </section>
+
+    <section class="section guide-card guide-card--pad" id="colors" data-guide-section>
+      <h2>Color legend</h2>
+      <div class="muted">The dashboard uses color in two different ways: <b>severity frames</b> (OK/MED/HIGH/CRIT) and <b>category tags</b> (what kind of cue you are seeing). Use this legend to interpret the visual framing at a glance.</div>
+
+      <div style="margin-top:12px" class="kgrid">
+        <div>
+          <div class="pill"><b>Severity frames</b><span class="muted">row / badge framing</span></div>
+          <div style="margin-top:10px" class="kgrid">
+            <div class="pill pill--ok"><b>OK</b><span class="muted">Low/no operational cue</span></div>
+            <div class="pill pill--med"><b>MED</b><span class="muted">Watch items (early degradation)</span></div>
+            <div class="pill pill--high"><b>HIGH</b><span class="muted">Likely operational impact</span></div>
+            <div class="pill pill--crit"><b>CRIT</b><span class="muted">Highest priority review</span></div>
+          </div>
+          <div style="margin-top:10px" class="muted">Severity is driven primarily by the composite <b>Score</b> and key minima cues (VIS/RVR, CIG, WX, gusts). It is a triage helper, not an operating decision.</div>
+        </div>
+
+        <div>
+          <div class="pill"><b>Category tags</b><span class="muted">what the cue refers to</span></div>
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+            <span class="tag tag--eng">ENG ICE</span>
+            <span class="tag tag--vis">VIS</span>
+            <span class="tag tag--rvr">RVR</span>
+            <span class="tag tag--cig">CIG</span>
+            <span class="tag tag--gust">GUST</span>
+            <span class="tag tag--wx">WX</span>
+          </div>
+          <div style="margin-top:10px" class="muted">Tags do not represent severity by themselves; they explain which field(s) in METAR/TAF are responsible for the highlighted cue.</div>
+
+          <div style="margin-top:14px" class="pill"><b>OM policy tags</b><span class="muted">advisory limits</span></div>
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+            <span class="tag tag--stop">TO/LND PROHIB</span>
+            <span class="tag tag--lvto">LVTO/LVP</span>
+            <span class="tag tag--warn">MINIMA CUE</span>
+          </div>
+          <div style="margin-top:10px" class="muted">These tags are derived from OM-A/OM-B extracts (advisory) and are intended to help you spot conditions that typically demand special attention.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px" class="pill"><b>BASE airports</b><span class="muted">priority highlight</span></div>
+      <div style="margin-top:10px" class="muted">Airports listed in <span class="mono">base.txt</span> are treated as priority. They are shown first in the tile IATA lists and displayed with a distinct highlight:</div>
+      <div style="margin-top:10px" class="tile__iata"><span class="base">BUD</span><span>VIE</span><span>LTN</span></div>
     </section>
 
     <section class="section guide-card guide-card--pad" id="tiles" data-guide-section>
