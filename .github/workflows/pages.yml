@@ -47,9 +47,8 @@ jobs:
 
           # Optional top-level pages
           if [ -f "alerts.html" ]; then cp -f alerts.html dist/; fi
-          if [ -f "settings.html" ]; then cp -f settings.html dist/; fi
           if [ -f "map.html" ]; then cp -f map.html dist/; fi
-          if [ -f "base.txt" ]; then cp -f base.txt dist/; fi
+          if [ -f "settings.html" ]; then cp -f settings.html dist/; fi
 
           # Static folders (copy only if they exist)
           if [ -d "assets" ]; then cp -R assets dist/assets; fi
@@ -60,6 +59,8 @@ jobs:
           # Optional root files
           if [ -f "favicon.ico" ]; then cp -f favicon.ico dist/; fi
           if [ -f "robots.txt" ]; then cp -f robots.txt dist/; fi
+          if [ -f "base.txt" ]; then cp -f base.txt dist/; fi
+          if [ -f "base.txt" ]; then cp -f base.txt dist/; fi
 
           echo "---- DIST TREE (top 200 files) ----"
           find dist -type f | head -n 200
