@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wizz Air METAR/TAF Map</title>
+  <link rel="stylesheet" href="assets/styles.css?v=50.OM1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+    body{height:100vh; overflow:hidden;}
+    .mapWrap{position:relative; height:calc(100vh - var(--top-h));}
+    #map{position:absolute; inset:0;}
+    .mapPanel{position:absolute; top:14px; left:14px; right:14px; max-width:980px; margin:0 auto; z-index:500;}
+    .mapCard{background:rgba(23,20,42,.72); border:1px solid var(--line); border-radius:16px; backdrop-filter: blur(10px); box-shadow:0 18px 50px rgba(0,0,0,.35);}
+    .mapCard__row{display:flex; gap:12px; align-items:center; padding:12px 14px; flex-wrap:wrap;}
+    .mapCard__grow{flex:1 1 260px;}
+    .mapQ{width:100%; min-width:240px; background:rgba(0,0,0,.25); border:1px solid var(--line); color:var(--txt); border-radius:12px; padding:10px 12px; font:500 14px/1 var(--sans); outline:none;}
+    .legend{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .sw{width:12px; height:12px; border-radius:50%; border:2px solid rgba(255,255,255,.18); display:inline-block;}
+    .sw--ok{background:var(--ok);} .sw--med{background:var(--med);} .sw--high{background:var(--high);} .sw--crit{background:var(--crit);} .sw--stop{background:var(--wizz-mag);} 
+    .sw--base{background:transparent; border-color:var(--wizz-pink);}
+    .legend span{color:var(--mut); font-size:12px;}
+    .leaflet-popup-content-wrapper{background:rgba(23,20,42,.92); border:1px solid var(--line); border-radius:16px;}
+    .leaflet-popup-tip{background:rgba(23,20,42,.92);}
+    .pop{min-width:320px; max-width:460px;}
+    .pop h3{margin:0 0 6px; font-size:14px; letter-spacing:.04em; text-transform:uppercase; color:rgba(255,255,255,.86);}
+    .pop .sub{color:var(--mut); font-size:12px; margin-bottom:10px;}
+    .pop pre{margin:0; white-space:pre-wrap; word-break:break-word; font-family:var(--mono); font-size:12px; line-height:1.35; background:rgba(0,0,0,.25); border:1px solid var(--line); border-radius:12px; padding:10px;}
+    .pop .grid{display:grid; grid-template-columns:1fr; gap:10px;}
+    .pop .tags{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 12px;}
+    .pop .tag{padding:5px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.16); font-size:11px; letter-spacing:.02em; color:rgba(255,255,255,.86);}
+    .pop .tag--bad{border-color:rgba(255,75,92,.55); box-shadow:0 0 18px rgba(255,75,92,.10);} 
+    .pop .tag--warn{border-color:rgba(255,207,90,.45);} 
+    .pop .tag--wind{border-color:rgba(46,244,255,.35);} 
+    .pop .tag--lvto{border-color:rgba(122,60,255,.45);} 
+    .pop .tag--eng{border-color:rgba(255,47,166,.55);} 
+    .pop ul{margin:0; padding-left:18px; color:rgba(255,255,255,.86); font-size:12px;}
+    .markerDot{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.22); box-shadow:0 0 18px rgba(0,0,0,.35);}
+    .markerDot--base{box-shadow:0 0 0 3px rgba(255,47,166,.28), 0 0 18px rgba(0,0,0,.35);} 
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="brand__row">
+        <div class="brand__title">Wizz Air METAR/TAF Map</div>
+        <div class="brand__spacer"></div>
+        <a class="viewpill viewpill--link" href="./" title="Back to Dashboard"><span class="viewpill__k">DASHBOARD</span></a>
+        <a class="viewpill viewpill--link" href="stat/" title="Open Stats"><span class="viewpill__k">STATS</span></a>
+        <a class="viewpill viewpill--link" href="alerts.html" title="Guide"><span class="viewpill__k">GUIDE</span></a>
+      </div>
+      <div class="brand__sub">Hover a dot to see raw + decoded METAR/TAF and active alerts (same logic as the desktop dashboard).</div>
+    </div>
+  </header>
+
+  <div class="mapWrap">
+    <div id="map"></div>
+
+    <div class="mapPanel">
+      <div class="mapCard">
+        <div class="mapCard__row">
+          <div class="mapCard__grow">
+            <input id="mapQ" class="mapQ" type="search" placeholder="Search IATA / ICAO / airport name" autocomplete="off" />
+          </div>
+          <div class="legend" aria-label="Legend">
+            <span><i class="sw sw--ok"></i> OK</span>
+            <span><i class="sw sw--med"></i> MED</span>
+            <span><i class="sw sw--high"></i> HIGH</span>
+            <span><i class="sw sw--crit"></i> CRIT</span>
+            <span><i class="sw sw--stop"></i> TO PROHIB</span>
+            <span><i class="sw sw--base"></i> BASE</span>
+          </div>
+          <div id="mapStatus" style="color:var(--mut); font-size:12px;">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="assets/om_policy.js?v=50.OM1"></script>
+  <script src="assets/map.js?v=50.OM1"></script>
+</body>
+</html>

@@ -23,6 +23,9 @@
 <a class="viewpill viewpill--link" href="alerts.html" title="Alert guide">
   <span class="viewpill__k">GUIDE</span>
 </a>
+<a class="viewpill viewpill--link" href="map.html" title="Open Map">
+  <span class="viewpill__k">MAP</span>
+</a>
 </div>
 <div class="brand__sub">METAR + TAF monitor (aviationweather.gov via GitHub Actions) · OM-A/OM-B policy layer (advisory)</div>
 </div>
@@ -98,7 +101,6 @@
 <option value="eng">ENG ICE OPS</option>
 <option value="crit">Critical (≥70)</option>
 <option value="vis175">VIS ≤175</option>
-<option value="vis300">VIS/RVR &lt; 300</option>
 </optgroup>
 <optgroup label="Weather">
 <option value="fog">FG / BR / FZFG</option>
@@ -161,9 +163,8 @@
 
 </main>
 <!-- Drawer -->
-<!-- Drawer backdrop: must start hidden to avoid a "grey layer" on first paint -->
-<div class="scrim" id="scrim" hidden></div>
-<aside aria-modal="true" class="drawer" id="drawer" role="dialog" aria-hidden="true">
+<div class="scrim hidden" id="scrim"></div>
+<aside aria-modal="true" class="drawer hidden" id="drawer" role="dialog">
 <div class="drawer__top">
 <div class="drawer__title" id="dAirport">—</div>
 <button class="drawer__close" id="drawerClose" type="button">×</button>
