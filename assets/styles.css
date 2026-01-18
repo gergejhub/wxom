@@ -24,10 +24,10 @@ html{color-scheme:dark;}
 
   --top-h: 0px;
 }
+ourier New", monospace;
+}
 
 *{box-sizing:border-box}
-
-[hidden], .hidden{display:none !important;}
 body{
   margin:0;
   font-family:var(--sans);
@@ -166,94 +166,6 @@ body{
   justify-content:flex-start;
   gap:8px;
 }
-
-/* Tile tooltips (hover bubbles) ------------------------------------------- */
-.tiletip{
-  position:fixed;
-  z-index:999;
-  width:min(520px, calc(100vw - 24px));
-  padding:12px 12px;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.14);
-  background:
-    radial-gradient(700px 260px at 15% 0%, rgba(255,47,166,.18), transparent 55%),
-    radial-gradient(700px 260px at 85% 0%, rgba(122,60,255,.18), transparent 55%),
-    linear-gradient(180deg, rgba(18,15,32,.92), rgba(10,8,18,.90));
-  box-shadow:
-    0 22px 50px rgba(0,0,0,.55),
-    0 0 0 1px rgba(0,0,0,.24) inset;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  pointer-events:none; /* bubble should not block clicks */
-}
-.tiletip::after{
-  content:"";
-  position:absolute;
-  left:24px;
-  top:-7px;
-  width:14px;
-  height:14px;
-  transform:rotate(45deg);
-  background:rgba(18,15,32,.92);
-  border-left:1px solid rgba(255,255,255,.12);
-  border-top:1px solid rgba(255,255,255,.12);
-}
-.tiletip.tiletip--above::after{
-  top:auto;
-  bottom:-7px;
-  border-left:0;
-  border-top:0;
-  border-right:1px solid rgba(255,255,255,.12);
-  border-bottom:1px solid rgba(255,255,255,.12);
-}
-.tiletip__hdr{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:8px;
-}
-.tiletip__title{
-  font-weight:900;
-  letter-spacing:.2px;
-  font-size:14px;
-  line-height:1.15;
-}
-.tiletip__om{
-  flex:0 0 auto;
-  font-size:11px;
-  color:rgba(255,255,255,.68);
-  padding:2px 8px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.06);
-  margin-top:1px;
-}
-.tiletip__p{
-  font-size:12px;
-  color:rgba(255,255,255,.78);
-  line-height:1.35;
-  margin:0 0 6px 0;
-}
-.tiletip__chips{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:8px;
-}
-.tiletip__chip{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 8px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.06);
-  font-size:11px;
-  font-weight:800;
-  color:rgba(255,255,255,.86);
-}
-
 .tile:hover{
   transform:translateY(-2px);
   filter:saturate(1.08);
@@ -261,15 +173,6 @@ body{
     0 22px 44px rgba(0,0,0,.42),
     0 0 0 1px rgba(255,255,255,.05) inset,
     0 0 34px rgba(255,47,166,.16);
-}
-
-/* Active tile filter state (when a tile is used to filter the table) */
-.tile--active{
-  transform:translateY(-2px);
-  box-shadow:
-    0 24px 52px rgba(0,0,0,.55),
-    0 0 0 2px rgba(255,255,255,.16) inset,
-    0 0 40px rgba(46,244,255,.16);
 }
 .tile__k{
   font-size:18px;
@@ -319,12 +222,23 @@ body{
   border:1px solid rgba(255,255,255,.14);
   background:rgba(255,255,255,.04);
 }
-.tile__iata span.base{
-  border-color:rgba(0,255,180,.55);
-  background:rgba(0,255,180,.08);
-  box-shadow:0 0 12px rgba(0,255,180,.10);
+
+/* Base-airport highlighting (from config/airport_roles.json) */
+.tile__iata .iataTag--base{
+  border-color: rgba(214,60,255,.55);
+  background: rgba(214,60,255,.14);
+  box-shadow: 0 0 0 1px rgba(214,60,255,.08) inset;
+}
+.tile__iata .iataTag--more{
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  opacity: .92;
 }
 
+.airport__iata--base{
+  color: rgba(214,60,255,.95);
+  text-shadow: 0 0 18px rgba(214,60,255,.22);
+}
 .tile--eng{
   border-color:rgba(255,75,92,.45);
   box-shadow:0 0 18px rgba(255,75,92,.12);
@@ -501,11 +415,6 @@ tbody tr:hover{ background:rgba(255,255,255,.02); }
   font-size:12px;
   color:rgba(255,255,255,.82);
 }
-.airport__iata.base{
-  color:rgba(0,255,180,.95);
-  text-shadow:0 0 10px rgba(0,255,180,.12);
-}
-
 .airport__name{
   color:rgba(255,255,255,.72);
   font-size:12px;

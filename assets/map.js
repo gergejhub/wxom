@@ -490,11 +490,24 @@ async function init(){
     attribution: '&copy; OpenStreetMap &copy; CARTO'
   }).addTo(MAP);
 
-  let baseSet = new Set();
+  // Base airports: prefer config/airport_roles.json (single source of truth).
+  // Fallback to base.txt (IATA list) if present.
+  let baseIataSet = new Set();
+  let baseIcaoSet = new Set();
+  try{
+    const roles = await fetchJson('config/airport_roles.json');
+    for (const [icao, role] of Object.entries(roles || {})){
+      if (String(role).toUpperCase() === 'BASE') baseIcaoSet.add(String(icao).toUpperCase());
+    }
+  }catch(e){
+    // ignore
+  }
   try{
     const baseTxt = await fetchText('base.txt');
-    baseSet = new Set(baseTxt.split(/\s+/).map(x=>x.trim().toUpperCase()).filter(x=>x.length===3));
-  }catch(e){}
+    baseIataSet = new Set(baseTxt.split(/\s+/).map(x=>x.trim().toUpperCase()).filter(x=>x.length===3));
+  }catch(e){
+    // ignore
+  }
 
   let runwaysMap = null;
   try{
@@ -512,7 +525,7 @@ async function init(){
     if (st.lat == null || st.lon == null) continue;
     const derived = deriveStation(st, runwaysMap);
     const color = colorForStation(derived);
-    const isBase = (st.iata && baseSet.has(String(st.iata).toUpperCase())) || false;
+    const isBase = (baseIcaoSet.has(String(st.icao||'').toUpperCase())) || (st.iata && baseIataSet.has(String(st.iata).toUpperCase())) || false;
 
     const icon = makeDivIcon(color, isBase);
     const marker = L.marker([st.lat, st.lon], { icon }).addTo(MAP);
@@ -525,7 +538,14 @@ async function init(){
     MARKERS.push({marker, st, derived});
   }
 
+  if (!MARKERS.length){
+    status.textContent = `Loaded ${stations.length} stations · Generated ${data.generatedAt || "—"} · No map points (missing lat/lon in data/latest.json). Run the dataset update once after updating scripts/update-data.mjs.`;
+  }
+
   fitInitial(MAP, MARKERS);
+  if (!MARKERS.length){
+    status.textContent = `No airports plotted (missing coordinates). Ensure update-data.mjs writes lat/lon into data/latest.json.`;
+  }
 
   qEl.addEventListener('input', ()=>applySearch(qEl.value));
 }

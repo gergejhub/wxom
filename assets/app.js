@@ -7,233 +7,6 @@
 
 const $ = (id) => document.getElementById(id);
 
-// Tile tooltips (policy/trigger quick help) ---------------------------------
-// Shows a small "bubble" when hovering a tile, summarizing what triggers it
-// and which OM section it maps to. Content mirrors the GUIDE page (alerts.html)
-// but stays compact for at-a-glance usage.
-
-const TILE_TIPS = {
-  eng: {
-    title: "Engine Anti-Ice Ops (advisory)",
-    om: "Ops advisory",
-    lines: [
-      "Highlights stations where engine anti-ice operations are likely required.",
-      "Cue is derived from METAR/TAF freezing/frozen precipitation / icing risk signals.",
-    ],
-    triggers: ["FZFG / FZRA / FZDZ", "SN / SG / GS", "OAT ≤ 0°C cues (advisory)"]
-  },
-  crit: {
-    title: "Critical (severity score ≥ 70)",
-    om: "Scoring model (advisory)",
-    lines: [
-      "Composite score derived from operationally relevant hazards (VIS/RVR, CIG, TS/CB, wind gusts, wx codes, policy flags).",
-      "Use to triage; always verify raw METAR/TAF and local procedures."
-    ],
-    triggers: ["Score ≥ 70"]
-  },
-  vis300: {
-    title: "Low VIS / RVR (worst < 300 m)",
-    om: "OM-A 8.1.4 (minima cues)",
-    lines: [
-      "Uses the worst (METAR or TAF) visibility / RVR when present.",
-      "Designed as a rapid operational impact cue."
-    ],
-    triggers: ["Worst VIS < 300 m", "or worst RVR < 300 m"]
-  },
-  ts: {
-    title: "Thunderstorm / Convective (TS / CB)",
-    om: "OM-A 8.3.8.1",
-    lines: [
-      "Thunderstorm activity is a flight safety risk.",
-      "This cue flags convective signals in METAR/TAF."
-    ],
-    triggers: ["TS", "CB", "TCU (risk cue)"]
-  },
-  wind: {
-    title: "Wind (gust ≥ 25 kt)",
-    om: "Ops cue (limits per OM-B/airport)",
-    lines: [
-      "Flags airports with gusts at/above the configured threshold.",
-      "Crosswind limitation assessment is available via XWIND policy tile (runway-aware)."
-    ],
-    triggers: ["Gust ≥ 25 kt"]
-  },
-  snow: {
-    title: "Snow present / forecast",
-    om: "OM-A 8.3.8.7 (heavy precip take-off prohibited)",
-    lines: [
-      "Highlights snow in METAR/TAF. Use alongside runway condition / SNOWTAM when available.",
-      "Heavy snow (+SN) is also a TO/LND PROHIB policy flag."
-    ],
-    triggers: ["SN / +SN", "SG / GS (when present)"]
-  },
-  toProhib: {
-    title: "Take-off / Landing prohibited (policy flags)",
-    om: "OM-A 8.3.8",
-    lines: [
-      "Company policy: take-off is prohibited in specific heavy precipitation conditions.",
-      "Also flags TS presence as a risk cue for take-off/landing planning."
-    ],
-    triggers: ["+SN, +GS, +SG, +PL", "FZRA / +FZRA", "GR / +GR", "TS (risk cue)"]
-  },
-  lvto: {
-    title: "LVTO / Minima cues", 
-    om: "OM-A 8.1.4",
-    lines: [
-      "Low Visibility Take-off (LVTO) cue based on reported VIS/RVR.",
-      "Highlights additional procedural cues for LVP and absolute minimum RVR."
-    ],
-    triggers: ["LVTO: RVR/VIS < 550 m", "LVP required: RVR < 400 m", "Absolute minimum: RVR < 125 m"]
-  },
-  xwind: {
-    title: "Crosswind exceedance (runway-aware)",
-    om: "OM-B 1.3.1",
-    lines: [
-      "Evaluates best-available runway alignment (from runways.json) against reported wind.",
-      "Assumes dry runway unless runway condition data is available (advisory)."
-    ],
-    triggers: ["Best RWY crosswind exceeds company limit"]
-  },
-  va: {
-    title: "Volcanic ash detected", 
-    om: "OM-A 8.3.8.6",
-    lines: [
-      "Flags volcanic ash / ash cloud cues in METAR/TAF.",
-      "Company policy: avoid planning/flight into medium/high contamination zones."
-    ],
-    triggers: ["VA", "VOLCANIC ASH"]
-  }
-};
-
-function initTileTooltips(){
-  // Create a single tooltip element (reused)
-  let tip = document.getElementById('tileTip');
-  if (!tip){
-    tip = document.createElement('div');
-    tip.id = 'tileTip';
-    tip.className = 'tiletip';
-    tip.setAttribute('role','tooltip');
-    tip.hidden = true;
-    document.body.appendChild(tip);
-  }
-
-  const tiles = Array.from(document.querySelectorAll('.tiles .tile[data-filter]'));
-  if (!tiles.length) return;
-
-  let active = null;
-  let raf = 0;
-
-  const hide = ()=>{
-    active = null;
-    tip.hidden = true;
-    tip.innerHTML = '';
-  };
-
-  const clamp = (v, lo, hi)=>Math.max(lo, Math.min(hi, v));
-
-  const position = (anchor)=>{
-    if (!anchor || tip.hidden) return;
-    const r = anchor.getBoundingClientRect();
-    const pad = 10;
-    const vw = window.innerWidth || 1200;
-    const vh = window.innerHeight || 800;
-
-    // Ensure tip has measurable size
-    const tr = tip.getBoundingClientRect();
-    let top = r.bottom + 10;
-    let left = r.left;
-
-    // Prefer below; if it would overflow, place above
-    if (top + tr.height + pad > vh){
-      top = r.top - tr.height - 10;
-      tip.classList.add('tiletip--above');
-    } else {
-      tip.classList.remove('tiletip--above');
-    }
-
-    left = clamp(left, pad, vw - tr.width - pad);
-    top = clamp(top, pad, vh - tr.height - pad);
-
-    tip.style.left = `${left}px`;
-    tip.style.top = `${top}px`;
-  };
-
-  const renderTip = (key)=>{
-    const t = TILE_TIPS[key];
-    if (!t) return '';
-    const trig = (t.triggers || []).map(x=>`<span class="tiletip__chip">${escapeHtml(x)}</span>`).join('');
-    const lines = (t.lines || []).map(x=>`<div class="tiletip__p">${escapeHtml(x)}</div>`).join('');
-    return `
-      <div class="tiletip__hdr">
-        <div class="tiletip__title">${escapeHtml(t.title || key)}</div>
-        <div class="tiletip__om">${escapeHtml(t.om || '')}</div>
-      </div>
-      <div class="tiletip__body">
-        ${lines}
-        ${trig ? `<div class="tiletip__chips">${trig}</div>` : ''}
-      </div>
-    `;
-  };
-
-  const showFor = (btn)=>{
-    const f = btn.getAttribute('data-filter');
-    if (!f) return;
-    const html = renderTip(f);
-    if (!html) return;
-    active = btn;
-    tip.innerHTML = html;
-    tip.hidden = false;
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(()=>position(btn));
-  };
-
-  tiles.forEach(btn=>{
-    btn.addEventListener('mouseenter', ()=>showFor(btn));
-    btn.addEventListener('mouseleave', hide);
-    btn.addEventListener('focusin', ()=>showFor(btn));
-    btn.addEventListener('focusout', hide);
-  });
-
-  window.addEventListener('scroll', ()=>{ if (active) position(active); }, { passive:true });
-  window.addEventListener('resize', ()=>{ if (active) position(active); });
-  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hide(); });
-  // Hide if user clicks elsewhere
-  document.addEventListener('pointerdown', (e)=>{
-    if (!active) return;
-    if (e.target && (e.target.closest('.tiletip') || e.target.closest('.tile'))) return;
-    hide();
-  });
-}
-
-// Base airport priority list ------------------------------------------------
-// Loaded from base.txt (one IATA per line). Used to prioritize and highlight key stations
-// across tiles and the table.
-const BASE_LIST_URL = "base.txt";
-let baseAirports = new Set();
-let baseAirportsLoaded = false;
-async function fetchBaseAirportsOnce(){
-  if (baseAirportsLoaded) return baseAirports;
-  baseAirportsLoaded = true;
-  try{
-    const res = await fetch(BASE_LIST_URL + "?cb=" + Date.now(), { cache: "no-store" });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const txt = await res.text();
-    const set = new Set();
-    txt.split(/\r?\n/)
-      .map(x => x.trim())
-      .filter(Boolean)
-      .forEach(x => set.add(x.toUpperCase()));
-    baseAirports = set;
-  } catch (e) {
-    // Non-fatal: if base.txt is missing, the app should still work.
-    baseAirports = new Set();
-  }
-  return baseAirports;
-}
-function isBaseAirport(code){
-  if (!code) return false;
-  return baseAirports.has(String(code).toUpperCase());
-}
 
 // View mode (Auto / TV) ----------------------------------------------------
 const VIEW_MODE_KEY = "wizz_viewMode"; // "auto" | "tv"
@@ -1193,12 +966,14 @@ function rowHtml(st){
   const metRaw = st.metarRaw ? highlightRaw(st.metarRaw) : "<span class='muted'>—</span>";
   const tafRaw = st.tafRaw ? highlightRaw(st.tafRaw) : "<span class='muted'>—</span>";
 
+  const iataCls = (String(st.role||"").toUpperCase() === "BASE") ? "airport__iata airport__iata--base" : "airport__iata";
+
   return `<tr class="row" data-icao="${escapeHtml(st.icao)}">
     <td>
       <div class="airport">
         <div class="airport__codes">
           <div class="airport__icao">${escapeHtml(st.icao)}</div>
-          <div class="airport__iata ${isBaseAirport(st.iata)?"base":""}">${escapeHtml((st.iata||"—").toUpperCase())}</div>
+          <div class="${iataCls}">${escapeHtml((st.iata||"—").toUpperCase())}</div>
         </div>
         <div class="airport__name">${escapeHtml(st.name||"")}</div>
       </div>
@@ -1288,39 +1063,24 @@ case "gust25":
         if (!(st.cigAll !== null && st.cigAll < 500)) return false;
         break;
       
-      // OM-A/OM-B advisory (derived from METAR/TAF only; no manual inputs)
-      // Note: These keys intentionally match both the dropdown values and the tile data-filter values.
-      case "toProhib":
-      case "oma_to_prohib":
-        if (!(st.om && st.om.toProhib)) return false;
-        break;
-
-      case "lvto":
-      case "oma_lvto":
-        if (!(st.om && st.om.lvto)) return false;
-        break;
-
-      case "lvp":
-        if (!(st.om && st.om.lvp)) return false;
-        break;
-
-      case "rvr125":
-        if (!(st.om && st.om.rvr125)) return false;
-        break;
-
-      case "xwind":
-        if (!(st.om && st.om.xwindExceed)) return false;
-        break;
-
-      case "va":
-        if (!(st.om && st.om.va)) return false;
-        break;
-
-      case "coldcorr":
-      case "oma_cold":
-        if (!(st.om && st.om.coldcorr)) return false;
-        break;
-
+case "oma_to_prohib":
+  if (!(st.om && st.om.takeoffProhibitedWx)) return false;
+  break;
+case "oma_ts_prohib":
+  if (!(st.om && st.om.tsCb)) return false;
+  break;
+case "oma_lvto":
+  if (!(st.om && st.om.lvto)) return false;
+  break;
+case "oma_below_cat1":
+  if (!(st.om && st.om.belowCat1)) return false;
+  break;
+case "oma_va":
+  if (!(st.om && st.om.volcanicAsh)) return false;
+  break;
+case "oma_cold":
+  if (!(st.om && st.om.coldTemp)) return false;
+  break;
 case "dataset":
   // dataset tile is informational; do not filter
   break;
@@ -1383,24 +1143,29 @@ function updateTiles(currentList){
       const code = st.iata || st.icao;
       if (!code) continue;
       const rr = (typeof st.roleRank === "number") ? st.roleRank : roleRank(getRole(st.icao));
+      const role = (st.role || getRole(st.icao) || "OTHER");
       const prev = seen.get(code);
-      if (!prev || rr < prev.rr) seen.set(code, {code, rr});
+      if (!prev || rr < prev.rr) seen.set(code, {code, rr, role});
     }
     return Array.from(seen.values())
-      .sort((a,b)=> (Number(isBaseAirport(b.code)) - Number(isBaseAirport(a.code))) || (a.rr-b.rr) || a.code.localeCompare(b.code))
-      .map(x=>x.code);
+      .sort((a,b)=> (a.rr-b.rr) || a.code.localeCompare(b.code));
   }
 
   function renderIata(elId, list){
     const el = document.getElementById(elId);
     if (!el) return;
-    const codes = uniqIata(list);
+    const items = uniqIata(list);
     const max = (viewMode === "tv" ? 18 : 10);
-    const shown = codes.slice(0, max);
-    const rest = codes.length - shown.length;
+    const shown = items.slice(0, max);
+    const rest = items.length - shown.length;
+    // Highlight base airports (role == BASE) for rapid recognition.
     el.innerHTML =
-      shown.map(x=>`<span class="${isBaseAirport(x)?"iata base":"iata"}">${escapeHtml(x)}</span>`).join("") +
-      (rest > 0 ? `<span>+${rest}</span>` : "");
+      shown.map(it=>{
+        const r = String(it.role || "OTHER").toUpperCase();
+        const cls = r === "BASE" ? "iataTag iataTag--base" : "iataTag";
+        return `<span class="${cls}">${escapeHtml(it.code)}</span>`;
+      }).join("") +
+      (rest > 0 ? `<span class="iataTag iataTag--more">+${rest}</span>` : "");
   }
 
   renderIata("tileEngIata", eng);
@@ -1626,7 +1391,6 @@ async function updateDatasetTile(){
 async function refreshData(force=false){
   const tbody = $("rows");
   try{
-    await fetchBaseAirportsOnce();
     await fetchRoles();
     await fetchRunways();
     const res = await fetch("data/latest.json?cb=" + Date.now(), {cache:"no-store"});
@@ -1660,25 +1424,11 @@ async function load(){
 
 
 function bind(){
-  const TILE_TO_COND = {eng:"eng", crit:"crit", vis300:"vis300", ts:"ts", wind:"gust25", snow:"snow", toProhib:"toProhib", lvto:"lvto", xwind:"xwind", va:"va"};
-
-  const syncActiveTile = ()=>{
-    const tiles = Array.from(document.querySelectorAll('#tiles .tile[data-filter]'));
-    tiles.forEach(btn=>{
-      const f = btn.getAttribute('data-filter');
-      const target = TILE_TO_COND[f] || null;
-      const on = (target && view.cond === target);
-      btn.classList.toggle('tile--active', !!on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-  };
-
   $("q").addEventListener("input", (e)=>{ view.q = e.target.value; render(); });
-  $("cond").addEventListener("change", (e)=>{ view.cond = e.target.value; syncActiveTile(); render(); });
+  $("cond").addEventListener("change", (e)=>{ view.cond = e.target.value; render(); });
   $("alert").addEventListener("change", (e)=>{ view.alert = e.target.value; render(); });
   $("sortPri").addEventListener("change", (e)=>{ view.sortPri = e.target.checked; render(); });
   initViewModeUI();
-  initTileTooltips();
 
 
   // tile filters
@@ -1688,22 +1438,17 @@ function bind(){
     if (btn.id === "tileReset"){
       view.q=""; view.cond="all"; view.alert="all"; view.sortPri=true;
       $("q").value=""; $("cond").value="all"; $("alert").value="all"; $("sortPri").checked=true;
-      syncActiveTile();
       render();
       return;
     }
     const f = btn.getAttribute("data-filter");
     if (!f) return;
     // toggle: clicking same filter again resets to all
-    const target = TILE_TO_COND[f] || "all";
+    const map = {eng:"eng", crit:"crit", vis300:"vis300", ts:"ts", wind:"gust25", snow:"snow", toProhib:"toProhib", lvto:"lvto", xwind:"xwind", va:"va"};
+    const target = map[f] || "all";
     view.cond = (view.cond === target ? "all" : target);
     $("cond").value = view.cond;
-    syncActiveTile();
     render();
-
-    // UX: ensure the table is in view after selecting a tile filter
-    const table = document.getElementById('table');
-    if (table){ table.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 
   $("drawerClose").addEventListener("click", closeDrawer);

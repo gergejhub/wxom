@@ -363,7 +363,8 @@ async function buildIataMap(icaos){
     try { existing = JSON.parse(fs.readFileSync(OUT_IATA_MAP,'utf8')); } catch {}
   }
 
-  const missing = icaos.filter(i => !existing[i]);
+  // Rebuild entries that are missing core fields (older iata_map.json versions may not contain lat/lon).
+  const missing = icaos.filter(i => !existing[i] || existing[i].lat == null || existing[i].lon == null);
   if(missing.length === 0) return existing;
 
   console.log(`IATA map: ${missing.length} missing ICAO codes, downloading OurAirports airports.csv…`);
@@ -390,7 +391,7 @@ async function buildIataMap(icaos){
       iata: iata || null,
       name: name || null,
       lat: Number.isFinite(lat) ? lat : null,
-      lon: Number.isFinite(lon) ? lon : null
+      lon: Number.isFinite(lon) ? lon : null,
     };
     want.delete(ident);
   }
