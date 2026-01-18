@@ -4,20 +4,26 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>WX Monitor – Stats</title>
-  <link rel="stylesheet" href="../assets/styles.css?v=51"/>
-  <link rel="stylesheet" href="styles.css?v=51"/>
+  <link rel="stylesheet" href="../assets/styles.css?v=79"/>
+  <link rel="stylesheet" href="styles.css?v=79"/>
 </head>
 <body>
-  <header class="statTop">
-    <div class="statTop__left">
-      <div class="statTop__title">WX Monitor / Stats</div>
-      <div class="statTop__sub">Health, refresh verification, and an at‑a‑glance change atlas for non‑technical viewers.</div>
-    </div>
-    <div class="statTop__right">
-      <a class="btn btn--ghost" href="../index.html">Dashboard</a>
-      <a class="btn btn--ghost" href="../map.html">Map</a>
-      <a class="btn btn--ghost" href="../alerts.html">Guide</a>
-      <button class="btn btn--primary" id="btnNow" type="button">Refresh now</button>
+
+  <!-- Match the dashboard look & feel -->
+  <header class="top top--stat">
+    <div class="brand">
+      <div class="brand__row">
+        <div class="brand__title">WX Monitor / Stats</div>
+        <div class="brand__spacer"></div>
+        <a class="viewpill viewpill--link" href="../index.html" title="Back to dashboard">
+          <span class="viewpill__k">BACK</span>
+        </a>
+        <button class="viewpill" id="btnNow" type="button" title="Fetch latest.json now">
+          <span class="viewpill__k">REFRESH</span>
+          <span class="viewpill__v">NOW</span>
+        </button>
+      </div>
+      <div class="brand__sub">Health, refresh verification, and airport‑level change history stored locally in this browser.</div>
     </div>
   </header>
 
@@ -49,7 +55,7 @@
 
       <div class="statRow">
         <span class="pill" id="expectedPill">Expected ~10 min updates</span>
-        <span class="muted" id="storageNote">Change Atlas uses local history (this browser) and records only when new METAR/TAF arrives (generatedAt changes).</span>
+        <span class="muted" id="storageNote">Airport history is stored locally in this browser. Keep this page open to build trends.</span>
       </div>
 
       <div class="statCharts">
@@ -66,77 +72,47 @@
       </div>
     </section>
 
-    <section class="card atlasCard">
-      <div class="atlasHead">
+    <section class="card airportCard">
+      <div class="airportHead">
         <div>
-          <div class="atlasHead__title" id="atlasTitle">Change Atlas</div>
-          <div class="atlasHead__sub" id="atlasSub">A time‑matrix of detected changes per airport. Left column is sticky; scroll horizontally for time.</div>
+          <div class="airportHead__title">Airport statistics</div>
+          <div class="airportHead__sub muted">Pick an airport (IATA/ICAO). The charts below show the observed values at each dataset refresh.</div>
         </div>
-        <div class="atlasControls">
-          <input id="atlasSearch" class="input" type="text" placeholder="Search ICAO/IATA…" autocomplete="off"/>
-          <select id="atlasWindow" class="select">
+        <div class="airportControls">
+          <div class="pickWrap">
+            <input id="airportPick" class="input" type="text" placeholder="Type IATA or ICAO…" autocomplete="off" list="airportList"/>
+            <datalist id="airportList"></datalist>
+            <div class="pickHint muted" id="airportHint">–</div>
+          </div>
+          <select id="atlasWindow" class="select" title="Time window">
             <option value="60">Last 60 min</option>
             <option value="120">Last 120 min</option>
             <option value="240" selected>Last 240 min</option>
           </select>
-          <select id="atlasMetric" class="select">
-            <option value="ALL" selected>All metrics</option>
-            <option value="VIS">Visibility</option>
-            <option value="RVR">RVR</option>
-            <option value="CIG">Ceiling</option>
-            <option value="GUST">Wind</option>
-            <option value="WX">Weather</option>
-            <option value="SN">Snow</option>
-          </select>
-          <select id="atlasDir" class="select">
-            <option value="ALL" selected>All directions</option>
+          <select id="atlasDir" class="select" title="Direction filter">
+            <option value="ALL" selected>All changes</option>
             <option value="WORSE">Got worse</option>
             <option value="BETTER">Improved</option>
           </select>
-          <select id="atlasRole" class="select">
-            <option value="ALL" selected>All roles</option>
-            <option value="BASE">Base</option>
-            <option value="DEST">Destination</option>
-            <option value="ALT">Alternate</option>
-            <option value="OTHER">Other</option>
-          </select>
         </div>
       </div>
 
-      <div class="atlasKpis" id="atlasKpis"></div>
+      <div class="airportPinned">
+        <div class="airportPinned__left">
+          <div class="airportPinned__k">Selected airport</div>
+          <div class="airportPinned__title" id="atlasBadges">–</div>
 
-      <div class="atlasTableWrap" id="atlasTableWrap">
-        <div class="atlasTable" id="atlasTable"></div>
-        <div class="atlasEmpty" id="atlasEmpty" style="display:none;">
-          No history yet in this browser. Leave this page open for a few minutes until new METAR/TAF arrives.
-        </div>
-      </div>
-
-      <div class="atlasLegend">
-        <span class="legendItem"><span class="legendGlyph worse">▼</span> Got worse</span>
-        <span class="legendItem"><span class="legendGlyph better">▲</span> Improved</span>
-        <span class="legendItem"><span class="legendGlyph mixed">◆</span> Change / mixed</span>
-        <span class="muted">Bigger glyph ≈ higher impact. Vertical grid = 10 min.</span>
-      </div>
-
-      <div class="atlasPinned">
-        <div class="atlasPinned__left">
-          <div class="atlasPinned__k">Pinned airport</div>
-          <div class="atlasPinned__title" id="atlasBadges">–</div>
-          <canvas id="miniCanvas" width="520" height="70"></canvas>
           <div class="trendBox">
-            <canvas id="trendCanvas" width="520" height="170"></canvas>
-            <div id="trendStack" class="trendStack" style="display:none;"></div>
+            <div id="trendStack" class="trendStack"></div>
             <div id="trendFallback" class="trendFallback" style="display:none;"></div>
           </div>
         </div>
-        <div class="atlasPinned__right">
-          <div class="atlasPinned__k">What happened?</div>
+
+        <div class="airportPinned__right">
+          <div class="airportPinned__k">What happened?</div>
           <div id="atlasEvents" class="atlasEvents"></div>
         </div>
       </div>
-
-      <div id="atlasTooltip" class="atlasTooltip" style="display:none;"></div>
     </section>
 
     <section class="card logCard">
@@ -154,6 +130,6 @@
 
   </main>
 
-  <script src="app.js?v=53"></script>
+  <script src="app.js?v=79"></script>
 </body>
 </html>
