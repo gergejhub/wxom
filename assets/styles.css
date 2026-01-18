@@ -21,12 +21,15 @@ html{color-scheme:dark;}
 
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+
   --top-h: 0px;
 }
 
+
 *{box-sizing:border-box}
 
-[hidden], .hidden{display:none !important;}
+[hidden],
+.hidden{ display:none !important; }
 body{
   margin:0;
   font-family:var(--sans);
@@ -221,6 +224,22 @@ body{
   border:1px solid rgba(255,255,255,.14);
   background:rgba(255,255,255,.04);
 }
+
+/* BASE airports: subtle but noticeable pulse in tile IATA chips */
+@keyframes basePulse{
+  0%, 100%{ box-shadow:0 0 0 0 rgba(255,47,166,.00); }
+  50%{ box-shadow:0 0 0 6px rgba(255,47,166,.22); }
+}
+.tile__iata .iata-chip{ display:inline-flex; }
+.tile__iata .iata-chip--base{
+  border-color:rgba(255,47,166,.65);
+  background:rgba(255,47,166,.10);
+  animation:basePulse 2.8s ease-in-out infinite;
+}
+.tile__iata .iata-chip--more{ opacity:.85; }
+@media (prefers-reduced-motion: reduce){
+  .tile__iata .iata-chip--base{ animation:none; }
+}
 .tile--eng{
   border-color:rgba(255,75,92,.45);
   box-shadow:0 0 18px rgba(255,75,92,.12);
@@ -396,6 +415,10 @@ tbody tr:hover{ background:rgba(255,255,255,.02); }
   letter-spacing:.8px;
   font-size:12px;
   color:rgba(255,255,255,.82);
+}
+.airport__iata.is-base{
+  color:var(--wizz-pink);
+  text-shadow:0 0 10px rgba(255,47,166,.22);
 }
 .airport__name{
   color:rgba(255,255,255,.72);
@@ -857,50 +880,3 @@ body.view-auto header.top{ position:static; top:auto; }
 .worst{ display:flex; align-items:center; gap:10px; white-space:nowrap; }
 .worst__v{ min-width:40px; text-align:right; }
 
-
-/* Tile tooltip (hover) */
-.tile-tooltip{position:fixed;z-index:9999;max-width:360px;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .12s ease, transform .12s ease;
-  background:rgba(20,17,35,.96);border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 40px rgba(0,0,0,.45);border-radius:16px;padding:12px 12px;}
-.tile-tooltip.show{opacity:1;transform:translateY(0);}
-.tile-tooltip__t{font-weight:700;letter-spacing:.02em;margin:0 0 6px 0;}
-.tile-tooltip__p{margin:0 0 8px 0;color:rgba(255,255,255,.78);line-height:1.3;}
-.tile-tooltip__k{display:inline-block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-right:6px;}
-.tile-tooltip__v{font-size:13px;color:rgba(255,255,255,.9);}
-.tile-tooltip__om{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12);font-size:12.5px;color:rgba(255,255,255,.75);}
-.tile-tooltip__om b{color:rgba(255,255,255,.92);}
-
-/* BASE highlighting */
-.tile__iata span.base{border:1px solid rgba(255,47,166,.55);background:rgba(255,47,166,.14);color:rgba(255,255,255,.95);}
-.airport__iata.base{border:1px solid rgba(255,47,166,.55);background:rgba(255,47,166,.14);padding:2px 8px;border-radius:999px;display:inline-block;}
-
-
-/* --- Base airport highlighting (base.txt) --- */
-.airport__iata.is-base{color:var(--wizz-pink); font-weight:700;}
-.airport__codes.is-base{border-left:2px solid rgba(255,47,166,.6); padding-left:10px;}
-.tile__iata span.is-base{border:1px solid rgba(255,47,166,.55); background:rgba(255,47,166,.10); color:var(--txt);}
-
-/* --- Tile hover tooltips --- */
-.tile-tip{
-  position:fixed;
-  z-index:10000;
-  max-width:420px;
-  padding:12px 12px;
-  border-radius:14px;
-  background:rgba(18,16,32,.92);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:0 18px 60px rgba(0,0,0,.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  pointer-events:none;
-  opacity:0;
-  transform:translateY(6px);
-  transition: opacity .12s ease, transform .12s ease;
-}
-.tile-tip.is-on{opacity:1; transform:translateY(0);}
-.tile-tip__h{display:flex; align-items:center; gap:10px; margin:0 0 8px 0;}
-.tile-tip__t{font-weight:800; letter-spacing:.02em;}
-.tile-tip__b{font-size:12px; color:rgba(255,255,255,.7); margin:0; line-height:1.35;}
-.tile-tip__k{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.6); margin-top:10px;}
-.tile-tip__om{font-size:12px; color:rgba(255,255,255,.78); margin-top:6px; line-height:1.35;}
-.tile-tip__ul{margin:6px 0 0 16px; padding:0;}
-.tile-tip__ul li{margin:2px 0; font-size:12px; color:rgba(255,255,255,.82);}

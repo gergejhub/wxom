@@ -148,30 +148,35 @@ let lastGeneratedAt = null; // string (ISO) from data.generatedAt
 // Shared airport roles (multi-user): fetched from repo-backed JSON.
 let rolesMap = {}; // { ICAO: "BASE" | "DEST" | "ALT" }
 
-// BASE airports (from base.txt; IATA codes) -----------------------------
-let baseIataSet = new Set();
+// Base airport list (IATA codes) from repo-backed base.txt.
+// Used for highlighting + prioritisation.
+let baseSet = new Set();
 
-function isBaseIata(code){
-  const k = String(code || "").trim().toUpperCase();
-  return k ? baseIataSet.has(k) : false;
+function isBaseCode(code){
+  const v = String(code || "").trim().toUpperCase();
+  return v && baseSet.has(v);
 }
 
 async function fetchBaseList(){
   try{
     const res = await fetch("base.txt?cb=" + Date.now(), {cache:"no-store"});
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok){
+      baseSet = new Set();
+      return baseSet;
+    }
     const txt = await res.text();
-    const codes = txt.split(/\r?\n/)
-      .map(l=>l.trim())
-      .filter(l=>l && !l.startsWith("#"))
-      .map(l=>l.toUpperCase());
-    baseIataSet = new Set(codes);
+    const out = new Set();
+    for (const line of txt.split(/\r?\n/)){
+      const v = String(line || "").trim().toUpperCase();
+      if (!v || v.startsWith("#")) continue;
+      out.add(v);
+    }
+    baseSet = out;
   }catch(e){
-    baseIataSet = new Set();
+    baseSet = new Set();
   }
-  return baseIataSet;
+  return baseSet;
 }
-
 
 function normalizeRole(r){
   const v = String(r || "").trim().toUpperCase();
@@ -994,9 +999,9 @@ function rowHtml(st){
   return `<tr class="row" data-icao="${escapeHtml(st.icao)}">
     <td>
       <div class="airport">
-        <div class="airport__codes ${st.isBase ? "is-base" : ""}">
+        <div class="airport__codes">
           <div class="airport__icao">${escapeHtml(st.icao)}</div>
-          <div class="airport__iata ${st.isBase ? "base" : ""}">${escapeHtml((st.iata||"—").toUpperCase())}</div>
+          <div class="airport__iata${st.isBase ? " is-base" : ""}">${escapeHtml((st.iata||"—").toUpperCase())}</div>
         </div>
         <div class="airport__name">${escapeHtml(st.name||"")}</div>
       </div>
@@ -1182,8 +1187,12 @@ function updateTiles(currentList){
     const shown = codes.slice(0, max);
     const rest = codes.length - shown.length;
     el.innerHTML =
-      shown.map(x=>`<span class="${isBaseIata(x) ? "base" : ""}">${escapeHtml(x)}</span>`).join("") +
-      (rest > 0 ? `<span>+${rest}</span>` : "");
+      shown.map(x=>{
+        const base = isBaseCode(x);
+        const cls = base ? "iata-chip iata-chip--base" : "iata-chip";
+        return `<span class="${cls}">${escapeHtml(x)}</span>`;
+      }).join("") +
+      (rest > 0 ? `<span class="iata-chip iata-chip--more">+${rest}</span>` : "");
   }
 
   renderIata("tileEngIata", eng);
@@ -1286,7 +1295,6 @@ function openDrawer(icao){
   };
 
   // open
-  $("drawer").hidden = false;
   $("drawer").classList.add("is-open");
   $("drawer").setAttribute("aria-hidden","false");
   $("scrim").hidden = false;
@@ -1305,7 +1313,6 @@ function refreshDrawerAges(){
 function closeDrawer(){
   $("drawer").classList.remove("is-open");
   $("drawer").setAttribute("aria-hidden","true");
-  $("drawer").hidden = true;
   $("scrim").hidden = true;
   drawerIcao = null;
 }
@@ -1362,12 +1369,14 @@ function applyDataFromLatest(data){
     tafRaw: s.tafRaw || s.taf || "",
     metarAgeMin: s.metarAgeMin ?? s.metarAge ?? null,
     tafAgeMin: s.tafAgeMin ?? s.tafAge ?? null,
-  })).filter(s=>s.icao && s.icao.length===4).map(deriveStation).map(st=>{
-    st.isBase = isBaseIata(st.iata);
-    st.role = st.isBase ? "BASE" : getRole(st.icao);
-    st.roleRank = st.isBase ? -1 : roleRank(st.role);
-    return st;
-  });
+  })).filter(s=>s.icao && s.icao.length===4)
+    .map(deriveStation)
+    .map(st=>{
+      st.isBase = isBaseCode(st.iata);
+      st.role = st.isBase ? "BASE" : getRole(st.icao);
+      st.roleRank = roleRank(st.role);
+      return st;
+    });
 
   stationMap = new Map(stations.map(s=>[s.icao, s]));
 
@@ -1412,6 +1421,7 @@ async function updateDatasetTile(){
 async function refreshData(force=false){
   const tbody = $("rows");
   try{
+    await fetchBaseList();
     await fetchRoles();
     await fetchRunways();
     const res = await fetch("data/latest.json?cb=" + Date.now(), {cache:"no-store"});
@@ -1439,77 +1449,6 @@ async function refreshData(force=false){
   }
 }
 
-
-// Tile hover tooltips (OM reference + triggers) --------------------------
-const TILE_TOOLTIP = {
-  eng: { title:"ENG ICE OPS", om:"OM-A 8.3.8.2", triggers:["FZFG/FZRA/FZDZ", "SN/PL/GS/SG", "icing keywords"] },
-  crit: { title:"CRITICAL", om:"Internal score", triggers:["Score ≥ 70", "Multiple hazards"] },
-  vis300: { title:"VIS/RVR < 300", om:"OM-A 8.1.4 (CAT II)", triggers:["Worst VIS/RVR < 300 m"] },
-  ts: { title:"TS / CB", om:"OM-A 8.3.8.1", triggers:["TS/CB in METAR or TAF"] },
-  wind: { title:"WIND", om:"OM-B 1.3.1", triggers:["Gust ≥ 25 kt (advisory)"] },
-  snow: { title:"SNOW", om:"OM-A 8.3.8.7", triggers:["SN/BL... in METAR/TAF"] },
-  toProhib: { title:"TO PROHIB", om:"OM-A 8.3.8.1/8.3.8.7", triggers:["TS overhead/approaching", "Heavy precip (+SN, +FZRA, GR, etc)"] },
-  lvto: { title:"LVTO", om:"OM-A 8.1.4.4", triggers:["RVR/VIS < 550 m"] },
-  xwind: { title:"XWIND", om:"OM-B 1.3.1", triggers:["Crosswind exceed (best RWY estimate)"] },
-  va: { title:"VA", om:"OM-A 8.3.8.6", triggers:["Volcanic ash reported/detected"] },
-};
-
-let tileTipEl = null;
-function ensureTileTip(){
-  if (tileTipEl) return tileTipEl;
-  const el = document.createElement("div");
-  el.className = "tile-tip";
-  el.setAttribute("aria-hidden","true");
-  document.body.appendChild(el);
-  tileTipEl = el;
-  return el;
-}
-function showTileTip(btn, key, x, y){
-  const info = TILE_TOOLTIP[key];
-  if (!info) return;
-  const el = ensureTileTip();
-  const trig = (info.triggers||[]).map(t=>`<li>${escapeHtml(t)}</li>`).join("");
-  el.innerHTML = `
-    <div class="tile-tip__h"><div class="tile-tip__t">${escapeHtml(info.title)}</div></div>
-    <div class="tile-tip__k">Triggers</div>
-    <ul class="tile-tip__ul">${trig}</ul>
-    <div class="tile-tip__k">OM reference</div>
-    <div class="tile-tip__om">${escapeHtml(info.om||"—")}</div>
-  `;
-  const pad = 14;
-  const vw = window.innerWidth || 1200;
-  const vh = window.innerHeight || 800;
-  el.style.left = "0px";
-  el.style.top = "0px";
-  el.classList.add("is-on");
-  const r = el.getBoundingClientRect();
-  let left = x + 14;
-  let top = y + 14;
-  if (left + r.width + pad > vw) left = vw - r.width - pad;
-  if (top + r.height + pad > vh) top = vh - r.height - pad;
-  if (left < pad) left = pad;
-  if (top < pad) top = pad;
-  el.style.left = left + "px";
-  el.style.top = top + "px";
-}
-function hideTileTip(){
-  if (!tileTipEl) return;
-  tileTipEl.classList.remove("is-on");
-}
-function initTileTooltips(){
-  const root = document.getElementById("tiles");
-  if (!root) return;
-  root.querySelectorAll("button.tile[data-filter]").forEach(btn=>{
-    const key = btn.getAttribute("data-filter");
-    if (!key || !TILE_TOOLTIP[key]) return;
-    btn.addEventListener("mouseenter", (e)=>{ showTileTip(btn, key, e.clientX, e.clientY); });
-    btn.addEventListener("mousemove", (e)=>{ showTileTip(btn, key, e.clientX, e.clientY); });
-    btn.addEventListener("mouseleave", hideTileTip);
-    btn.addEventListener("focus", (e)=>{ const r=btn.getBoundingClientRect(); showTileTip(btn, key, r.left+r.width/2, r.top); });
-    btn.addEventListener("blur", hideTileTip);
-  });
-}
-
 async function load(){
   return refreshData(true);
 }
@@ -1521,10 +1460,6 @@ function bind(){
   $("alert").addEventListener("change", (e)=>{ view.alert = e.target.value; render(); });
   $("sortPri").addEventListener("change", (e)=>{ view.sortPri = e.target.checked; render(); });
   initViewModeUI();
-  initTileTooltips();
-  // Ensure the drawer overlay starts hidden (no initial gray layer).
-  const _scr = $("scrim"); if (_scr) _scr.hidden = true;
-  const _dr = $("drawer"); if (_dr) _dr.hidden = true;
 
 
   // tile filters
@@ -1566,6 +1501,6 @@ function bind(){
 
 bind();
 updateDatasetTile();
-Promise.all([fetchRoles(), fetchBaseList()]).finally(()=>{ load(); });
+load();
 
 updateTopHeight();
