@@ -1454,12 +1454,176 @@ async function load(){
 }
 
 
+// Tile hover tooltips (detailed triggers + OM reference) --------------------
+// These are informational aids for users; they do NOT change alert logic.
+const TILE_TOOLTIP = {
+  eng: {
+    title: "ENG ICE OPS",
+    om: "OM-A 8.3.8.2 (Icing) · Clean Aircraft Concept",
+    why: "Jegesedési/icing indikációk alapján a rendszer kiemeli, hogy földi de/anti-icing és jegesedési kockázat releváns lehet.",
+    triggers: [
+      "METAR/TAF: FZFG / FZRA / FZDZ",
+      "METAR/TAF: SN / PL / GS / SG",
+      "METAR/TAF: icing kulcsszavak / jelzések (ha szerepelnek)",
+    ],
+  },
+  crit: {
+    title: "CRITICAL",
+    om: "Internal severity score (dashboard policy layer)",
+    why: "Összesített súlyossági állapot. Több hazard / nagyon alacsony minima-közeli értékek együtt CRIT szintre emelhetik.",
+    triggers: [
+      "Score ≥ 70",
+      "Több, egymást erősítő hazard egyidejű jelenléte",
+    ],
+  },
+  vis300: {
+    title: "VIS/RVR < 300",
+    om: "OM-A 8.1.4 (CAT II minima: RVR ≥ 300m)",
+    why: "A rendszer a METAR és TAF alapján számolt worst VIS/RVR értéket nézi. 300m alá esés CAT II küszöb alatti helyzetet jelez.",
+    triggers: [
+      "Worst VIS < 300 m (METAR/TAF)",
+      "vagy RVRmin < 300 m (METAR/TAF)",
+    ],
+  },
+  ts: {
+    title: "TS / CB",
+    om: "OM-A 8.3.8.1 (Thunderstorms avoidance)",
+    why: "Zivatar/CB jelenlét a jelentésekben. A társasági elv: kerülés, és overhead/approaching esetén TO/LND kerülendő/prohibited operatív döntés szerint.",
+    triggers: [
+      "METAR/TAF: TS",
+      "METAR/TAF: CB (ha jelölve)",
+    ],
+  },
+  wind: {
+    title: "WIND",
+    om: "OM-B 1.3.1 (Crosswind limits) · advisory tile",
+    why: "Széllökés (gust) kiemelés. A tile a gust küszöböt jelzi (advisory), az XWIND tile a becsült keresztszelet vizsgálja.",
+    triggers: ["GUST ≥ 25 kt (METAR vagy TAF)"]
+  },
+  snow: {
+    title: "SNOW",
+    om: "OM-A 8.3.8.7 (Heavy precipitation - takeoff prohibited)",
+    why: "Hó/havazás jelzés a METAR/TAF-ban. A konkrét tiltó esetek (+SN, +GS, +SG, +PL, +FZRA, GR) a TO PROHIB tile-ban jelennek meg.",
+    triggers: [
+      "METAR: SN vagy kapcsolódó snow jelenség",
+      "TAF: SN vagy kapcsolódó snow jelenség",
+    ],
+  },
+  toProhib: {
+    title: "TO PROHIB",
+    om: "OM-A 8.3.8.1 (TS) · OM-A 8.3.8.7 (Heavy precip)",
+    why: "A policy layer tiltó jellegű időjárási elemeket keres. Ez advisory jelzés: a tényleges műveleti döntés az aktuális körülmények és SOP szerint.",
+    triggers: [
+      "TS overhead/approaching (jelzés METAR/TAF alapján)",
+      "Heavy snow: +SN",
+      "Moderate/heavy freezing rain: FZRA / +FZRA",
+      "Hail: GR / +GR",
+      "Ice pellets / snow pellets / grains: PL / GS / SG (különösen +)",
+    ],
+  },
+  lvto: {
+    title: "LVTO",
+    om: "OM-A 8.1.4.4 (Take-off minima) · LVP if RVR < 400m",
+    why: "Low Visibility Take-off indikáció: ha a (worst) VIS/RVR 550m alá megy. 400m alatt LVP szükséges.",
+    triggers: [
+      "RVR/VIS < 550 m",
+      "(külön jelzés: LVP ajánlott/required ha RVR < 400 m)",
+    ],
+  },
+  xwind: {
+    title: "XWIND",
+    om: "OM-B 1.3.1 (Crosswind limitations)",
+    why: "A rendszer runway heading nélkül egy becsült (best RWY) logikával közelíti a keresztszelet. Advisory jelzés: a tényleges limit RWY/condition függő.",
+    triggers: [
+      "Becsült crosswind meghaladja a company limitet (runway condition nélkül: konzervatív)",
+      "Gust is beleszámít (company limits incl. gusts)",
+    ],
+  },
+  va: {
+    title: "VA",
+    om: "OM-A 8.3.8.6 (Volcanic ash)",
+    why: "Vulkáni hamu/VA indikáció jelentésekben. Medium/High contamination zónák kerülendők; látható ash cloud avoidance szükséges.",
+    triggers: ["METAR/TAF: VA / volcanic ash jelzés"]
+  },
+};
+
+let tileTipEl = null;
+function ensureTileTip(){
+  if (tileTipEl) return tileTipEl;
+  const el = document.createElement("div");
+  el.className = "tile-tip";
+  el.setAttribute("aria-hidden", "true");
+  document.body.appendChild(el);
+  tileTipEl = el;
+  return el;
+}
+
+function showTileTip(key, x, y){
+  const info = TILE_TOOLTIP[key];
+  if (!info) return;
+  const el = ensureTileTip();
+  const trig = (info.triggers || []).map(t=>`<li>${escapeHtml(t)}</li>`).join("");
+  el.innerHTML = `
+    <div class="tile-tip__h">
+      <div class="tile-tip__t">${escapeHtml(info.title)}</div>
+    </div>
+    ${info.why ? `<div class="tile-tip__b">${escapeHtml(info.why)}</div>` : ""}
+    <div class="tile-tip__k">Trigger</div>
+    <ul class="tile-tip__ul">${trig}</ul>
+    <div class="tile-tip__k">OM reference</div>
+    <div class="tile-tip__om">${escapeHtml(info.om || "—")}</div>
+  `;
+
+  const pad = 14;
+  const vw = window.innerWidth || 1200;
+  const vh = window.innerHeight || 800;
+  el.style.left = "0px";
+  el.style.top = "0px";
+  el.classList.add("is-on");
+  const r = el.getBoundingClientRect();
+  let left = x + 14;
+  let top = y + 14;
+  if (left + r.width + pad > vw) left = vw - r.width - pad;
+  if (top + r.height + pad > vh) top = vh - r.height - pad;
+  if (left < pad) left = pad;
+  if (top < pad) top = pad;
+  el.style.left = left + "px";
+  el.style.top = top + "px";
+}
+
+function hideTileTip(){
+  if (!tileTipEl) return;
+  tileTipEl.classList.remove("is-on");
+}
+
+function initTileTooltips(){
+  // Avoid hover tooltips on touch devices
+  const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  const root = document.getElementById("tiles");
+  if (!root || coarse) return;
+
+  root.querySelectorAll("button.tile[data-filter]").forEach(btn=>{
+    const key = btn.getAttribute("data-filter");
+    if (!key || !TILE_TOOLTIP[key]) return;
+    btn.addEventListener("mouseenter", (e)=>{ showTileTip(key, e.clientX, e.clientY); });
+    btn.addEventListener("mousemove", (e)=>{ showTileTip(key, e.clientX, e.clientY); });
+    btn.addEventListener("mouseleave", hideTileTip);
+    btn.addEventListener("focus", ()=>{
+      const r = btn.getBoundingClientRect();
+      showTileTip(key, r.left + r.width/2, r.top);
+    });
+    btn.addEventListener("blur", hideTileTip);
+  });
+}
+
+
 function bind(){
   $("q").addEventListener("input", (e)=>{ view.q = e.target.value; render(); });
   $("cond").addEventListener("change", (e)=>{ view.cond = e.target.value; render(); });
   $("alert").addEventListener("change", (e)=>{ view.alert = e.target.value; render(); });
   $("sortPri").addEventListener("change", (e)=>{ view.sortPri = e.target.checked; render(); });
   initViewModeUI();
+  initTileTooltips();
 
 
   // tile filters
@@ -1485,6 +1649,9 @@ function bind(){
   $("drawerClose").addEventListener("click", closeDrawer);
   $("scrim").addEventListener("click", closeDrawer);
   document.addEventListener("keydown",(e)=>{ if (e.key==="Escape") closeDrawer(); });
+
+  // Hide tooltip when scrolling (prevents odd positioning if user scrolls while hovering)
+  document.addEventListener("scroll", hideTileTip, {passive:true});
 
   // Refresh time-based UI (METAR/TAF age) every minute without refetch.
   // Also keep the Quick View drawer age fields ticking if it's open.
