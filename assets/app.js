@@ -1460,90 +1460,90 @@ const TILE_TOOLTIP = {
   eng: {
     title: "ENG ICE OPS",
     om: "OM-A 8.3.8.2 (Icing) · Clean Aircraft Concept",
-    why: "Jegesedési/icing indikációk alapján a rendszer kiemeli, hogy földi de/anti-icing és jegesedési kockázat releváns lehet.",
+    why: "Based on icing-related indications, the system highlights that ground de/anti-icing and icing risk may be relevant.",
     triggers: [
       "METAR/TAF: FZFG / FZRA / FZDZ",
       "METAR/TAF: SN / PL / GS / SG",
-      "METAR/TAF: icing kulcsszavak / jelzések (ha szerepelnek)",
+      "METAR/TAF: icing-related keywords / remarks (when present)",
     ],
   },
   crit: {
     title: "CRITICAL",
     om: "Internal severity score (dashboard policy layer)",
-    why: "Összesített súlyossági állapot. Több hazard / nagyon alacsony minima-közeli értékek együtt CRIT szintre emelhetik.",
+    why: "Composite severity state. Multiple hazards and/or minima-adjacent values can elevate the overall state to CRIT.",
     triggers: [
       "Score ≥ 70",
-      "Több, egymást erősítő hazard egyidejű jelenléte",
+      "Multiple reinforcing hazards at the same time",
     ],
   },
   vis300: {
     title: "VIS/RVR < 300",
     om: "OM-A 8.1.4 (CAT II minima: RVR ≥ 300m)",
-    why: "A rendszer a METAR és TAF alapján számolt worst VIS/RVR értéket nézi. 300m alá esés CAT II küszöb alatti helyzetet jelez.",
+    why: "The system uses the worst-case VIS/RVR computed from METAR and TAF. Dropping below 300 m indicates a below CAT II band situation.",
     triggers: [
       "Worst VIS < 300 m (METAR/TAF)",
-      "vagy RVRmin < 300 m (METAR/TAF)",
+      "or RVRmin < 300 m (METAR/TAF)",
     ],
   },
   ts: {
     title: "TS / CB",
     om: "OM-A 8.3.8.1 (Thunderstorms avoidance)",
-    why: "Zivatar/CB jelenlét a jelentésekben. A társasági elv: kerülés, és overhead/approaching esetén TO/LND kerülendő/prohibited operatív döntés szerint.",
+    why: "Thunderstorm/CB indication in reports. Company policy is avoidance; overhead/approaching may require delay/hold/diversion per SOP and operational judgment.",
     triggers: [
       "METAR/TAF: TS",
-      "METAR/TAF: CB (ha jelölve)",
+      "METAR/TAF: CB (when reported)",
     ],
   },
   wind: {
     title: "WIND",
     om: "OM-B 1.3.1 (Crosswind limits) · advisory tile",
-    why: "Széllökés (gust) kiemelés. A tile a gust küszöböt jelzi (advisory), az XWIND tile a becsült keresztszelet vizsgálja.",
-    triggers: ["GUST ≥ 25 kt (METAR vagy TAF)"]
+    why: "Highlights significant gusts. This tile is advisory (gust threshold); the XWIND tile estimates crosswind component.",
+    triggers: ["GUST ≥ 25 kt (METAR or TAF)"]
   },
   snow: {
     title: "SNOW",
     om: "OM-A 8.3.8.7 (Heavy precipitation - takeoff prohibited)",
-    why: "Hó/havazás jelzés a METAR/TAF-ban. A konkrét tiltó esetek (+SN, +GS, +SG, +PL, +FZRA, GR) a TO PROHIB tile-ban jelennek meg.",
+    why: "Snow-related weather codes are present in METAR/TAF. Specific prohibitive cases (+SN, +GS, +SG, +PL, +FZRA, GR) are shown under the TO PROHIB tile.",
     triggers: [
-      "METAR: SN vagy kapcsolódó snow jelenség",
-      "TAF: SN vagy kapcsolódó snow jelenség",
+      "METAR: SN or related snow phenomena",
+      "TAF: SN or related snow phenomena",
     ],
   },
   toProhib: {
     title: "TO PROHIB",
     om: "OM-A 8.3.8.1 (TS) · OM-A 8.3.8.7 (Heavy precip)",
-    why: "A policy layer tiltó jellegű időjárási elemeket keres. Ez advisory jelzés: a tényleges műveleti döntés az aktuális körülmények és SOP szerint.",
+    why: "The policy layer flags weather elements that can prohibit take-off per OM guidance. Advisory: the operational decision remains per SOP and actual conditions.",
     triggers: [
-      "TS overhead/approaching (jelzés METAR/TAF alapján)",
+      "TS overhead/approaching (derived from METAR/TAF)",
       "Heavy snow: +SN",
       "Moderate/heavy freezing rain: FZRA / +FZRA",
       "Hail: GR / +GR",
-      "Ice pellets / snow pellets / grains: PL / GS / SG (különösen +)",
+      "Ice pellets / snow pellets / grains: PL / GS / SG (especially +)",
     ],
   },
   lvto: {
     title: "LVTO",
     om: "OM-A 8.1.4.4 (Take-off minima) · LVP if RVR < 400m",
-    why: "Low Visibility Take-off indikáció: ha a (worst) VIS/RVR 550m alá megy. 400m alatt LVP szükséges.",
+    why: "Low Visibility Take-off indication when worst VIS/RVR drops below 550 m. Below 400 m, LVP must be in force.",
     triggers: [
       "RVR/VIS < 550 m",
-      "(külön jelzés: LVP ajánlott/required ha RVR < 400 m)",
+      "(LVP required if RVR < 400 m)",
     ],
   },
   xwind: {
     title: "XWIND",
     om: "OM-B 1.3.1 (Crosswind limitations)",
-    why: "A rendszer runway heading nélkül egy becsült (best RWY) logikával közelíti a keresztszelet. Advisory jelzés: a tényleges limit RWY/condition függő.",
+    why: "Without runway heading, crosswind is approximated using a best-runway estimation. Advisory: actual limits depend on runway/condition/width.",
     triggers: [
-      "Becsült crosswind meghaladja a company limitet (runway condition nélkül: konzervatív)",
-      "Gust is beleszámít (company limits incl. gusts)",
+      "Estimated crosswind exceeds company limits (conservative without RWY condition)",
+      "Gust is included (company limits include gusts)",
     ],
   },
   va: {
     title: "VA",
     om: "OM-A 8.3.8.6 (Volcanic ash)",
-    why: "Vulkáni hamu/VA indikáció jelentésekben. Medium/High contamination zónák kerülendők; látható ash cloud avoidance szükséges.",
-    triggers: ["METAR/TAF: VA / volcanic ash jelzés"]
+    why: "Volcanic ash (VA) indication in reports. Medium/High contamination must be avoided; visible ash cloud avoidance is mandatory.",
+    triggers: ["METAR/TAF: VA / volcanic ash indication"]
   },
 };
 
