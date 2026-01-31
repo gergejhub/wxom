@@ -722,14 +722,59 @@ function buildPopupHtml(st, derived, isBase){
   `;
 }
 
+function buildTooltipHtml(st, derived, isBase){
+  const code = `${st.iata || st.icao || ""}`.trim();
+  const now = derived.nowAlert || "OK";
+  const fc = derived.fcstAlert || "OK";
+  const worst = derived.overallAlert || "OK";
+  const base = isBase ? `<span class="tipPill tipPill--base">BASE</span>` : "";
+  const p = (t, cls)=>`<span class="tipPill ${cls}">${escapeHtml(t)}</span>`;
+  const aCls = (a)=> a === "CRIT" ? "tipPill--crit" : a === "HIGH" ? "tipPill--high" : a === "MED" ? "tipPill--med" : "tipPill--ok";
+  const topNow = (derived.now?.items || []).slice(0,3).map(x=>x.label).join(" · ");
+  const topFc = (derived.fcst?.items || []).slice(0,2).map(x=>x.label).join(" · ");
+  const om = (derived.omTags || []).slice(0,2).map(x=>x.label).join(" · ");
+  const hints = [topNow, topFc, om].filter(Boolean).join(" | ");
+  return `
+    <div class="tip">
+      <div class="tipRow">
+        <b>${escapeHtml(code || "AIRPORT")}</b>
+        <span class="tipPills">
+          ${base}
+          ${p(`NOW ${now}`, aCls(now))}
+          ${p(`FCST ${fc}`, aCls(fc))}
+          ${p(worst, aCls(worst))}
+        </span>
+      </div>
+      <div class="tipSub">${escapeHtml(hints || "Click for full details")}</div>
+    </div>
+  `;
+}
+
+function popupOptions(){
+  // Reserve the overlay header area so the popup does not open "under" it.
+  const panel = document.querySelector('.mapPanel');
+  const h = panel ? Math.ceil(panel.getBoundingClientRect().height) : 0;
+  const topPad = Math.max(110, h + 18);
+  return {
+    maxWidth: 560,
+    closeButton: false,
+    autoPan: true,
+    autoPanPaddingTopLeft: L.point(24, topPad),
+    autoPanPaddingBottomRight: L.point(24, 24),
+    offset: L.point(0, 14)
+  };
+}
+
 function makeDivIcon(colorCss, isBase){
   const cls = isBase ? "mkrIcon mkrIcon--base" : "mkrIcon";
   const badge = isBase ? `<span class="baseBadge">B</span>` : "";
+  const size = isBase ? 30 : 22;
+  const anchor = isBase ? 15 : 11;
   return L.divIcon({
     className: cls,
     html: `<div class="mkrInner"><div class="markerDot" style="background:${colorCss}"></div>${badge}</div>`,
-    iconSize: [22,22],
-    iconAnchor: [11,11]
+    iconSize: [size,size],
+    iconAnchor: [anchor,anchor]
   });
 }
 
@@ -749,6 +794,13 @@ let CLUSTERS = null;
 let RUNWAYS_MAP = null;
 let BASE_ICAO_SET = new Set();
 let BASE_IATA_SET = new Set();
+
+// UI filters
+let FILTER_ONLY_BASES = false;
+let FILTER_ONLY_TRIGGERED = false;
+
+// When a user searches for a filtered-out airport, temporarily force it visible
+const SEARCH_FORCE_VISIBLE_MS = 15 * 1000;
 
 let MARKERS_BY_ICAO = new Map(); // icao -> L.Marker
 let META_BY_ICAO = new Map();    // icao -> {st, derived, isBase}
@@ -807,6 +859,30 @@ function applySearch(q){
   }
 }
 
+function passesFilters({ isBase, derived }){
+  if (FILTER_ONLY_BASES && !isBase) return false;
+  if (FILTER_ONLY_TRIGGERED && !derived?.hasAnyTrigger) return false;
+  return true;
+}
+
+function ensureLayerVisibility(marker, shouldBeVisible){
+  if (!CLUSTERS || !marker) return;
+  const inGroup = CLUSTERS.hasLayer(marker);
+  if (shouldBeVisible && !inGroup) CLUSTERS.addLayer(marker);
+  if (!shouldBeVisible && inGroup) CLUSTERS.removeLayer(marker);
+}
+
+function refreshFilters(){
+  // Apply current filter state to all known markers.
+  for (const [icao, meta] of META_BY_ICAO.entries()){
+    const marker = MARKERS_BY_ICAO.get(icao);
+    if (!marker) continue;
+    const visible = passesFilters(meta) || (marker.__forceVisibleUntil && marker.__forceVisibleUntil > Date.now());
+    ensureLayerVisibility(marker, visible);
+  }
+  CLUSTERS?.refreshClusters();
+}
+
 function jumpToQuery(q){
   const s = String(q || "").trim().toUpperCase();
   if (!s || !MAP) return;
@@ -815,6 +891,11 @@ function jumpToQuery(q){
   const best = hits[0];
   const marker = MARKERS_BY_ICAO.get(best.icao);
   if (!marker || !CLUSTERS) return;
+
+  // If filters would hide the airport, force it visible briefly so the user sees the result.
+  marker.__forceVisibleUntil = Date.now() + SEARCH_FORCE_VISIBLE_MS;
+  ensureLayerVisibility(marker, true);
+  CLUSTERS.refreshClusters();
 
   // Zoom/pan so the marker becomes visible (works with clusters)
   const target = marker.getLatLng();
@@ -828,6 +909,8 @@ function jumpToQuery(q){
 async function init(){
   const status = $("mapStatus");
   const qEl = $("mapQ");
+  const onlyBasesEl = $("onlyBases");
+  const onlyTrigEl = $("onlyTriggered");
 
   MAP = L.map('map', {
     center: [48.2, 16.0],
@@ -837,16 +920,28 @@ async function init(){
     preferCanvas: true
   });
 
+  // IMPORTANT: move overlay panel INSIDE the Leaflet container so popup stacking works correctly.
+  // (If the panel is a sibling of the map container, Leaflet popups cannot escape that stacking context.)
+  try{
+    const panel = document.querySelector('.mapPanel');
+    const container = MAP.getContainer();
+    if (panel && container && panel.parentElement !== container){
+      container.appendChild(panel);
+    }
+  }catch(e){}
+
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO'
   }).addTo(MAP);
 
   // Marker clustering: improves readability when many airports are close together
   CLUSTERS = L.markerClusterGroup({
-    maxClusterRadius: 55,
+    maxClusterRadius: 70,
     showCoverageOnHover: false,
     spiderfyOnMaxZoom: true,
     disableClusteringAtZoom: 8,
+    chunkedLoading: true,
+    removeOutsideVisibleBounds: true,
     iconCreateFunction: (cluster)=>{
       const children = cluster.getAllChildMarkers();
       let worst = "OK";
@@ -894,7 +989,8 @@ async function init(){
     }
   }catch(e){}
   try{
-    const baseTxt = await fetchText('config/base.txt');
+    // Base list lives at repo root (base.txt)
+    const baseTxt = await fetchText('base.txt');
     for (const line of String(baseTxt||"").split(/\r?\n/)){
       const t = line.trim().toUpperCase();
       if (t && !t.startsWith("#")) BASE_IATA_SET.add(t);
@@ -934,6 +1030,17 @@ async function init(){
     }
   });
 
+  // Filters
+  const onFilterChange = ()=>{
+    FILTER_ONLY_BASES = !!onlyBasesEl?.checked;
+    FILTER_ONLY_TRIGGERED = !!onlyTrigEl?.checked;
+    refreshFilters();
+    // Keep search highlighting consistent
+    applySearch(qEl?.value || "");
+  };
+  if (onlyBasesEl) onlyBasesEl.addEventListener('change', onFilterChange);
+  if (onlyTrigEl) onlyTrigEl.addEventListener('change', onFilterChange);
+
   await refresh();
   fitInitial(MAP);
   setInterval(refresh, REFRESH_MS);
@@ -965,26 +1072,42 @@ async function updateStations(data){
       marker.__overallAlert = derived.overallAlert;
       marker.__pulseUntil = 0;
 
-      marker.bindPopup(buildPopupHtml(st, derived, isBase), {
-        maxWidth: 560,
-        closeButton: false,
-        autoPanPadding: [26,26]
+      // Click => full popup (dashboard-parity), Hover => compact tooltip.
+      marker.bindPopup(buildPopupHtml(st, derived, isBase), popupOptions());
+      marker.bindTooltip(buildTooltipHtml(st, derived, isBase), {
+        className: "wxTip",
+        direction: "top",
+        sticky: true,
+        opacity: 1,
+        offset: L.point(0, -10)
       });
 
-      marker.on('mouseover', ()=>marker.openPopup());
-      marker.on('mouseout', ()=>marker.closePopup());
-
-      CLUSTERS.addLayer(marker);
+      // Add marker based on current filters
+      const visible = passesFilters({isBase, derived});
+      if (visible) CLUSTERS.addLayer(marker);
       MARKERS_BY_ICAO.set(icao, marker);
     }else{
       marker.setLatLng([st.lat, st.lon]);
       marker.setIcon(makeDivIcon(color, isBase));
-      marker.bindPopup(buildPopupHtml(st, derived, isBase));
+      if (marker.getPopup()) marker.setPopupContent(buildPopupHtml(st, derived, isBase));
+      else marker.bindPopup(buildPopupHtml(st, derived, isBase), popupOptions());
+      if (marker.getTooltip()) marker.setTooltipContent(buildTooltipHtml(st, derived, isBase));
+      else marker.bindTooltip(buildTooltipHtml(st, derived, isBase), {
+        className: "wxTip",
+        direction: "top",
+        sticky: true,
+        opacity: 1,
+        offset: L.point(0, -10)
+      });
       marker.__isBase = isBase;
       marker.__overallAlert = derived.overallAlert;
     }
 
     META_BY_ICAO.set(icao, {st, derived, isBase});
+
+    // Ensure visibility according to filters (unless force-visible due to a search)
+    const visible = passesFilters({isBase, derived}) || (marker.__forceVisibleUntil && marker.__forceVisibleUntil > Date.now());
+    ensureLayerVisibility(marker, visible);
 
         // Pulse logic (newly triggered airports pulse for 5 minutes)
     const triggeredNow = !!derived.hasAnyTrigger;
@@ -1022,6 +1145,14 @@ async function updateStations(data){
   }
 
   refreshPulseClasses();
+  // Clear expired forced visibility
+  const t = Date.now();
+  for (const marker of MARKERS_BY_ICAO.values()){
+    if (marker.__forceVisibleUntil && marker.__forceVisibleUntil <= t){
+      marker.__forceVisibleUntil = 0;
+    }
+  }
+  refreshFilters();
   CLUSTERS.refreshClusters();
 }
 
