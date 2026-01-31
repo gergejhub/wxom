@@ -43,6 +43,10 @@ let rolesMap = {};
 let pinnedIcao = null;
 let airportIndex = [];
 
+let baseSet = new Set();
+let pickerBasesOnly = false;
+let lastStations = []; // last fetched stations for picker
+
 function nowMs(){ return Date.now(); }
 
 function loadJson(key, fallback){
@@ -217,7 +221,12 @@ function metricCategory(metric){
 }
 
 function roleOf(icao){
-  const v = rolesMap[(icao||"").toUpperCase()];
+  const key = (icao||"").toUpperCase();
+  // Prefer base list (IATA-based). Use local snap to resolve IATA when available.
+  const snap = getStationSnap(key);
+  const iata = snap && snap.iata ? String(snap.iata).toUpperCase() : "";
+  if(iata && isBase(iata)) return "BASE";
+  const v = rolesMap[key];
   if(v==="BASE"||v==="DEST"||v==="ALT") return v;
   return "OTHER";
 }
@@ -228,16 +237,42 @@ function roleRank(role){
   return 3;
 }
 
+function computeRole(icao, iata){
+  const ii = String(iata||"").toUpperCase();
+  if(ii && baseSet && baseSet.has(ii)) return "BASE";
+  const v = rolesMap[(icao||"").toUpperCase()];
+  if(v==="BASE"||v==="DEST"||v==="ALT") return v;
+  return "OTHER";
+}
+
 function buildAirportIndex(){
+  // Union index: use last fetched dataset stations (live) + local snapshots (history).
   const snaps = loadJson(KEY_SNAP, {});
-  const arr = [];
+  const map = new Map();
+
+  // Live dataset stations (preferred)
+  for(const st of (lastStations||[])){
+    const icao = String(st?.icao||"").toUpperCase();
+    if(!icao) continue;
+    const iata = String(st?.iata||"").toUpperCase() || null;
+    map.set(icao, { icao, iata, role: computeRole(icao, iata) });
+  }
+
+  // Local snapshots can add airports not currently present, and can add IATA if missing
   for(const [icao0, snap] of Object.entries(snaps||{})){
     const icao = String(icao0||"").toUpperCase();
     if(!icao) continue;
     const iata = String(snap?.iata||"").toUpperCase() || null;
-    const role = roleOf(icao);
-    arr.push({ icao, iata, role });
+    if(map.has(icao)){
+      const cur = map.get(icao);
+      if(!cur.iata && iata) cur.iata = iata;
+      cur.role = computeRole(icao, cur.iata);
+    }else{
+      map.set(icao, { icao, iata, role: computeRole(icao, iata) });
+    }
   }
+
+  const arr = Array.from(map.values());
   arr.sort((a,b)=>{
     const ra = roleRank(a.role), rb = roleRank(b.role);
     if(ra!==rb) return ra-rb;
@@ -254,14 +289,31 @@ function updateAirportPicker(){
   const hint = $("airportHint");
   if(!dl) return;
   buildAirportIndex();
-  dl.innerHTML = airportIndex.map(a=>{
+  const items = pickerBasesOnly ? airportIndex.filter(a=>a.role==="BASE") : airportIndex;
+
+  const seen = new Set();
+  const opts = [];
+  for(const a of items){
     const label = `${a.iata?`${a.iata} / `:""}${a.icao} · ${a.role}`;
-    // datalist uses the value for matching; keep it short & predictable
-    const value = a.iata ? `${a.iata}` : `${a.icao}`;
-    return `<option value="${escapeHtml(value)}" label="${escapeHtml(label)}"></option>`;
-  }).join("");
+    const addOpt = (value)=>{
+      const v = String(value||"").trim().toUpperCase();
+      if(!v) return;
+      if(seen.has(v)) return;
+      seen.add(v);
+      opts.push(`<option value="${escapeHtml(v)}" label="${escapeHtml(label)}"></option>`);
+    };
+    // Allow matching by both IATA and ICAO
+    addOpt(a.iata);
+    addOpt(a.icao);
+  }
+  dl.innerHTML = opts.join("");
+
   if(hint){
-    hint.textContent = airportIndex.length ? `${airportIndex.length} airports indexed (local)` : "No airport history yet.";
+    if(!items.length){
+      hint.textContent = pickerBasesOnly ? "No BASE airports found in the current dataset." : "No airports indexed yet.";
+    }else{
+      hint.textContent = pickerBasesOnly ? `${items.length} BASE airports (current dataset)` : `${items.length} airports (current dataset)`;
+    }
   }
 }
 
@@ -274,6 +326,29 @@ function resolveAirportToken(token){
   const byIata = airportIndex.find(a=>a.iata===t);
   if(byIata) return byIata.icao;
   return null;
+}
+
+async function loadBases(){
+  // base.txt contains IATA codes (one per line)
+  try{
+    const res = await fetch("../base.txt?cb="+Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const txt = await res.text();
+    const codes = [];
+    for(const raw of txt.split("\n")){
+      const line = String(raw||"").replace("\r","").trim().toUpperCase();
+      if(!line || line.startsWith("#")) continue;
+      if(/^[A-Z0-9]{3,4}$/.test(line)) codes.push(line);
+    }
+    baseSet = new Set(codes);
+  }catch{
+    baseSet = new Set();
+  }
+}
+
+function isBase(code){
+  const v = String(code||"").trim().toUpperCase();
+  return v ? baseSet.has(v) : false;
 }
 
 async function loadRoles(){
@@ -834,17 +909,35 @@ function formatTick(v){
 }
 
 function renderLog(){
+  const list = $("logList");
+  if(!list) return;
   const hist = loadJson(KEY_HISTORY, []);
-  const rows = hist.slice(0,20).map(h=>{
-    return `<tr>
-      <td>${escapeHtml(fmtTime(h.t))}</td>
-      <td>${escapeHtml(h.generatedAt || "–")}</td>
-      <td>${escapeHtml(String(h.total ?? "–"))}</td>
-      <td>${escapeHtml(String(h.missingMetar ?? "–"))}</td>
-      <td>${escapeHtml(String(h.missingTaf ?? "–"))}</td>
-    </tr>`;
+
+  const html = hist.slice(0, 25).map(h=>{
+    const t = (h && typeof h.t==="number") ? h.t : Date.now();
+    const ga = h?.generatedAt || "–";
+    const genMs = (h && typeof h.genMs==="number") ? h.genMs : (ga!=="–" ? Date.parse(ga) : null);
+    const age = (genMs && isFinite(genMs)) ? fmtAge(genMs) : "–";
+    const total = (h?.total ?? "–");
+    const mm = (h?.missingMetar ?? "–");
+    const mt = (h?.missingTaf ?? "–");
+
+    return `
+      <div class="logItem">
+        <div class="logItem__left">
+          <div class="logItem__t">${escapeHtml(fmtTime(t))} · ${escapeHtml(ga)}</div>
+          <div class="logItem__s">${escapeHtml(age)}</div>
+        </div>
+        <div class="logItem__right">
+          <span class="badge"><span class="badge__k">Stations</span>${escapeHtml(String(total))}</span>
+          <span class="badge"><span class="badge__k">Missing METAR</span>${escapeHtml(String(mm))}</span>
+          <span class="badge"><span class="badge__k">Missing TAF</span>${escapeHtml(String(mt))}</span>
+        </div>
+      </div>
+    `;
   }).join("");
-  $("logBody").innerHTML = rows || `<tr><td colspan="5" class="muted">No log yet.</td></tr>`;
+
+  list.innerHTML = html || `<div class="muted">No log yet. Keep this page open to build refresh history.</div>`;
 }
 
 function buildAtlasModel(){
@@ -1454,7 +1547,7 @@ function renderPinned(){
 
   const snap = getStationSnap(pinnedIcao) || {};
   const name = `${pinnedIcao}${snap.iata?(" / "+snap.iata):""}`;
-  const role = roleOf(pinnedIcao);
+  const role = computeRole(pinnedIcao, snap.iata);
   badge.textContent = `${name} · ${role}`;
 
   // events (last 12, filtered by current selectors)
@@ -1541,6 +1634,8 @@ async function refresh(force=false){
     return;
   }
 
+  lastStations = data.stations || [];
+
   const genAt = data.generatedAt || null;
   const genMs = genAt ? Date.parse(genAt) : null;
 
@@ -1590,12 +1685,204 @@ async function refresh(force=false){
   renderPinned();
 }
 
+
+const STAT_TOOLTIP = {
+  kpi_latest: {
+    title: "Latest dataset",
+    body: "Shows when the last dataset (latest.json) was generated.",
+    bullets: [
+      "‘Latest dataset’ is the timestamp from latest.json (generatedAt).",
+      "‘Age’ is how long ago this dataset was created (in your browser time).",
+      "If age grows beyond ~20–30 minutes, data is likely delayed/stale."
+    ]
+  },
+  kpi_health: {
+    title: "Refresh health",
+    body: "A simple health verdict based on how old the latest dataset is.",
+    bullets: [
+      "Healthy: within ~1.8× the expected update interval.",
+      "Delayed: between ~1.8× and ~3.2×.",
+      "Stale: beyond ~3.2× (updates are not arriving)."
+    ]
+  },
+  kpi_avg: {
+    title: "Average interval",
+    body: "Average time between dataset updates observed by this browser.",
+    bullets: [
+      "Computed from generatedAt changes stored locally.",
+      "If you refresh/close the page, the trend may reset or become less accurate.",
+      "Use together with Refresh trend to see spikes and patterns."
+    ]
+  },
+  kpi_cov: {
+    title: "Station coverage",
+    body: "How many stations are present and how many are missing METAR/TAF.",
+    bullets: [
+      "Total stations: number of airports in latest.json.",
+      "Missing METAR/TAF: station reports absent in the dataset.",
+      "Coverage issues often correlate with upstream feed interruptions."
+    ]
+  },
+  trend_refresh: {
+    title: "Refresh trend",
+    body: "Intervals between dataset updates (generatedAt changes).",
+    bullets: [
+      "Each bar is one interval between two consecutive datasets.",
+      "Short bars = frequent refresh; tall bars = delays.",
+      "Use this to spot temporary outages or slow periods."
+    ]
+  },
+  trend_coverage: {
+    title: "Coverage trend",
+    body: "Missing METAR / Missing TAF counts over time.",
+    bullets: [
+      "Stacked bars help you see if METAR or TAF is the main gap.",
+      "Sudden jumps usually indicate feed-level issues, not weather.",
+      "Sustained missing counts may mean specific stations are down."
+    ]
+  }
+};
+
+let statTipHover = null;
+let statTipPin = null;
+let pinnedTip = { key: null, anchor: null };
+
+function ensureStatTips(){
+  statTipHover = statTipHover || $("statTip");
+  statTipPin = statTipPin || $("statTipPin");
+}
+
+function buildStatTipHtml(info, pinned=false){
+  const bullets = (info.bullets||[]).map(b=>`<li>${escapeHtml(b)}</li>`).join("");
+  return `
+    ${pinned ? `<div class="tile-tip__x" title="Close">×</div>` : ``}
+    <div class="tile-tip__h"><div class="tile-tip__t">${escapeHtml(info.title||"Details")}</div></div>
+    ${info.body ? `<div class="tile-tip__b">${escapeHtml(info.body)}</div>` : ``}
+    ${bullets ? `<div class="tile-tip__k">Details</div><ul class="tile-tip__ul">${bullets}</ul>` : ``}
+  `;
+}
+
+function positionTip(el, x, y){
+  const pad = 14;
+  const vw = window.innerWidth || 1200;
+  const vh = window.innerHeight || 800;
+  el.style.left = "0px";
+  el.style.top = "0px";
+  el.classList.add("is-on");
+  const r = el.getBoundingClientRect();
+  let left = x + 14;
+  let top = y + 14;
+  if(left + r.width + pad > vw) left = vw - r.width - pad;
+  if(top + r.height + pad > vh) top = vh - r.height - pad;
+  if(left < pad) left = pad;
+  if(top < pad) top = pad;
+  el.style.left = left + "px";
+  el.style.top = top + "px";
+}
+
+function showStatHover(key, x, y){
+  ensureStatTips();
+  const info = STAT_TOOLTIP[key];
+  if(!info || !statTipHover) return;
+  statTipHover.innerHTML = buildStatTipHtml(info, false);
+  statTipHover.setAttribute("aria-hidden", "false");
+  positionTip(statTipHover, x, y);
+}
+
+function hideStatHover(){
+  if(!statTipHover) return;
+  statTipHover.classList.remove("is-on");
+  statTipHover.setAttribute("aria-hidden", "true");
+}
+
+function showStatPin(key, anchorEl){
+  ensureStatTips();
+  const info = STAT_TOOLTIP[key];
+  if(!info || !statTipPin) return;
+  pinnedTip = { key, anchor: anchorEl };
+  statTipPin.style.display = "block";
+  statTipPin.innerHTML = buildStatTipHtml(info, true);
+  statTipPin.setAttribute("aria-hidden", "false");
+
+  const r = anchorEl.getBoundingClientRect();
+  positionTip(statTipPin, r.right, r.top);
+
+  const xbtn = statTipPin.querySelector('.tile-tip__x');
+  if(xbtn) xbtn.addEventListener('click', (e)=>{ e.stopPropagation(); hideStatPin(); });
+}
+
+function hideStatPin(){
+  if(!statTipPin) return;
+  pinnedTip = { key: null, anchor: null };
+  statTipPin.classList.remove("is-on");
+  statTipPin.style.display = "none";
+  statTipPin.setAttribute("aria-hidden", "true");
+}
+
+function initStatTooltips(){
+  ensureStatTips();
+  const nodes = document.querySelectorAll('[data-tip-id]');
+  if(!nodes.length) return;
+
+  nodes.forEach(node=>{
+    const key = node.getAttribute('data-tip-id');
+    if(!key || !STAT_TOOLTIP[key]) return;
+
+    node.addEventListener('mouseenter', (e)=>{ showStatHover(key, e.clientX, e.clientY); });
+    node.addEventListener('mousemove', (e)=>{ showStatHover(key, e.clientX, e.clientY); });
+    node.addEventListener('mouseleave', hideStatHover);
+
+    node.addEventListener('focus', ()=>{
+      const r = node.getBoundingClientRect();
+      showStatHover(key, r.left + r.width/2, r.top);
+    });
+    node.addEventListener('blur', hideStatHover);
+
+    node.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(pinnedTip.key === key && statTipPin && statTipPin.style.display !== 'none'){
+        hideStatPin();
+      }else{
+        showStatPin(key, node);
+      }
+    });
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(!statTipPin || statTipPin.style.display === 'none') return;
+    const t = e.target;
+    if(statTipPin.contains(t)) return;
+    if(pinnedTip.anchor && pinnedTip.anchor.contains(t)) return;
+    hideStatPin();
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') hideStatPin();
+  });
+}
+
 function bind(){
-  $("btnNow").addEventListener("click", ()=>refresh(true));
-  ["atlasWindow","atlasDir"].forEach(id=>{
+  const btnNow = $("btnNow");
+  if(btnNow) btnNow.addEventListener("click", ()=>refresh(true));
+
+  ["atlasWindow", "atlasDir"].forEach(id=>{
     const el = $(id);
     if(el) el.addEventListener("change", ()=>{ renderPinned(); });
   });
+
+  const basesBtn = $("pickBasesOnly");
+  if(basesBtn){
+    const sync = ()=>{
+      basesBtn.setAttribute("aria-pressed", pickerBasesOnly ? "true" : "false");
+      basesBtn.textContent = pickerBasesOnly ? "BASES ONLY: ON" : "BASES ONLY: OFF";
+    };
+    sync();
+    basesBtn.addEventListener("click", ()=>{
+      pickerBasesOnly = !pickerBasesOnly;
+      sync();
+      updateAirportPicker();
+    });
+  }
 
   const pick = $("airportPick");
   if(pick){
@@ -1609,9 +1896,12 @@ function bind(){
     pick.addEventListener("keydown", (e)=>{ if(e.key==="Enter") apply(); });
     pick.addEventListener("blur", apply);
   }
+
+  initStatTooltips();
 }
 
 (async function init(){
+  try{ await loadBases(); }catch{}
   try{ await loadRoles(); }catch{}
   bind();
   await refresh(true);
