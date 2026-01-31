@@ -776,6 +776,16 @@ function deriveStation(st){
   const metPri = engIceOps ? 1000 : met.score; // 1000 = pinned
   const tafPri = taf.score;
 
+  // Clarify why an airport is "Critical" in the table:
+  // - METAR CRIT: met.score >= 70 ("now")
+  // - TAF CRIT:  taf.score >= 70 ("forecast")
+  // - Overall CRIT can also come from pillar escalation (SNOW/WIND/ENG ICE OPS)
+  const metCrit = (typeof met.score === "number" && met.score >= 70);
+  const tafCrit = (typeof taf.score === "number" && taf.score >= 70);
+  const critSrc = (alert === "CRIT")
+    ? (metCrit ? "M" : (tafCrit ? "T" : "E"))
+    : null;
+
   // Determine triggers & source (M/T)
   const triggers = [];
   const push = (label, cls, src) => triggers.push({label, cls, src}); // src: "M","T","MT"
@@ -915,6 +925,9 @@ return {
     engIceOps,
     severityScore,
     alert,
+    metCrit,
+    tafCrit,
+    critSrc,
     metPri,
     tafPri,
     triggers
@@ -1220,6 +1233,19 @@ function rowHtml(st){
   const metRaw = st.metarRaw ? highlightRaw(st.metarRaw) : "<span class='muted'>—</span>";
   const tafRaw = st.tafRaw ? highlightRaw(st.tafRaw) : "<span class='muted'>—</span>";
 
+  const critDriverBadge = (()=>{
+    if (String(st.alert || "").toUpperCase() !== "CRIT") return "";
+    const src = (st.metCrit ? "M" : (st.critSrc === "T" ? "T" : "E"));
+    const cls = (src === "M") ? "pillsub--m" : (src === "T" ? "pillsub--t" : "pillsub--e");
+    const txt = (src === "M") ? "METAR" : (src === "T" ? "TAF" : "ESC");
+    const tip = (src === "M")
+      ? "Critical because METAR score ≥ 70 (NOW-driven)."
+      : (src === "T")
+        ? "Critical because TAF score ≥ 70 (FORECAST-driven)."
+        : "Critical via escalation (SNOW/WIND/ENG ICE OPS) even though neither score is ≥ 70.";
+    return `<span class="pill pillsub ${cls}" title="${escapeHtml(tip)}">${txt}</span>`;
+  })();
+
   return `<tr class="row" data-icao="${escapeHtml(st.icao)}">
     <td>
       <div class="airport">
@@ -1230,7 +1256,7 @@ function rowHtml(st){
         <div class="airport__name">${escapeHtml(st.name||"")}</div>
       </div>
     </td>
-    <td><span class="pill pill--${st.alert.toLowerCase()}">${escapeHtml(alertLabel(st.alert))}</span></td>
+    <td><div class="alertcell"><span class="pill pill--${st.alert.toLowerCase()}">${escapeHtml(alertLabel(st.alert))}</span>${critDriverBadge}</div></td>
     <td><div class="triggers">${lowVisTagHtml}${trigHtml}</div></td>
     <td class="col-worst">
       <div class="worst">
@@ -1393,16 +1419,45 @@ function sortList(list){
   if (!view.sortPri){
     return [...list].sort((a,b)=> a.icao.localeCompare(b.icao));
   }
+
+  const alertRank = (st)=>{
+    const k = String(st?.alert || "OK").toUpperCase();
+    return (ALERT_LEVEL[k] ?? 0);
+  };
+  const critDriverRank = (st)=>{
+    // Only meaningful when overall alert is CRIT.
+    if (String(st?.alert || "").toUpperCase() !== "CRIT") return 0;
+    // Prefer NOW/METAR-driven criticality above forecast-driven, above "pillar-only" escalation.
+    if (st?.metCrit) return 3;
+    if (st?.critSrc === "T" || st?.tafCrit) return 2;
+    return 1; // E (escalation)
+  };
+
   return [...list].sort((a,b)=>{
     // 1) ENG ICE OPS pinned
     if (a.engIceOps !== b.engIceOps) return a.engIceOps ? -1 : 1;
-    // 2) METAR priority (current)
+
+    // 2) Overall alert bucket (CRIT > HIGH > MED > OK)
+    const ar = alertRank(b) - alertRank(a);
+    if (ar) return ar;
+
+    // 3) Within CRIT: distinguish NOW(METAR) vs FORECAST(TAF) vs escalation
+    const cr = critDriverRank(b) - critDriverRank(a);
+    if (cr) return cr;
+
+    // 4) BASE airports first within the same bucket
+    if (a.isBase !== b.isBase) return a.isBase ? -1 : 1;
+
+    // 5) Then METAR score ("now" severity)
     if (b.metPri !== a.metPri) return b.metPri - a.metPri;
-    // 3) TAF priority
-    if (b.tafPri !== a.tafPri) return b.tafPri - a.tafPri;
-    // 4) Severity
+
+    // 6) Then combined severity score (after pillar escalation)
     if (b.severityScore !== a.severityScore) return b.severityScore - a.severityScore;
-    // 5) ICAO
+
+    // 7) Then TAF score
+    if (b.tafPri !== a.tafPri) return b.tafPri - a.tafPri;
+
+    // 8) ICAO
     return a.icao.localeCompare(b.icao);
   });
 }
