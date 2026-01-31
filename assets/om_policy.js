@@ -1,7 +1,14 @@
 /* OM-A/OM-B advisory policy layer (zero-manual inputs).
    - Crosswind advisory: uses OurAirports runway headings/widths (data/runways.json)
    - Runway condition is inferred conservatively from METAR/TAF wx codes (no SNOWTAM/RWYCC).
-   - Outputs: st.om = { ...flags... } consumed by assets/app.js
+   - Outputs are advisory (dispatcher aids), not operational release criteria.
+   - Consumed by assets/app.js via window.WXM_OM.computeOmFlags
+
+   Key OM references (user-provided PDFs):
+   - OM-A: TAKEOFF IS PROHIBITED in specific heavy precip/freezing/hail conditions.
+   - OM-A: RVR reporting requirement when VIS/CMV < 800m for approach/landing.
+   - OM-A: LVP required for LVTO (RVR < 400m); crew qualification for LVTO (RVR < 150m).
+   - OM-B: Crosswind limits by runway condition (RCAM / RWYCC) and narrow runway limits.
 */
 
 (function(){
@@ -48,47 +55,116 @@
   function hasToken(raw, re){ return re.test(String(raw || "").toUpperCase()); }
 
   function detectVA(raw){ return hasToken(raw, /\bVA\b/); }
-  function detectCB(raw){ return hasToken(raw, /\bCB\b|\bTCU\b/); }
+  function detectCB(raw){
+    const up = String(raw || "").toUpperCase();
+    // CB/TCU may be appended to cloud groups (e.g. BKN020CB)
+    return /CB\b/.test(up) || /TCU\b/.test(up);
+  }
+
+  function detectAnyRvr(raw){
+    const up = String(raw || "").toUpperCase();
+    return /\bR\d{2}[LRC]?\/[PM]?\d{4}/.test(up);
+  }
+
+  function extractRvrGroups(raw){
+    // Parses METAR/TAF RVR groups like: R12/0600U, R27/P2000, R04/0300V0600D
+    // Returns [{rwy, q1, v1, q2, v2, trend}]
+    if (!raw) return [];
+    const re = /\bR(\d{2}[LRC]?)\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?\b/g;
+    const out = [];
+    let m;
+    while ((m = re.exec(String(raw))) !== null){
+      out.push({
+        rwy: m[1] || null,
+        q1: m[2] || "",
+        v1: m[3] ? parseInt(m[3],10) : null,
+        q2: m[4] || "",
+        v2: m[5] ? parseInt(m[5],10) : null,
+        trend: m[6] || ""
+      });
+    }
+    return out.filter(x => Number.isFinite(x.v1) || Number.isFinite(x.v2));
+  }
+
+  function heavyPrecipMatches(raw){
+    // OM-A 8.3.8.7: TAKEOFF IS PROHIBITED in the following weather conditions:
+    // +SN, +GS, +SG, +PL, (moderate/heavy) FZRA, (moderate/heavy) GR
+    const up = String(raw || "").toUpperCase();
+    const out = [];
+    if (/\+SN/.test(up)) out.push("+SN");
+    if (/\+GS/.test(up)) out.push("+GS");
+    if (/\+SG/.test(up)) out.push("+SG");
+    if (/\+PL/.test(up)) out.push("+PL");
+
+    if (/\+FZRA/.test(up)) out.push("+FZRA");
+    else if (/FZRA/.test(up)) out.push("FZRA");
+
+    if (/\+GR/.test(up)) out.push("+GR");
+    else if (/GR/.test(up)) out.push("GR");
+
+    return out;
+  }
 
   function detectHeavyPrecipTOProhib(raw){
-    // Heavy snow (+SN), heavy snow pellets (+GS), heavy snow grains (+SG), heavy ice pellets (+PL),
-    // moderate/heavy freezing rain (FZRA, +FZRA), moderate/heavy hail (GR, +GR)
-    const up = String(raw || "").toUpperCase();
-    return (
-      /\+SN\b/.test(up) ||
-      /\+GS\b/.test(up) ||
-      /\+SG\b/.test(up) ||
-      /\+PL\b/.test(up) ||
-      /\bFZRA\b/.test(up) ||     // includes +FZRA
-      /\bGR\b/.test(up)          // includes +GR
-    );
+    return heavyPrecipMatches(raw).length > 0;
   }
+
 
   function inferRunwayCondition(metarRaw, tafRaw){
-    // Conservative inference:
-    // - contaminated if snow/ice pellets/fzra/hail present
-    // - wet if rain/drizzle present
-    // - dry otherwise
+    // Conservative inference from wx codes only.
+    // Returns {cond, rwyccEst, evidence[]} (evidence are wx tokens that drove the estimate).
+    // - DRY     => RWYCC 6
+    // - WET     => RWYCC 5 (damp/wet)
+    // - CONTAM  => RWYCC 3 (snow contamination proxy)
+    // - SEVERE  => RWYCC 2 proxy (freezing rain / ice pellets / hail)
     const up = `${metarRaw||""} ${tafRaw||""}`.toUpperCase();
-    if (/\bSN\b|\bSG\b|\bGS\b|\bPL\b|\bFZRA\b|\bGR\b/.test(up)) return "CONTAM";
-    if (/\bRA\b|\bDZ\b/.test(up)) return "WET";
-    return "DRY";
+
+    const ev = [];
+
+    const severeRe = /(FZRA|FZDZ|PL|GR)/g;
+    let mm;
+    while ((mm = severeRe.exec(up)) !== null) ev.push(mm[1]);
+    if (ev.length){
+      return {cond:"SEVERE", rwyccEst:2, evidence:[...new Set(ev)]};
+    }
+
+    const snowRe = /(SN|SG|GS|BLSN|DRSN|SHSN)/g;
+    while ((mm = snowRe.exec(up)) !== null) ev.push(mm[1]);
+    if (ev.length){
+      return {cond:"CONTAM", rwyccEst:3, evidence:[...new Set(ev)]};
+    }
+
+    const wetRe = /(RA|DZ)/g;
+    while ((mm = wetRe.exec(up)) !== null) ev.push(mm[1]);
+    if (ev.length){
+      return {cond:"WET", rwyccEst:5, evidence:[...new Set(ev)]};
+    }
+
+    return {cond:"DRY", rwyccEst:6, evidence:[]};
   }
 
-  function crosswindLimitKt(cond, narrow){
+
+
+  function crosswindLimitKt(rwyccEst, narrow){
     // OM-B 1.3.1 crosswind limits incl gusts (company limits).
-    // With no SNOWTAM depth/RWYCC, we map inferred conditions to table rows:
-    // - DRY => Dry
-    // - WET => Wet/Damp (<=3mm)
-    // - CONTAM => Use 15kt (dry/wet snow) as a conservative default.
-    if (cond === "DRY") return narrow ? 20 : 38;
-    if (cond === "WET") return narrow ? 20 : 35;
-    // CONTAM
-    return narrow ? 10 : 15;
+    // Table (standard / narrow):
+    // RWYCC 6: 38 / 20
+    // RWYCC 5: 35 / 20
+    // RWYCC 4: 20 / 10
+    // RWYCC 3: 15 / 10
+    // RWYCC 2: 10 /  5
+    // RWYCC 1/0: NO OPS (company policy; unless specific OM-C upgrade logic)
+    if (!Number.isFinite(rwyccEst)) return null;
+    if (rwyccEst >= 6) return narrow ? 20 : 38;
+    if (rwyccEst === 5) return narrow ? 20 : 35;
+    if (rwyccEst === 4) return narrow ? 10 : 20;
+    if (rwyccEst === 3) return narrow ? 10 : 15;
+    if (rwyccEst === 2) return narrow ? 5  : 10;
+    return null;
   }
 
-  function computeBestCrosswind(metarRaw, runwaysForIcao){
-    const w = parseWindKt(metarRaw);
+  function computeBestCrosswind(windRaw, runwaysForIcao){
+    const w = parseWindKt(windRaw);
     if (w.dir == null || w.spd == null) return {xwind:null, best:null, narrow:null, usedSpd:null, windDir:w.dir};
     const usedSpd = Math.max(w.spd, w.gst || 0);
     const rwys = Array.isArray(runwaysForIcao) ? runwaysForIcao : [];
@@ -120,43 +196,111 @@
     const metarRaw = st.metarRaw || "";
     const tafRaw = st.tafRaw || "";
 
-    const tsOrCb = (met && met.hz && met.hz.ts) || (taf && taf.hz && taf.hz.ts) || detectCB(metarRaw) || detectCB(tafRaw);
+    // Presence flags
+    const tsOrCb = (met && met.hz && (met.hz.ts || met.hz.cb)) || (taf && taf.hz && (taf.hz.ts || taf.hz.cb)) || detectCB(metarRaw) || detectCB(tafRaw);
     const heavy = detectHeavyPrecipTOProhib(metarRaw) || detectHeavyPrecipTOProhib(tafRaw);
-    const toProhib = !!(tsOrCb || heavy);
+    const toProhib = !!heavy; // OM-A heavy precip list (TAKEOFF IS PROHIBITED)
 
     const va = detectVA(metarRaw) || detectVA(tafRaw);
 
     // LVTO / LVP / absolute min:
-    // Prefer RVR if present, otherwise VIS. We use minimum of all detected RVR groups if available.
+    // Prefer RVR if present, otherwise use reported MET visibility (no conversion).
     const refVis = (typeof rvrMinAll === "number") ? rvrMinAll : (typeof worstVis === "number" ? worstVis : null);
     const lvto = (refVis != null) ? (refVis < 550) : false;
-    const lvp = (refVis != null) ? (refVis < 400) : false;
+    const lvp  = (refVis != null) ? (refVis < 400) : false;
     const rvr125 = (typeof rvrMinAll === "number") ? (rvrMinAll < 125) : false;
 
+    // Commander responsibility: LVTO (RVR < 150m) requires appropriately qualified crew.
+    const lvtoQualReq = (typeof rvrMinAll === "number") ? (rvrMinAll < 150) : false;
+
+    // Approach/landing: RVR reporting must be available when VIS/CMV < 800m.
+    const rvrRequired = (typeof worstVis === "number" && worstVis < 800) ? (!detectAnyRvr(obsRaw)) : false;
+
+    // CAT-driven tags (generic thresholds; actual minima depend on approach category and lights)
+    const cat2Plus = (typeof rvrMinAll === "number") ? (rvrMinAll < 450) : false;
+    const cat3Only = (typeof rvrMinAll === "number") ? (rvrMinAll < 200) : false;
+    const cat3BelowMin = (typeof rvrMinAll === "number") ? (rvrMinAll < 75) : false;
+
+    // Cold temperature corrections flag (simple; detailed tables live in OM-A)
     const tempC = parseTempC(metarRaw);
     const coldcorr = (tempC != null) ? (tempC <= 0) : false;
 
     // Crosswind advisory
     const rwys = runwaysMap ? runwaysMap[st.icao] : null;
-    const bestX = computeBestCrosswind(metarRaw, rwys);
-    const cond = inferRunwayCondition(metarRaw, tafRaw);
+    const windRaw = metarRaw || tafRaw;
+    const bestX = computeBestCrosswind(windRaw, rwys);
+    const condInfo = inferRunwayCondition(metarRaw, tafRaw);
     const narrow = (bestX.narrow === true);
-    const xwindLimit = (bestX.xwind != null) ? crosswindLimitKt(cond, narrow) : null;
+    const xwindLimit = (bestX.xwind != null) ? crosswindLimitKt(condInfo.rwyccEst, narrow) : null;
     const xwindExceed = (bestX.xwind != null && xwindLimit != null) ? (bestX.xwind > xwindLimit) : false;
 
+    const noOpsLikely = (Number.isFinite(condInfo.rwyccEst) && condInfo.rwyccEst < 3);
+
+    // Explanations for UI/audit (kept compact; derived only from raw METAR/TAF text + runways.json)
+    const explainSrc = (metarRaw && !tafRaw) ? "M" : (!metarRaw && tafRaw) ? "T" : "MT";
+    const obsRaw = metarRaw || tafRaw;
+    const rvrGroups = extractRvrGroups(obsRaw);
+    const heavyMatches = [...new Set([...heavyPrecipMatches(metarRaw), ...heavyPrecipMatches(tafRaw)])];
+    const w = parseWindKt(obsRaw);
+    const refVisType = (typeof rvrMinAll === "number") ? "RVR" : ((typeof worstVis === "number") ? "VIS" : null);
+
+    const explain = {
+      src: explainSrc,
+      heavyMatches,
+      refVisType,
+      refVisValue: (refVis != null ? refVis : null),
+      worstVis: (typeof worstVis === "number" ? worstVis : null),
+      rvrMinAll: (typeof rvrMinAll === "number" ? rvrMinAll : null),
+      rvrGroups,
+      rvrAny: detectAnyRvr(obsRaw),
+      visThresh800: 800,
+      lvtoThresh550: 550,
+      lvpThresh400: 400,
+      lvtoQualThresh150: 150,
+      rvrStopThresh125: 125,
+      cat2Thresh450: 450,
+      cat3Thresh200: 200,
+      cat3LowThresh75: 75,
+      tempC: (tempC != null ? tempC : null),
+      runwayCond: {cond: condInfo.cond, rwyccEst: condInfo.rwyccEst, evidence: condInfo.evidence || []},
+      wind: {dir: w.dir ?? null, spd: w.spd ?? null, gst: w.gst ?? null, usedSpd: bestX.usedSpd ?? null},
+      xwind: {
+        available: !!(rwys && rwys.length),
+        xwindKt: (bestX.xwind != null ? bestX.xwind : null),
+        limitKt: (xwindLimit != null ? xwindLimit : null),
+        runwayHdg: (bestX.best && Number.isFinite(bestX.best.hdg)) ? bestX.best.hdg : null,
+        runwayName: (bestX.best && bestX.best.name) ? bestX.best.name : null,
+        runwayWidthM: (bestX.best && Number.isFinite(bestX.best.width_m)) ? bestX.best.width_m : null,
+        narrow: (bestX.narrow === true)
+      }
+    };
+
     return {
+      explain,
+      // OM-A/OM-B derived flags (advisory)
       toProhib,
       tsOrCb: !!tsOrCb,
       heavyPrecip: !!heavy,
       va,
       lvto,
       lvp,
+      lvtoQualReq,
       rvr125,
+      rvrRequired,
+      cat2Plus,
+      cat3Only,
+      cat3BelowMin,
       coldcorr,
+
+      // Crosswind
       xwindExceed,
       xwindKt: bestX.xwind,
       xwindLimitKt: xwindLimit,
-      xwindCond: cond,
+      xwindCond: condInfo.cond,
+      rwyccEst: condInfo.rwyccEst,
+      noOpsLikely,
+
+      // Diagnostics
       xwindNarrow: bestX.narrow,
       xwindUsedSpdKt: bestX.usedSpd,
       xwindWindDir: bestX.windDir

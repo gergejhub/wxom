@@ -1,5 +1,5 @@
 
-/* v60: fixes
+/* v62: changes
    - Quick View triggers layout (CSS flex-wrap)
    - Raw highlight overlap fixed via CSS .hl inline-block margins
    - Priority: METAR-driven hazards outrank TAF-only hazards
@@ -11,6 +11,20 @@ const $ = (id) => document.getElementById(id);
 // View mode (Auto / TV) ----------------------------------------------------
 const VIEW_MODE_KEY = "wizz_viewMode"; // "auto" | "tv"
 let viewMode = (localStorage.getItem(VIEW_MODE_KEY) || "auto");
+
+
+// Notifications (AUTO view): browser notifications when a NEW BASE becomes impacted by a NEW METAR
+const NOTIF_KEY = "wxm_notifEnabled"; // "1"|"0"
+let notifEnabled = (localStorage.getItem(NOTIF_KEY) === "1");
+
+// Collapsible TAF tiles panel
+const TAF_PANEL_KEY = "wxm_tafPanelOpen"; // "1"|"0"
+let tafPanelOpen = (localStorage.getItem(TAF_PANEL_KEY) === "1"); // default collapsed
+
+// For change detection (new METAR / new alerts)
+let prevMetarObsByIcao = new Map(); // ICAO -> "DDHHMMZ"
+let prevSignalSets = null; // previous tile sets for TV toast/flash
+
 
 function detectDeviceClass(){
   const w = window.innerWidth || 1200;
@@ -66,6 +80,78 @@ function initViewModeUI(){
     }
   });
 }
+
+
+// --- Notifications UI ----------------------------------------------------
+function updateNotifBtn(){
+  const btn = $("notifBtn");
+  const lbl = $("notifBtnLabel");
+  if (!btn || !lbl) return;
+  const supported = (typeof window !== "undefined" && "Notification" in window);
+  btn.classList.toggle("hidden", !supported);
+  lbl.textContent = notifEnabled ? "ON" : "OFF";
+}
+
+async function requestNotifPermission(){
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission === "denied") return false;
+  try{
+    const p = await Notification.requestPermission();
+    return p === "granted";
+  }catch(e){
+    return false;
+  }
+}
+
+async function toggleNotifications(){
+  if (!("Notification" in window)) return;
+  if (!notifEnabled){
+    const ok = await requestNotifPermission();
+    if (!ok){
+      notifEnabled = false;
+      localStorage.setItem(NOTIF_KEY, "0");
+      updateNotifBtn();
+      return;
+    }
+    notifEnabled = true;
+    localStorage.setItem(NOTIF_KEY, "1");
+    updateNotifBtn();
+    try{
+      new Notification("Notifications enabled", {body:"You will be notified when a NEW BASE becomes impacted by a NEW METAR (AUTO view).", silent:true});
+    }catch(e){}
+    return;
+  }
+  notifEnabled = false;
+  localStorage.setItem(NOTIF_KEY, "0");
+  updateNotifBtn();
+}
+
+function initNotifUI(){
+  updateNotifBtn();
+  const btn = $("notifBtn");
+  if (btn) btn.addEventListener("click", toggleNotifications);
+}
+
+// --- TAF panel UI --------------------------------------------------------
+function applyTafPanelState(){
+  const panel = $("tilesTaf");
+  const sub = $("tileTafAnySub");
+  if (panel) panel.classList.toggle("hidden", !tafPanelOpen);
+  if (sub) sub.textContent = tafPanelOpen ? "tap to collapse" : "tap to expand";
+}
+
+function toggleTafPanel(){
+  tafPanelOpen = !tafPanelOpen;
+  localStorage.setItem(TAF_PANEL_KEY, tafPanelOpen ? "1" : "0");
+  applyTafPanelState();
+}
+
+function initTafPanelUI(){
+  applyTafPanelState();
+  // click handler is bound in bind() on the summary tile
+}
+
 
 
 
@@ -413,35 +499,80 @@ function hasAny(raw, tokens){
 }
 
 function hazardFlags(raw){
+  // Returns a richer set of phenomena flags from raw METAR/TAF strings.
+  // NOTE: The report header (METAR/TAF/SPECI/AUTO/AMD/...) and ICAO station id are stripped
+  // before token scanning to avoid false positives like LGTS/GCTS triggering TS.
   if (!raw) return {
     fzfg:false, fg:false, br:false, blsn:false,
-    sn:false, ra:false, ts:false,
-    cb:false, va:false,
+    sn:false, ra:false, ts:false, cb:false,
+    va:false,
     fzra:false, fzdz:false, gr:false, pl:false, gs:false, sg:false,
     heavySn:false, heavyFzra:false, heavyHail:false,
   };
 
-  const up = String(raw).toUpperCase();
+  const upAll = String(raw).toUpperCase();
+
+  // Strip leading meta tokens + ICAO to prevent substring matches inside airport identifiers.
+  const toksAll = upAll.split(/\s+/).map(t=>t.trim()).filter(Boolean);
+  let i = 0;
+  const headerSkip = new Set(["METAR","SPECI","TAF","AUTO","COR","AMD","CNL","NIL"]);
+  while (i < toksAll.length && headerSkip.has(toksAll[i])) i++;
+  if (i < toksAll.length && /^[A-Z]{4}$/.test(toksAll[i])) i++; // ICAO station
+  const toks = toksAll.slice(i);
+
+  const coreText = toks.join(" ");
 
   // Token-aware helpers to catch combined weather codes like RASN, -RASN, SNRA, etc.
-  const wxToks = up.split(/\s+/).map(t=>t.trim()).filter(Boolean).filter(t=>{
-    if (t.includes("/")) return false;                 // time groups, RVR
+  const wxToks = toks.filter(t=>{
+    if (!t) return false;
+    if (t.includes("/")) return false;                 // time groups, RVR, validity
     if (/[0-9]/.test(t)) return false;                 // numeric groups
     if (/KT$/.test(t) || /MPS$/.test(t)) return false; // wind
-    if (t.length > 10) return false;
+    if (t.length > 12) return false;
     return true;
   });
 
   const hasWx = (needle)=>wxToks.some(t=>t.includes(needle));
+  const hasWxRe = (re)=>wxToks.some(t=>re.test(t));
+
+  // Cloud qualifiers can be attached: BKN020CB, SCT030TCU, etc. (avoid matching in ICAO)
+  const cb =
+    /\b(?:FEW|SCT|BKN|OVC|VV)\d{3}(?:CB|TCU)\b/.test(coreText) ||
+    /\bCB\b/.test(coreText) ||
+    /\bTCU\b/.test(coreText) ||
+    hasWx("CB") || hasWx("TCU");
+
+  const va = /\bVA\b/.test(coreText);
+
+  const fzra = /\bFZRA\b/.test(coreText) || hasWx("FZRA");
+  const fzdz = /\bFZDZ\b/.test(coreText) || hasWx("FZDZ");
+  const gr   = /\bGR\b/.test(coreText)   || hasWx("GR");
+  const pl   = /\bPL\b/.test(coreText)   || hasWx("PL");
+  const gs   = /\bGS\b/.test(coreText)   || hasWx("GS");
+  const sg   = /\bSG\b/.test(coreText)   || hasWx("SG");
+
+  // Heavy-intensity markers (used for OM-A takeoff prohibition list in om_policy.js as well)
+  const heavySn   = /\+SN\b/.test(coreText) || hasWx("+SN");
+  const heavyFzra = /\+FZRA\b/.test(coreText) || /\bFZRA\b/.test(coreText); // includes +FZRA
+  const heavyHail = /\+GR\b/.test(coreText) || /\bGR\b/.test(coreText);     // includes +GR
+
+  // TS: match only true weather tokens (avoid ICAO substring issues)
+  const ts = hasWxRe(/^(?:\+|\-)?TS/) || hasWxRe(/^VCTS/);
 
   return {
-    fzfg: /\bFZFG\b/.test(up),
-    fg: /\bFG\b/.test(up) || hasWx("FG"),
-    br: /\bBR\b/.test(up) || hasWx("BR"),
-    blsn: /\bBLSN\b/.test(up) || hasWx("BLSN"),
-    sn: /\bSN\b/.test(up) || /\bSHSN\b/.test(up) || /\bBLSN\b/.test(up) || hasWx("SN"),
-    ra: /\bRA\b/.test(up) || /\bDZ\b/.test(up) || hasWx("RA") || hasWx("DZ"),
-    ts: /\bTS\b/.test(up) || /\bTSRA\b/.test(up) || /\bTSGR\b/.test(up) || hasWx("TS"),
+    fzfg: /\bFZFG\b/.test(coreText),
+    fg: /\bFG\b/.test(coreText) || hasWx("FG"),
+    br: /\bBR\b/.test(coreText) || hasWx("BR"),
+    blsn: /\bBLSN\b/.test(coreText) || hasWx("BLSN"),
+
+    sn: /\bSN\b/.test(coreText) || /\bSHSN\b/.test(coreText) || /\bBLSN\b/.test(coreText) || hasWx("SN"),
+    ra: /\bRA\b/.test(coreText) || /\bDZ\b/.test(coreText) || hasWx("RA") || hasWx("DZ"),
+    ts,
+    cb,
+
+    va,
+    fzra, fzdz, gr, pl, gs, sg,
+    heavySn, heavyFzra, heavyHail,
   };
 }
 
@@ -484,6 +615,7 @@ function computeScores(raw){
 
   // Wx triggers
   if (hz.ts) score += 22;
+  if (hz.cb) score += 12;
   if (hz.fzfg) score += 18;
   if (hz.fg) score += 14;
   if (hz.sn) score += 10;
@@ -516,8 +648,11 @@ function computeOmPolicy(st, met, taf, worstVis, rvrMinAll){
   }catch(e){}
   return {
     toProhib:false, tsOrCb:false, heavyPrecip:false, va:false,
-    lvto:false, lvp:false, rvr125:false, coldcorr:false,
-    xwindExceed:false, xwindKt:null, xwindLimitKt:null
+    lvto:false, lvp:false, lvtoQualReq:false, rvr125:false, rvrRequired:false,
+    cat2Plus:false, cat3Only:false, cat3BelowMin:false,
+    coldcorr:false,
+    xwindExceed:false, xwindKt:null, xwindLimitKt:null,
+    xwindCond:null, rwyccEst:null, noOpsLikely:false
   };
 }
 
@@ -541,6 +676,16 @@ function deriveStation(st){
     return vals.length ? Math.min(...vals) : null;
   })();
 
+  // TAF-only worst visibility (for forecast tiles)
+  const tafWorstVis = (() => {
+    const vals = extractAllVisibilityMetersFromTAF(st.tafRaw || "");
+    if (vals.length) return Math.min(...vals);
+    return (taf.vis !== null) ? taf.vis : null;
+  })();
+
+  const metRvrMin = (met.rvrMin !== undefined) ? met.rvrMin : null;
+  const tafRvrMin = (taf.rvrMin !== undefined) ? taf.rvrMin : null;
+
   const allRvr = [...extractRvrMeters(st.metarRaw || ""), ...extractRvrMeters(st.tafRaw || "")];
   const rvrMinAll = allRvr.length ? Math.min(...allRvr) : null;
 
@@ -555,6 +700,11 @@ function deriveStation(st){
 
   // OM policy layer (derived from METAR/TAF only; no manual runway heading/condition)
   st.om = computeOmPolicy(st, met, taf, worstVis, rvrMinAll);
+
+  // Separate OM flags for METAR-only vs TAF-only tiles
+  const _empty = computeScores("");
+  st.omMet = computeOmPolicy({...st, tafRaw:""}, met, _empty, met.vis, metRvrMin);
+  st.omTaf = computeOmPolicy({...st, metarRaw:""}, _empty, taf, tafWorstVis, tafRvrMin);
 
   // ENG ICE OPS condition based on METAR visibility + METAR FZFG (operationally "now")
   const engIceOps = (met.vis !== null && met.vis <= 150 && met.hz.fzfg);
@@ -587,16 +737,67 @@ function deriveStation(st){
   };
 
   
-  // OM-A/OM-B advisory flags (METAR/TAF-derived)
-  if (st.om){
-    if (st.om.toProhib) push("TO/LND PROHIBITED", "tag--stop", "M");
-    if (st.om.lvto) push("LVTO", "tag--lvto", "M");
-    if (st.om.lvp) push("LVP required", "tag--warn", "M");
-    if (st.om.rvr125) push("RVR<125", "tag--stop", "M");
-    if (st.om.xwindExceed) push(`XWIND>${st.om.xwindLimitKt}KT`, "tag--wind", "M");
-    if (st.om.va) push("VA", "tag--stop", "M");
-    if (st.om.coldcorr) push("COLD CORR", "tag--warn", "M");
+  
+  // OM-A/OM-B advisory tags (derived from raw METAR/TAF observables)
+  // Note: these are dispatcher aids; the dashboard has no access to SNOWTAM / reported RWYCC.
+  const omM = st.omMet || {};
+  const omT = st.omTaf || {};
+
+  // Hierarchical tagging to avoid duplicates (show the most restrictive band per source)
+  const minimaState = (om)=>{
+    if (om && om.rvr125) return "rvr125";
+    if (om && om.lvtoQualReq) return "lvto150";
+    if (om && om.lvp) return "lvp";
+    if (om && om.lvto) return "lvto";
+    return null;
+  };
+  const catState = (om)=>{
+    if (om && om.cat3BelowMin) return "cat3min";
+    if (om && om.cat3Only) return "cat3only";
+    if (om && om.cat2Plus) return "cat2plus";
+    return null;
+  };
+
+  const mMin = minimaState(omM);
+  const tMin = minimaState(omT);
+  const mCat = catState(omM);
+  const tCat = catState(omT);
+
+  // OM-A heavy precip: TAKEOFF IS PROHIBITED
+  addBy("TO PROHIB", "tag--stop", !!omM.toProhib, !!omT.toProhib);
+
+  // Takeoff / LVO bands
+  addBy("RVR<125", "tag--stop", mMin==="rvr125", tMin==="rvr125");
+  addBy("LVTO<150 QUAL", "tag--warn", mMin==="lvto150", tMin==="lvto150");
+  addBy("LVP (<400)", "tag--warn", mMin==="lvp", tMin==="lvp");
+  addBy("LVTO (<550)", "tag--lvto", mMin==="lvto", tMin==="lvto");
+
+  // Approach/landing requirement when VIS/CMV < 800m
+  addBy("RVR REQ (<800)", "tag--warn", !!omM.rvrRequired, !!omT.rvrRequired);
+
+  // CAT / minima bands (show only below thresholds)
+  addBy("CAT3<75", "tag--stop", mCat==="cat3min", tCat==="cat3min");
+  addBy("CAT3 ONLY <200", "tag--warn", mCat==="cat3only", tCat==="cat3only");
+  addBy("CAT2+ <450", "tag--warn", mCat==="cat2plus", tCat==="cat2plus");
+
+  // Crosswind exceed (label includes limit; METAR and TAF may differ)
+  if (omM && omM.xwindExceed && omM.xwindLimitKt){
+    push(`XWIND>${omM.xwindLimitKt}KT`, "tag--warn", "M");
   }
+  if (omT && omT.xwindExceed && omT.xwindLimitKt){
+    if (!(omM && omM.xwindExceed && omM.xwindLimitKt === omT.xwindLimitKt)){
+      push(`XWIND>${omT.xwindLimitKt}KT`, "tag--warn", "T");
+    }
+  }
+
+  // RWYCC policy (estimated): company policy requires RWYCC >=3 unless explicitly upgraded
+  addBy("RWYCC<3 likely", "tag--warn", !!omM.noOpsLikely, !!omT.noOpsLikely);
+
+  // Volcanic ash
+  addBy("VA", "tag--stop", !!omM.va, !!omT.va);
+
+  // Cold temp correction flag (METAR only)
+  if (omM && omM.coldcorr) push("COLD CORR", "tag--warn", "M");
 
 // VIS thresholds for worstVis
   for (const th of VIS_THRESHOLDS){
@@ -641,7 +842,7 @@ addBy("GUST≥30KT", "tag--gust", mg30 && !mg40, tg30 && !tg40);
 addBy("GUST≥25KT", "tag--gust", mg25 && !mg30 && !mg40, tg25 && !tg30 && !tg40);
   // Wx
   const mhz = met.hz, thz = taf.hz;
-  addBy("TS", "tag--wx", mhz.ts, thz.ts);
+  addBy("TS/CB", "tag--wx", (mhz.ts || mhz.cb), (thz.ts || thz.cb));
   addBy("FZFG", "tag--wx", mhz.fzfg, thz.fzfg);
   addBy("FG", "tag--wx", mhz.fg, thz.fg);
   addBy("BR", "tag--wx", mhz.br, thz.br);
@@ -654,33 +855,7 @@ addBy("GUST≥25KT", "tag--gust", mg25 && !mg30 && !mg40, tg25 && !tg30 && !tg40
   }
 
   
-  // OM-A/OM-B policy triggers (advisory; based strictly on METAR/TAF observables)
-  const om = st.om;
-
-  // Takeoff/Landing prohibited due TS/CB presence (overhead/approaching cannot be inferred from raw strings)
-  addBy("OM: TS/CB PROHIBITED", "tag--bad", om.tsCb && (met.hz.ts || met.hz.cb), om.tsCb && (taf.hz.ts || taf.hz.cb));
-
-  // Takeoff prohibited due heavy precipitation/freezing/hail (OM-A 8.3.8.7)
-  addBy("OM: TO PROHIBITED (WX)", "tag--bad", om.takeoffProhibitedWx && (met.hz.heavySn || met.hz.heavyFzra || met.hz.fzra || met.hz.gr || met.hz.pl || met.hz.gs || met.hz.sg), 
-                                 om.takeoffProhibitedWx && (taf.hz.heavySn || taf.hz.heavyFzra || taf.hz.fzra || taf.hz.gr || taf.hz.pl || taf.hz.gs || taf.hz.sg));
-
-  // Takeoff minima / LVTO / absolute minimum
-  if (om.rvrBelow125) push("OM: RVR/VIS < 125m", "tag--bad", "MT");
-  else if (om.lvpReq) push("OM: LVP required (<400m)", "tag--warn", "MT");
-  else if (om.lvto) push("OM: LVTO (<550m)", "tag--warn", "MT");
-
-  // Landing minima indicators (generic, since actual CAT depends on approach)
-  if (om.belowCat3) push("OM: Below CAT III (75m)", "tag--bad", "MT");
-  else if (om.belowCat2) push("OM: Below CAT II (300m/100ft)", "tag--warn", "MT");
-  else if (om.belowCat1) push("OM: Below CAT I (550m/200ft)", "tag--warn", "MT");
-
-  if (om.circlingBelow) push("OM: Circling below (4000m/1000ft)", "tag--warn", "MT");
-
-  // Volcanic ash presence
-  addBy("OM: VOLCANIC ASH (VA)", "tag--bad", om.volcanicAsh && met.hz.va, om.volcanicAsh && taf.hz.va);
-
-  // Cold temperature corrections
-  if (om.coldTemp) push("OM: Cold temp (≤0°C) minima correction", "tag--info", "M");
+  
 
 return {
     ...st,
@@ -1049,10 +1224,55 @@ function applyFilters(list){
       case "high": if (st.alert !== "HIGH") return false; break;
       case "med": if (st.alert !== "MED") return false; break;
 
+      // Tiles (NOW / METAR)
+      case "met_crit": if (!(st.met && st.met.score >= 70)) return false; break;
+      case "met_vis300": {
+        const v = (st.met ? st.met.vis : null);
+        const r = (st.met ? st.met.rvrMin : null);
+        if (!((v !== null && v < 300) || (r !== null && r < 300))) return false;
+      } break;
+      case "met_ts": if (!(st.met && st.met.hz && st.met.hz.ts)) return false; break;
+      case "met_wind25": if (!((st.met && st.met.gustMax !== null && st.met.gustMax >= 25))) return false; break;
+      case "met_snow": if (!(st.met && st.met.hz && st.met.hz.sn)) return false; break;
+      case "met_toProhib": if (!(st.omMet && st.omMet.toProhib)) return false; break;
+      case "met_lvto": if (!(st.omMet && st.omMet.lvto)) return false; break;
+      case "met_xwind": if (!(st.omMet && st.omMet.xwindExceed)) return false; break;
+      case "met_va": if (!(st.omMet && st.omMet.va)) return false; break;
+
+      // Tiles (FORECAST / TAF)
+      case "taf_any": {
+        const v = st.tafWorstVis;
+        const r = (st.taf ? st.taf.rvrMin : null);
+        const any = ((st.taf && st.taf.score >= 70) || ((v !== null && v < 300) || (r !== null && r < 300)) || (st.taf && st.taf.hz && (st.taf.hz.ts || st.taf.hz.sn)) || (st.taf && st.taf.gustMax !== null && st.taf.gustMax >= 25) || (st.omTaf && (st.omTaf.toProhib || st.omTaf.lvto || st.omTaf.va)));
+        if (!any) return false;
+      } break;
+      case "taf_crit": if (!(st.taf && st.taf.score >= 70)) return false; break;
+      case "taf_vis300": {
+        const v = st.tafWorstVis;
+        const r = (st.taf ? st.taf.rvrMin : null);
+        if (!((v !== null && v < 300) || (r !== null && r < 300))) return false;
+      } break;
+      case "taf_ts": if (!(st.taf && st.taf.hz && st.taf.hz.ts)) return false; break;
+      case "taf_wind25": if (!((st.taf && st.taf.gustMax !== null && st.taf.gustMax >= 25))) return false; break;
+      case "taf_snow": if (!(st.taf && st.taf.hz && st.taf.hz.sn)) return false; break;
+      case "taf_toProhib": if (!(st.omTaf && st.omTaf.toProhib)) return false; break;
+      case "taf_lvto": if (!(st.omTaf && st.omTaf.lvto)) return false; break;
+      case "taf_va": if (!(st.omTaf && st.omTaf.va)) return false; break;
+
+
+      // Policy (union of METAR/TAF-derived OM flags; advisory)
+      case "toProhib": if (!((st.omMet && st.omMet.toProhib) || (st.omTaf && st.omTaf.toProhib))) return false; break;
+      case "lvto": if (!((st.omMet && st.omMet.lvto) || (st.omTaf && st.omTaf.lvto))) return false; break;
+      case "lvp": if (!((st.omMet && st.omMet.lvp) || (st.omTaf && st.omTaf.lvp))) return false; break;
+      case "rvr125": if (!((st.omMet && st.omMet.rvr125) || (st.omTaf && st.omTaf.rvr125))) return false; break;
+      case "xwind": if (!((st.omMet && st.omMet.xwindExceed) || (st.omTaf && st.omTaf.xwindExceed))) return false; break;
+      case "va": if (!((st.omMet && st.omMet.va) || (st.omTaf && st.omTaf.va))) return false; break;
+      case "coldcorr": if (!(st.omMet && st.omMet.coldcorr)) return false; break;
+
+
       case "vis800": if (!(st.worstVis !== null && st.worstVis <= 800)) return false; break;
       case "vis550": if (!(st.worstVis !== null && st.worstVis <= 550)) return false; break;
       case "vis500": if (!(st.worstVis !== null && st.worstVis <= 500)) return false; break;
-      case "vis300": if (!(st.worstVis !== null && st.worstVis <= 300)) return false; break;
       case "vis250": if (!(st.worstVis !== null && st.worstVis <= 250)) return false; break;
       case "vis300": {
         const v = st.worstVis;
@@ -1092,22 +1312,22 @@ case "gust25":
         break;
       
 case "oma_to_prohib":
-  if (!(st.om && st.om.takeoffProhibitedWx)) return false;
+  if (!((st.omMet && st.omMet.toProhib) || (st.omTaf && st.omTaf.toProhib))) return false;
   break;
 case "oma_ts_prohib":
-  if (!(st.om && st.om.tsCb)) return false;
+  if (!((st.omMet && st.omMet.tsOrCb) || (st.omTaf && st.omTaf.tsOrCb))) return false;
   break;
 case "oma_lvto":
-  if (!(st.om && st.om.lvto)) return false;
+  if (!((st.omMet && st.omMet.lvto) || (st.omTaf && st.omTaf.lvto))) return false;
   break;
 case "oma_below_cat1":
-  if (!(st.om && st.om.belowCat1)) return false;
+  if (!((st.omMet && st.omMet.cat2Plus) || (st.omTaf && st.omTaf.cat2Plus))) return false;
   break;
 case "oma_va":
-  if (!(st.om && st.om.volcanicAsh)) return false;
+  if (!((st.omMet && st.omMet.va) || (st.omTaf && st.omTaf.va))) return false;
   break;
 case "oma_cold":
-  if (!(st.om && st.om.coldTemp)) return false;
+  if (!(st.omMet && st.omMet.coldcorr)) return false;
   break;
 case "dataset":
   // dataset tile is informational; do not filter
@@ -1137,33 +1357,94 @@ function sortList(list){
   });
 }
 
-function updateTiles(currentList){
-  const eng = currentList.filter(s=>s.engIceOps);
-  const crit = currentList.filter(s=>s.alert==="CRIT");
-  const vis300 = currentList.filter(s=> (s.worstVis !== null && s.worstVis < 300) || (s.rvrMinAll !== null && s.rvrMinAll < 300));
-  const ts = currentList.filter(s=>s.met.hz.ts || s.taf.hz.ts);
-  const wind = currentList.filter(s=> (s.met.gustMax !== null && s.met.gustMax >= 25) || (s.taf.gustMax !== null && s.taf.gustMax >= 25));
-  const snow = currentList.filter(s=>s.met.hz.sn || s.taf.hz.sn);
+function computeTileLists(list){
+  const metEng = list.filter(s=>s.engIceOps);
+  const metCrit = list.filter(s=> (s.met && typeof s.met.score === "number" && s.met.score >= 70));
+  const metVis300 = list.filter(s=> ((s.met && s.met.vis !== null && s.met.vis < 300) || (s.met && s.met.rvrMin !== null && s.met.rvrMin < 300)));
+  const metTs = list.filter(s=>s.met && s.met.hz && s.met.hz.ts);
+  const metWind = list.filter(s=> (s.met && s.met.gustMax !== null && s.met.gustMax >= 25));
+  const metSnow = list.filter(s=>s.met && s.met.hz && s.met.hz.sn);
+  const metToProhib = list.filter(s=>s.omMet && s.omMet.toProhib);
+  const metLvto = list.filter(s=>s.omMet && s.omMet.lvto);
+  const metXwind = list.filter(s=>s.omMet && s.omMet.xwindExceed);
+  const metVa = list.filter(s=>s.omMet && s.omMet.va);
 
-  // OM-A/OM-B advisory flags (computed in assets/om_policy.js)
-  const toProhib = currentList.filter(s=>s.om && s.om.toProhib);
-  const lvto = currentList.filter(s=>s.om && s.om.lvto);
-  const xwind = currentList.filter(s=>s.om && s.om.xwindExceed);
-  const va = currentList.filter(s=>s.om && s.om.va);
+  const tafCrit = list.filter(s=> (s.taf && typeof s.taf.score === "number" && s.taf.score >= 70));
+  const tafVis300 = list.filter(s=> ((s.tafWorstVis !== null && s.tafWorstVis < 300) || (s.taf && s.taf.rvrMin !== null && s.taf.rvrMin < 300)));
+  const tafTs = list.filter(s=>s.taf && s.taf.hz && s.taf.hz.ts);
+  const tafWind = list.filter(s=> (s.taf && s.taf.gustMax !== null && s.taf.gustMax >= 25));
+  const tafSnow = list.filter(s=>s.taf && s.taf.hz && s.taf.hz.sn);
+  const tafToProhib = list.filter(s=>s.omTaf && s.omTaf.toProhib);
+  const tafLvto = list.filter(s=>s.omTaf && s.omTaf.lvto);
+  const tafVa = list.filter(s=>s.omTaf && s.omTaf.va);
+
+  const metAny = list.filter(s=>
+    s.engIceOps ||
+    (s.met && s.met.score >= 70) ||
+    ((s.met && s.met.vis !== null && s.met.vis < 300) || (s.met && s.met.rvrMin !== null && s.met.rvrMin < 300)) ||
+    (s.met && s.met.hz && (s.met.hz.ts || s.met.hz.sn)) ||
+    (s.met && s.met.gustMax !== null && s.met.gustMax >= 25) ||
+    (s.omMet && (s.omMet.toProhib || s.omMet.lvto || s.omMet.xwindExceed || s.omMet.va))
+  );
+
+  const tafAny = list.filter(s=>
+    (s.taf && s.taf.score >= 70) ||
+    ((s.tafWorstVis !== null && s.tafWorstVis < 300) || (s.taf && s.taf.rvrMin !== null && s.taf.rvrMin < 300)) ||
+    (s.taf && s.taf.hz && (s.taf.hz.ts || s.taf.hz.sn)) ||
+    (s.taf && s.taf.gustMax !== null && s.taf.gustMax >= 25) ||
+    (s.omTaf && (s.omTaf.toProhib || s.omTaf.lvto || s.omTaf.va))
+  );
+
+  return {
+    met:{eng:metEng, crit:metCrit, vis300:metVis300, ts:metTs, wind:metWind, snow:metSnow, toProhib:metToProhib, lvto:metLvto, xwind:metXwind, va:metVa, any:metAny},
+    taf:{crit:tafCrit, vis300:tafVis300, ts:tafTs, wind:tafWind, snow:tafSnow, toProhib:tafToProhib, lvto:tafLvto, va:tafVa, any:tafAny}
+  };
+}
+
+function listToIcaoSet(arr){
+  const s = new Set();
+  for (const x of (arr || [])) if (x && x.icao) s.add(String(x.icao).toUpperCase());
+  return s;
+}
+function diffSet(a,b){
+  const out = new Set();
+  for (const v of a){
+    if (!b || !b.has(v)) out.add(v);
+  }
+  return out;
+}
+
+function updateTiles(currentList){
+  const t = computeTileLists(currentList);
 
   const setIf = (id,val)=>{ const el=document.getElementById(id); if (el) el.textContent=String(val); };
 
-  setIf("tileEngCount", eng.length);
-  setIf("tileCritCount", crit.length);
-  setIf("tileVis300Count", vis300.length);
-  setIf("tileTsCount", ts.length);
-  setIf("tileWindCount", wind.length);
-  setIf("tileSnowCount", snow.length);
+  // NOW (METAR-priority) tiles
+  setIf("tileEngCount", t.met.eng.length);
+  setIf("tileCritCount", t.met.crit.length);
+  setIf("tileVis300Count", t.met.vis300.length);
+  setIf("tileTsCount", t.met.ts.length);
+  setIf("tileWindCount", t.met.wind.length);
+  setIf("tileSnowCount", t.met.snow.length);
 
-  setIf("tileToProhibCount", toProhib.length);
-  setIf("tileLvtoCount", lvto.length);
-  setIf("tileXwindCount", xwind.length);
-  setIf("tileVACount", va.length);
+  setIf("tileToProhibCount", t.met.toProhib.length);
+  setIf("tileLvtoCount", t.met.lvto.length);
+  setIf("tileXwindCount", t.met.xwind.length);
+  setIf("tileVACount", t.met.va.length);
+
+  // FORECAST (TAF) tiles + summary
+  setIf("tileTafAnyCount", t.taf.any.length);
+  setIf("tileTafCritCount", t.taf.crit.length);
+  setIf("tileTafVis300Count", t.taf.vis300.length);
+  setIf("tileTafTsCount", t.taf.ts.length);
+  setIf("tileTafWindCount", t.taf.wind.length);
+  setIf("tileTafSnowCount", t.taf.snow.length);
+  setIf("tileTafToProhibCount", t.taf.toProhib.length);
+  setIf("tileTafLvtoCount", t.taf.lvto.length);
+  setIf("tileTafVACount", t.taf.va.length);
+
+  // keep the summary subtitle in sync with the panel state
+  applyTafPanelState();
 
   function uniqIata(list){
     const seen = new Map();
@@ -1195,17 +1476,27 @@ function updateTiles(currentList){
       (rest > 0 ? `<span class="iata-chip iata-chip--more">+${rest}</span>` : "");
   }
 
-  renderIata("tileEngIata", eng);
-  renderIata("tileCritIata", crit);
-  renderIata("tileVis300Iata", vis300);
-  renderIata("tileTsIata", ts);
-  renderIata("tileWindIata", wind);
-  renderIata("tileSnowIata", snow);
+  renderIata("tileEngIata", t.met.eng);
+  renderIata("tileCritIata", t.met.crit);
+  renderIata("tileVis300Iata", t.met.vis300);
+  renderIata("tileTsIata", t.met.ts);
+  renderIata("tileWindIata", t.met.wind);
+  renderIata("tileSnowIata", t.met.snow);
 
-  renderIata("tileToProhibIata", toProhib);
-  renderIata("tileLvtoIata", lvto);
-  renderIata("tileXwindIata", xwind);
-  renderIata("tileVAIata", va);
+  renderIata("tileToProhibIata", t.met.toProhib);
+  renderIata("tileLvtoIata", t.met.lvto);
+  renderIata("tileXwindIata", t.met.xwind);
+  renderIata("tileVAIata", t.met.va);
+
+  renderIata("tileTafAnyIata", t.taf.any);
+  renderIata("tileTafCritIata", t.taf.crit);
+  renderIata("tileTafVis300Iata", t.taf.vis300);
+  renderIata("tileTafTsIata", t.taf.ts);
+  renderIata("tileTafWindIata", t.taf.wind);
+  renderIata("tileTafSnowIata", t.taf.snow);
+  renderIata("tileTafToProhibIata", t.taf.toProhib);
+  renderIata("tileTafLvtoIata", t.taf.lvto);
+  renderIata("tileTafVAIata", t.taf.va);
 }
 
 
@@ -1241,6 +1532,217 @@ function render(){
   });
 }
 
+
+function formatRvrGroupList(groups){
+  if (!Array.isArray(groups) || !groups.length) return "";
+  return groups.map(g=>{
+    const q1 = g.q1 ? g.q1 : "";
+    const v1 = Number.isFinite(g.v1) ? String(g.v1).padStart(4,"0") : "----";
+    const a = `R${g.rwy||"--"}/${q1}${v1}`;
+    if (Number.isFinite(g.v2)){
+      const q2 = g.q2 ? g.q2 : "";
+      const v2 = String(g.v2).padStart(4,"0");
+      return `${a}V${q2}${v2}${g.trend||""}`;
+    }
+    return `${a}${g.trend||""}`;
+  }).join(", ");
+}
+
+function omMinBand(om){
+  if (!om) return null;
+  if (om.rvr125) return "rvr125";
+  if (om.lvtoQualReq) return "lvto150";
+  if (om.lvp) return "lvp";
+  if (om.lvto) return "lvto";
+  return null;
+}
+function omCatBand(om){
+  if (!om) return null;
+  if (om.cat3BelowMin) return "cat3min";
+  if (om.cat3Only) return "cat3only";
+  if (om.cat2Plus) return "cat2plus";
+  return null;
+}
+
+function renderOmExplainHtml(st){
+  const m = st && st.omMet ? st.omMet : {};
+  const t = st && st.omTaf ? st.omTaf : {};
+  const mx = m.explain || {};
+  const tx = t.explain || {};
+
+  function srcPill(s){
+    return `<span class="tag tag--src">${s}</span>`;
+  }
+
+  function line(src, html){
+    return `<div class="omx__line">${srcPill(src)} <span>${html}</span></div>`;
+  }
+
+  function code(x){
+    return `<code>${escapeHtml(String(x))}</code>`;
+  }
+
+  const items = [];
+
+  function addItem(title, linesArr){
+    if (!linesArr.length) return;
+    items.push(
+      `<div class="omx__item">`+
+        `<div class="omx__t"><span>${escapeHtml(title)}</span></div>`+
+        `<div class="omx__lines">`+linesArr.join("")+`</div>`+
+      `</div>`
+    );
+  }
+
+  // TO PROHIB (OM-A 8.3.8.7)
+  {
+    const lines = [];
+    if (m.toProhib){
+      const mm = (mx.heavyMatches && mx.heavyMatches.length) ? mx.heavyMatches.join(", ") : "—";
+      lines.push(line("M", `Matched heavy precip: ${code(mm)} (OM-A 8.3.8.7)`));
+    }
+    if (t.toProhib){
+      const tm = (tx.heavyMatches && tx.heavyMatches.length) ? tx.heavyMatches.join(", ") : "—";
+      lines.push(line("T", `Matched heavy precip: ${code(tm)} (OM-A 8.3.8.7)`));
+    }
+    addItem("TO PROHIB", lines);
+  }
+
+  // Takeoff minima / LVTO / LVP / RVR<125 (hierarchical)
+  {
+    const lines = [];
+    function bandExplain(src, om, x){
+      const band = omMinBand(om);
+      if (!band) return null;
+
+      const refType = x.refVisType || null;
+      const refVal  = (x.refVisValue != null) ? x.refVisValue : null;
+
+      const rvrList = formatRvrGroupList(x.rvrGroups);
+      const ref = (refType === "RVR")
+        ? `Ref ${code("RVR")} min = ${code(refVal+"m")} from ${code(rvrList || "RVR groups")}`
+        : (refType === "VIS")
+          ? `Ref ${code("VIS")} = ${code(refVal+"m")} (no RVR used)`
+          : `No ref VIS/RVR available`;
+
+      if (band === "rvr125") return `${ref} → below ${code("<125m")} (stop band)`;
+      if (band === "lvto150") return `${ref} → below ${code("<150m")} (LVTO crew qual)`;
+      if (band === "lvp") return `${ref} → below ${code("<400m")} (LVP)`;
+      if (band === "lvto") return `${ref} → below ${code("<550m")} (LVTO)`;
+      return null;
+    }
+
+    const mTxt = bandExplain("M", m, mx);
+    if (mTxt) lines.push(line("M", mTxt));
+    const tTxt = bandExplain("T", t, tx);
+    if (tTxt) lines.push(line("T", tTxt));
+    addItem("TAKEOFF / LVO BAND", lines);
+  }
+
+  // RVR reporting required when VIS/CMV < 800m (approach/landing)
+  {
+    const lines = [];
+    if (m.rvrRequired){
+      const vis = (mx.worstVis != null) ? mx.worstVis : "—";
+      const has = mx.rvrAny ? "yes" : "no";
+      lines.push(line("M", `VIS/CMV ${code(vis+"m")} < ${code("800m")} and RVR present? ${code(has)} → RVR required`));
+    }
+    if (t.rvrRequired){
+      const vis = (tx.worstVis != null) ? tx.worstVis : "—";
+      const has = tx.rvrAny ? "yes" : "no";
+      lines.push(line("T", `VIS/CMV ${code(vis+"m")} < ${code("800m")} and RVR present? ${code(has)} → RVR required`));
+    }
+    addItem("RVR REQ (<800)", lines);
+  }
+
+  // CAT band (hierarchical)
+  {
+    const lines = [];
+    function catExplain(om, x){
+      const band = omCatBand(om);
+      if (!band) return null;
+      const rvr = (x.rvrMinAll != null) ? x.rvrMinAll : null;
+      const rvrList = formatRvrGroupList(x.rvrGroups);
+      const ref = (rvr != null)
+        ? `RVR min ${code(rvr+"m")} from ${code(rvrList || "RVR groups")}`
+        : `No RVR available`;
+
+      if (band === "cat3min") return `${ref} → below ${code("<75m")} (very low RVR)`;
+      if (band === "cat3only") return `${ref} → below ${code("<200m")} (CAT III environment)`;
+      if (band === "cat2plus") return `${ref} → below ${code("<450m")} (CAT II thresholds DH-dependent)`;
+      return null;
+    }
+
+    const mTxt = catExplain(m, mx);
+    if (mTxt) lines.push(line("M", mTxt));
+    const tTxt = catExplain(t, tx);
+    if (tTxt) lines.push(line("T", tTxt));
+    addItem("CAT BAND", lines);
+  }
+
+  // RWYCC estimate
+  {
+    const lines = [];
+    function rwyccLine(x){
+      const cond = x.runwayCond || {};
+      const ev = Array.isArray(cond.evidence) && cond.evidence.length ? cond.evidence.join(", ") : "—";
+      return `Inferred ${code(cond.cond || "—")} (RWYCC≈${code(cond.rwyccEst!=null?cond.rwyccEst:"—")}) from wx ${code(ev)} (estimate)`;
+    }
+    if (m.noOpsLikely) lines.push(line("M", rwyccLine(mx)));
+    if (t.noOpsLikely) lines.push(line("T", rwyccLine(tx)));
+    addItem("RWYCC<3 LIKELY", lines);
+  }
+
+  // Crosswind exceed
+  {
+    const lines = [];
+    function xwindLine(x){
+      const wx = x.xwind || {};
+      if (!wx.available){
+        return `<span class="omx__mut">No runways.json data → crosswind advisory unavailable.</span>`;
+      }
+      const w = x.wind || {};
+      const windTxt = (w.dir!=null && w.usedSpd!=null)
+        ? `Wind ${code(w.dir+"°")} at ${code(w.usedSpd+"kt")}${(w.gst!=null && w.gst>w.spd)?` (gust ${code(w.gst+"kt")})`:""}`
+        : `Wind ${code("—")}`;
+      const rwyTxt = (wx.runwayHdg!=null)
+        ? `Best runway hdg ${code(wx.runwayHdg)}${wx.runwayName?` (${code(wx.runwayName)})`:""}`
+        : `Runway ${code("—")}`;
+      const xw = (wx.xwindKt!=null) ? code(wx.xwindKt+"kt") : code("—");
+      const lim = (wx.limitKt!=null) ? code(wx.limitKt+"kt") : code("—");
+      const narrow = wx.narrow ? "narrow runway limit applied" : "standard limit";
+      return `${windTxt}; ${rwyTxt}; XWIND ${xw} > limit ${lim} (${escapeHtml(narrow)}).`;
+    }
+    if (m.xwindExceed) lines.push(line("M", xwindLine(mx)));
+    if (t.xwindExceed) lines.push(line("T", xwindLine(tx)));
+    addItem("XWIND EXCEED", lines);
+  }
+
+  // VA
+  {
+    const lines = [];
+    if (m.va) lines.push(line("M", `Token ${code("VA")} detected in raw.`));
+    if (t.va) lines.push(line("T", `Token ${code("VA")} detected in raw.`));
+    addItem("VA", lines);
+  }
+
+  // Cold corrections (METAR only)
+  {
+    const lines = [];
+    if (m.coldcorr){
+      const tc = (mx.tempC != null) ? mx.tempC : "—";
+      lines.push(line("M", `Temperature ${code(tc+"°C")} ≤ 0 → cold temperature corrections may apply (OM-A tables).`));
+    }
+    addItem("COLD CORR", lines);
+  }
+
+  if (!items.length){
+    return `<div class="omx__mut">No OM policy tags below thresholds for this station.</div>`;
+  }
+  return items.join("");
+}
+
+
 function openDrawer(icao){
   updateTopHeight();
   const st = stations.find(s=>s.icao === icao);
@@ -1268,6 +1770,10 @@ function openDrawer(icao){
     const src = t.src ? `<span class="tag tag--src">${t.src==="MT"?"M+T":t.src}</span>` : "";
     return `<span class="tag ${t.cls||""}">${escapeHtml(t.label)} ${src}</span>`;
   }).join("");
+
+  // OM tag explanations (audit)
+  const omEl = $("dOmExplain");
+  if (omEl) omEl.innerHTML = renderOmExplainHtml(st);
 
   $("dMetRaw").innerHTML = st.metarRaw ? highlightRaw(st.metarRaw) : "—";
   $("dTafRaw").innerHTML = st.tafRaw ? highlightRaw(st.tafRaw) : "—";
@@ -1351,6 +1857,184 @@ function updateAgesInPlace(){
 }
 
 
+
+
+// --- TV highlight + notifications on new alerts ---------------------------
+function showTvToast(title, lines){
+  const el = $("tvToast");
+  if (!el) return;
+  const safeTitle = escapeHtml(title || "NEW ALERT");
+  const items = (lines || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
+  el.innerHTML = `
+    <div class="tvToast__h">
+      <div>${safeTitle}</div>
+      <div class="tvToast__k">${new Date().toISOString().replace('T',' ').slice(0,16)}Z</div>
+    </div>
+    <div class="tvToast__b"><ul>${items}</ul></div>
+  `;
+  el.classList.remove("hidden");
+  clearTimeout(showTvToast._t);
+  showTvToast._t = setTimeout(()=>{ el.classList.add("hidden"); }, 12_000);
+}
+
+function flashTiles(keys){
+  for (const key of (keys || [])){
+    const btn = document.querySelector(`button.tile[data-filter="${CSS.escape(key)}"]`);
+    if (!btn) continue;
+    btn.classList.add("is-flash");
+    setTimeout(()=>btn.classList.remove("is-flash"), 12_000);
+  }
+}
+
+function fmtCodesFromIcaos(icaos){
+  const out = [];
+  for (const icao of Array.from(icaos || [])){
+    const st = stationMap.get(icao);
+    const code = (st && (st.iata || st.icao)) ? String(st.iata || st.icao).toUpperCase() : String(icao).toUpperCase();
+    out.push(code);
+  }
+  out.sort();
+  const max = (viewMode === "tv" ? 14 : 8);
+  const shown = out.slice(0, max);
+  const rest = out.length - shown.length;
+  return shown.join(", ") + (rest > 0 ? ` +${rest}` : "");
+}
+
+function signalNewAlerts(fullList){
+  // fullList must be the full stations array (not filtered).
+  const t = computeTileLists(fullList);
+
+  // METAR "new report" detection based on DDHHMMZ group
+  const obsNow = new Map();
+  for (const st of fullList){
+    obsNow.set(st.icao, metarObsKeyFromRaw(st.metarRaw || ""));
+  }
+  let newMetar = false;
+  if (prevMetarObsByIcao && prevMetarObsByIcao.size){
+    for (const [icao, obs] of obsNow.entries()){
+      const prev = prevMetarObsByIcao.get(icao);
+      if (obs && prev && obs !== prev){ newMetar = true; break; }
+    }
+  }
+
+  // Build sets per tile for delta detection
+  const setsNow = {
+    met: {
+      eng: listToIcaoSet(t.met.eng),
+      crit: listToIcaoSet(t.met.crit),
+      vis: listToIcaoSet(t.met.vis300),
+      ts: listToIcaoSet(t.met.ts),
+      wind: listToIcaoSet(t.met.wind),
+      snow: listToIcaoSet(t.met.snow),
+      toProhib: listToIcaoSet(t.met.toProhib),
+      lvto: listToIcaoSet(t.met.lvto),
+      xwind: listToIcaoSet(t.met.xwind),
+      va: listToIcaoSet(t.met.va),
+      any: listToIcaoSet(t.met.any),
+    },
+    taf: {
+      crit: listToIcaoSet(t.taf.crit),
+      vis: listToIcaoSet(t.taf.vis300),
+      ts: listToIcaoSet(t.taf.ts),
+      wind: listToIcaoSet(t.taf.wind),
+      snow: listToIcaoSet(t.taf.snow),
+      toProhib: listToIcaoSet(t.taf.toProhib),
+      lvto: listToIcaoSet(t.taf.lvto),
+      va: listToIcaoSet(t.taf.va),
+      any: listToIcaoSet(t.taf.any),
+    }
+  };
+
+  // First run: just store baselines, no alerts.
+  if (!prevSignalSets){
+    prevSignalSets = setsNow;
+    prevMetarObsByIcao = obsNow;
+    return;
+  }
+
+  // AUTO view: show browser notifications only when a NEW BASE appears among impacted NOW-tile set, and ONLY on new METAR.
+  if (viewMode === "auto" && notifEnabled && newMetar){
+    const basesNow = new Set();
+    for (const icao of setsNow.met.any){
+      const st = stationMap.get(icao);
+      if (!st) continue;
+      if (st.role === "BASE" || isBaseCode(st.iata)) basesNow.add(icao);
+    }
+    const basesPrev = prevSignalSets.met.any ? new Set(Array.from(prevSignalSets.met.any).filter(icao=>{
+      const st = stationMap.get(icao);
+      return st && (st.role === "BASE" || isBaseCode(st.iata));
+    })) : new Set();
+    const newBases = diffSet(basesNow, basesPrev);
+    if (newBases.size){
+      const title = "NEW BASE alert (METAR)";
+      const body = fmtCodesFromIcaos(newBases);
+      try{
+        new Notification(title, {body, silent:false});
+      }catch(e){}
+    }
+  }
+
+  // TV view: toast + flash when ANY category gains new entries (NOW or TAF).
+  if (viewMode === "tv"){
+    const lines = [];
+    const flashes = [];
+
+    function check(catKey, label, filterKey){
+      const nowS = setsNow[catKey][label];
+      const prevS = prevSignalSets[catKey][label] || new Set();
+      const add = diffSet(nowS, prevS);
+      if (add.size){
+        lines.push(`${label.toUpperCase()}: ${fmtCodesFromIcaos(add)}`);
+        if (filterKey) flashes.push(filterKey);
+      }
+    }
+
+    // NOW (METAR) categories
+    check("met","crit","met_crit");
+    check("met","vis","met_vis300");
+    check("met","ts","met_ts");
+    check("met","wind","met_wind25");
+    check("met","snow","met_snow");
+    check("met","toProhib","met_toProhib");
+    check("met","lvto","met_lvto");
+    check("met","xwind","met_xwind");
+    check("met","va","met_va");
+    // ENG tile uses its legacy filter key "eng" in HTML? (we kept tile ENG as "eng")
+    const addEng = diffSet(setsNow.met.eng, prevSignalSets.met.eng || new Set());
+    if (addEng.size){
+      lines.push(`ENG: ${fmtCodesFromIcaos(addEng)}`);
+      flashes.push("eng");
+    }
+
+    // TAF categories (only if panel exists)
+    check("taf","crit","taf_crit");
+    check("taf","vis","taf_vis300");
+    check("taf","ts","taf_ts");
+    check("taf","wind","taf_wind25");
+    check("taf","snow","taf_snow");
+    check("taf","toProhib","taf_toProhib");
+    check("taf","lvto","taf_lvto");
+    check("taf","va","taf_va");
+
+    if (lines.length){
+      showTvToast("NEW ALERTS", lines.slice(0, 10));
+      flashTiles(flashes);
+      // also flash the TAF summary tile if any TAF additions occurred while panel is collapsed
+      const tafAdds = diffSet(setsNow.taf.any, prevSignalSets.taf.any || new Set());
+      if (tafAdds.size){
+        const btn = $("tileTafSummary");
+        if (btn){
+          btn.classList.add("is-flash");
+          setTimeout(()=>btn.classList.remove("is-flash"), 12_000);
+        }
+      }
+    }
+  }
+
+  prevSignalSets = setsNow;
+  prevMetarObsByIcao = obsNow;
+}
+
 function applyDataFromLatest(data){
   const gen = data && data.generatedAt ? new Date(data.generatedAt) : null;
   const genStr = (data && data.generatedAt) ? String(data.generatedAt) : null;
@@ -1379,6 +2063,9 @@ function applyDataFromLatest(data){
     });
 
   stationMap = new Map(stations.map(s=>[s.icao, s]));
+
+  // NEW alert detection + notifications (uses full list, not filtered)
+  try{ signalNewAlerts(stations); }catch(e){ console.error(e); }
 
   const metCnt = stations.filter(s=>!!s.metarRaw).length;
   const tafCnt = stations.filter(s=>!!s.tafRaw).length;
@@ -1547,6 +2234,26 @@ const TILE_TOOLTIP = {
   },
 };
 
+// Extra tooltip mappings for METAR-priority and TAF forecast tiles
+TILE_TOOLTIP.met_crit = {title:"CRITICAL (METAR)", om:"Internal severity score (METAR)", why:"Same severity policy, but tile is driven by METAR score.", triggers:["METAR score ≥ 70"]};
+TILE_TOOLTIP.met_vis300 = {title:"VIS/RVR < 300 (METAR)", om:"OM-A 8.1.4 (CAT II minima: RVR ≥ 300m)", why:"METAR-only (current) visibility/RVR banding.", triggers:["METAR VIS < 300 m", "or METAR RVRmin < 300 m"]};
+TILE_TOOLTIP.met_ts = {title:"TS / CB (METAR)", om:"OM-A 8.3.8.1 (Thunderstorms)", why:"Current report (METAR) indicates TS.", triggers:["METAR: TS"]};
+TILE_TOOLTIP.met_wind25 = {title:"WIND (METAR)", om:"Advisory", why:"Current gust threshold (METAR).", triggers:["METAR GUST ≥ 25 kt"]};
+TILE_TOOLTIP.met_snow = {title:"SNOW (METAR)", om:"Advisory", why:"Current snow signals (METAR).", triggers:["METAR: SN / snow-related"]};
+TILE_TOOLTIP.met_toProhib = {title:"TO PROHIB (METAR)", om:"OM-A 8.3.8.1/8.3.8.7", why:"METAR-only prohibitive WX flags.", triggers:["TS", "+SN", "FZRA/+FZRA", "GR", "PL/GS/SG"]};
+TILE_TOOLTIP.met_lvto = {title:"LVTO (METAR)", om:"OM-A 8.1.4.4", why:"METAR-only LVTO band.", triggers:["RVR/VIS < 550 m"]};
+TILE_TOOLTIP.met_xwind = {title:"XWIND (METAR)", om:"OM-B 1.3.1", why:"Crosswind estimate using METAR wind.", triggers:["Estimated XWIND exceeds limit"]};
+TILE_TOOLTIP.met_va = {title:"VA (METAR)", om:"OM-A 8.3.8.6", why:"Volcanic ash indicated in METAR.", triggers:["METAR: VA"]};
+TILE_TOOLTIP.taf_any = {title:"FORECAST (TAF)", om:"TAF-driven tiles", why:"Summary of forecast-driven (TAF) alerts.", triggers:["Any TAF tile is triggered"]};
+TILE_TOOLTIP.taf_crit = {title:"CRITICAL (TAF)", om:"Internal severity score (TAF)", why:"Forecast (TAF) severity band.", triggers:["TAF score ≥ 70"]};
+TILE_TOOLTIP.taf_vis300 = {title:"VIS/RVR < 300 (TAF)", om:"OM-A 8.1.4", why:"Worst visibility/RVR within the TAF.", triggers:["TAF worst VIS < 300 m", "or TAF RVRmin < 300 m"]};
+TILE_TOOLTIP.taf_ts = {title:"TS / CB (TAF)", om:"OM-A 8.3.8.1", why:"Forecast indicates TS.", triggers:["TAF: TS"]};
+TILE_TOOLTIP.taf_wind25 = {title:"WIND (TAF)", om:"Advisory", why:"Forecast gust threshold.", triggers:["TAF GUST ≥ 25 kt"]};
+TILE_TOOLTIP.taf_snow = {title:"SNOW (TAF)", om:"Advisory", why:"Forecast snow signals.", triggers:["TAF: SN"]};
+TILE_TOOLTIP.taf_toProhib = {title:"TO PROHIB (TAF)", om:"OM-A 8.3.8.1/8.3.8.7", why:"Forecast prohibitive WX flags.", triggers:["TS", "+SN", "FZRA/+FZRA", "GR", "PL/GS/SG"]};
+TILE_TOOLTIP.taf_lvto = {title:"LVTO (TAF)", om:"OM-A 8.1.4.4", why:"Forecast LVTO band.", triggers:["RVR/VIS < 550 m"]};
+TILE_TOOLTIP.taf_va = {title:"VA (TAF)", om:"OM-A 8.3.8.6", why:"Forecast VA indication.", triggers:["TAF: VA"]};
+
 let tileTipEl = null;
 function ensureTileTip(){
   if (tileTipEl) return tileTipEl;
@@ -1599,20 +2306,22 @@ function hideTileTip(){
 function initTileTooltips(){
   // Avoid hover tooltips on touch devices
   const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-  const root = document.getElementById("tiles");
-  if (!root || coarse) return;
+  const roots = [document.getElementById("tiles"), document.getElementById("tilesTaf")].filter(Boolean);
+  if (!roots.length || coarse) return;
 
-  root.querySelectorAll("button.tile[data-filter]").forEach(btn=>{
-    const key = btn.getAttribute("data-filter");
-    if (!key || !TILE_TOOLTIP[key]) return;
-    btn.addEventListener("mouseenter", (e)=>{ showTileTip(key, e.clientX, e.clientY); });
-    btn.addEventListener("mousemove", (e)=>{ showTileTip(key, e.clientX, e.clientY); });
-    btn.addEventListener("mouseleave", hideTileTip);
-    btn.addEventListener("focus", ()=>{
-      const r = btn.getBoundingClientRect();
-      showTileTip(key, r.left + r.width/2, r.top);
+  roots.forEach(root=>{
+    root.querySelectorAll("button.tile[data-filter]").forEach(btn=>{
+      const key = btn.getAttribute("data-filter");
+      if (!key || !TILE_TOOLTIP[key]) return;
+      btn.addEventListener("mouseenter", (e)=>{ showTileTip(key, e.clientX, e.clientY); });
+      btn.addEventListener("mousemove", (e)=>{ showTileTip(key, e.clientX, e.clientY); });
+      btn.addEventListener("mouseleave", hideTileTip);
+      btn.addEventListener("focus", ()=>{
+        const r = btn.getBoundingClientRect();
+        showTileTip(key, r.left + r.width/2, r.top);
+      });
+      btn.addEventListener("blur", hideTileTip);
     });
-    btn.addEventListener("blur", hideTileTip);
   });
 }
 
@@ -1626,27 +2335,39 @@ function bind(){
   initTileTooltips();
 
 
-  // tile filters
-  $("tiles").addEventListener("click", (e)=>{
-    const btn = e.target.closest("button.tile");
-    if (!btn) return;
-    if (btn.id === "tileReset"){
-      view.q=""; view.cond="all"; view.alert="all"; view.sortPri=true;
-      $("q").value=""; $("cond").value="all"; $("alert").value="all"; $("sortPri").checked=true;
-      render();
-      return;
-    }
-    const f = btn.getAttribute("data-filter");
-    if (!f) return;
-    // toggle: clicking same filter again resets to all
-    const map = {eng:"eng", crit:"crit", vis300:"vis300", ts:"ts", wind:"gust25", snow:"snow", toProhib:"toProhib", lvto:"lvto", xwind:"xwind", va:"va"};
-    const target = map[f] || "all";
-    view.cond = (view.cond === target ? "all" : target);
-    $("cond").value = view.cond;
-    render();
-  });
+initNotifUI();
+initTafPanelUI();
 
-  $("drawerClose").addEventListener("click", closeDrawer);
+// tile filters (NOW + TAF panel)
+function handleTileClick(e){
+  const btn = e.target.closest("button.tile");
+  if (!btn) return;
+
+  if (btn.id === "tileReset"){
+    view.q=""; view.cond="all"; view.alert="all"; view.sortPri=true;
+    $("q").value=""; $("cond").value="all"; $("alert").value="all"; $("sortPri").checked=true;
+    render();
+    return;
+  }
+  if (btn.id === "tileTafSummary"){
+    toggleTafPanel();
+    return;
+  }
+
+  const f = btn.getAttribute("data-filter");
+  if (!f) return;
+
+  // toggle: clicking same filter again resets to all
+  view.cond = (view.cond === f ? "all" : f);
+  $("cond").value = view.cond;
+  render();
+}
+$("tiles").addEventListener("click", handleTileClick);
+const tafRoot = $("tilesTaf");
+if (tafRoot) tafRoot.addEventListener("click", handleTileClick);
+
+$("drawerClose")
+.addEventListener("click", closeDrawer);
   $("scrim").addEventListener("click", closeDrawer);
   document.addEventListener("keydown",(e)=>{ if (e.key==="Escape") closeDrawer(); });
 

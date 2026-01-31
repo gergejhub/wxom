@@ -143,13 +143,25 @@ function ceilingFt(raw){
 }
 
 function hazardFlags(raw){
+  // Lightweight hazards for map view.
+  // Strip report header + ICAO to avoid false positives (e.g. LGTS/GCTS => 'TS').
   if (!raw) return {
     fzfg:false, fg:false, br:false, sn:false, ra:false, ts:false, cb:false, va:false,
     fzra:false, gr:false, pl:false, gs:false, sg:false,
     heavySn:false, heavyFzra:false, heavyHail:false
   };
-  const up = String(raw).toUpperCase();
-  const wxToks = up.split(/\s+/).map(t=>t.trim()).filter(Boolean).filter(t=>{
+
+  const upAll = String(raw).toUpperCase();
+
+  const toksAll = upAll.split(/\s+/).map(t=>t.trim()).filter(Boolean);
+  let i = 0;
+  const headerSkip = new Set(["METAR","SPECI","TAF","AUTO","COR","AMD","CNL","NIL"]);
+  while (i < toksAll.length && headerSkip.has(toksAll[i])) i++;
+  if (i < toksAll.length && /^[A-Z]{4}$/.test(toksAll[i])) i++;
+  const toks = toksAll.slice(i);
+  const coreText = toks.join(" ");
+
+  const wxToks = toks.filter(t=>{
     if (t.includes("/")) return false;
     if (/[0-9]/.test(t)) return false;
     if (/KT$/.test(t) || /MPS$/.test(t)) return false;
@@ -157,25 +169,26 @@ function hazardFlags(raw){
     return true;
   });
   const hasWx = (needle)=>wxToks.some(t=>t.includes(needle));
+  const hasWxRe = (re)=>wxToks.some(t=>re.test(t));
 
-  const fzra = /\bFZRA\b/.test(up) || hasWx("FZRA");
-  const gr = /\b\+?GR\b/.test(up) || hasWx("GR");
-  const pl = /\bPL\b/.test(up) || hasWx("PL");
-  const gs = /\bGS\b/.test(up) || hasWx("GS");
-  const sg = /\bSG\b/.test(up) || hasWx("SG");
-  const heavySn = /\b\+SN\b/.test(up) || wxToks.some(t=>t.startsWith("+" ) && t.includes("SN"));
-  const heavyFzra = /\b\+FZRA\b/.test(up);
-  const heavyHail = /\b\+GR\b/.test(up);
+  const fzra = /\bFZRA\b/.test(coreText) || hasWx("FZRA");
+  const gr = /\b\+?GR\b/.test(coreText) || hasWx("GR");
+  const pl = /\bPL\b/.test(coreText) || hasWx("PL");
+  const gs = /\bGS\b/.test(coreText) || hasWx("GS");
+  const sg = /\bSG\b/.test(coreText) || hasWx("SG");
+  const heavySn = /\b\+SN\b/.test(coreText) || wxToks.some(t=>t.startsWith("+" ) && t.includes("SN"));
+  const heavyFzra = /\b\+FZRA\b/.test(coreText);
+  const heavyHail = /\b\+GR\b/.test(coreText);
 
   return {
-    fzfg: /\bFZFG\b/.test(up),
-    fg: /\bFG\b/.test(up) || hasWx("FG"),
-    br: /\bBR\b/.test(up) || hasWx("BR"),
-    sn: /\bSN\b/.test(up) || /\bSHSN\b/.test(up) || /\bBLSN\b/.test(up) || hasWx("SN"),
-    ra: /\bRA\b/.test(up) || /\bDZ\b/.test(up) || hasWx("RA") || hasWx("DZ"),
-    ts: /\bTS\b/.test(up) || /\bTSRA\b/.test(up) || /\bTSGR\b/.test(up) || hasWx("TS"),
-    cb: /\bCB\b/.test(up) || hasWx("CB"),
-    va: /\bVA\b/.test(up) || hasWx("VA"),
+    fzfg: /\bFZFG\b/.test(coreText),
+    fg: /\bFG\b/.test(coreText) || hasWx("FG"),
+    br: /\bBR\b/.test(coreText) || hasWx("BR"),
+    sn: /\bSN\b/.test(coreText) || /\bSHSN\b/.test(coreText) || /\bBLSN\b/.test(coreText) || hasWx("SN"),
+    ra: /\bRA\b/.test(coreText) || /\bDZ\b/.test(coreText) || hasWx("RA") || hasWx("DZ"),
+    ts: hasWxRe(/^(?:\+|\-)?TS/) || hasWxRe(/^VCTS/),
+    cb: /\b(?:FEW|SCT|BKN|OVC|VV)\d{3}(?:CB|TCU)\b/.test(coreText) || /\bCB\b/.test(coreText) || /\bTCU\b/.test(coreText),
+    va: /\bVA\b/.test(coreText),
     fzra, gr, pl, gs, sg,
     heavySn, heavyFzra, heavyHail
   };

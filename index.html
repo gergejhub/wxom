@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Wizz Air METAR/TAF Monitor</title>
-<link href="assets/styles.css?v=50.OM1" rel="stylesheet"/>
+<link href="assets/styles.css?v=62.OM_TAGS_THRESH" rel="stylesheet"/>
 </head>
 <body>
 <header class="top">
@@ -16,6 +16,10 @@
 <button class="viewpill" id="viewBtn" title="Toggle TV view (Shift+T)" type="button">
 <span class="viewpill__k">VIEW</span>
 <span class="viewpill__v" id="viewBtnLabel">AUTO</span>
+</button>
+<button class="viewpill" id="notifBtn" title="Toggle browser notifications for NEW impacted BASE airports (AUTO view only)" type="button">
+  <span class="viewpill__k">NOTIF</span>
+  <span class="viewpill__v" id="notifBtnLabel">OFF</span>
 </button>
 <a class="viewpill viewpill--link" href="stat/" title="Open Stats">
 <span class="viewpill__k">STATS</span>
@@ -35,51 +39,58 @@
 <div class="tile__v" id="tileEngCount">0</div>
 <div class="tile__s">triggered</div><div class="tile__iata" id="tileEngIata"></div>
 </button>
-<button class="tile" data-filter="crit" type="button">
+<button class="tile" data-filter="met_crit" type="button">
 <div class="tile__k">CRITICAL</div>
 <div class="tile__v" id="tileCritCount">0</div>
-<div class="tile__s">score ≥ 70</div><div class="tile__iata" id="tileCritIata"></div>
+<div class="tile__s">METAR score ≥ 70</div><div class="tile__iata" id="tileCritIata"></div>
 </button>
-<button class="tile" data-filter="vis300" type="button">
+<button class="tile" data-filter="met_vis300" type="button">
 <div class="tile__k">VIS/RVR &lt; 300</div>
 <div class="tile__v" id="tileVis300Count">0</div>
-<div class="tile__s">worst (M/TAF)</div><div class="tile__iata" id="tileVis300Iata"></div>
+<div class="tile__s">METAR VIS/RVR</div><div class="tile__iata" id="tileVis300Iata"></div>
 </button>
-<button class="tile" data-filter="ts" type="button">
+<button class="tile" data-filter="met_ts" type="button">
 <div class="tile__k">TS / CB</div>
 <div class="tile__v" id="tileTsCount">0</div>
-<div class="tile__s">METAR/TAF</div><div class="tile__iata" id="tileTsIata"></div>
+<div class="tile__s">METAR</div><div class="tile__iata" id="tileTsIata"></div>
 </button>
-<button class="tile" data-filter="wind" type="button">
+<button class="tile" data-filter="met_wind25" type="button">
 <div class="tile__k">WIND</div>
 <div class="tile__v" id="tileWindCount">0</div>
-<div class="tile__s">gust ≥ 25 kt</div><div class="tile__iata" id="tileWindIata"></div>
+<div class="tile__s">METAR gust ≥ 25 kt</div><div class="tile__iata" id="tileWindIata"></div>
 </button>
-<button class="tile" data-filter="snow" type="button">
+<button class="tile" data-filter="met_snow" type="button">
 <div class="tile__k">SNOW</div>
 <div class="tile__v" id="tileSnowCount">0</div>
-<div class="tile__s">METAR/TAF</div><div class="tile__iata" id="tileSnowIata"></div>
+<div class="tile__s">METAR</div><div class="tile__iata" id="tileSnowIata"></div>
 </button>
 <!-- OM-A/OM-B advisory tiles -->
-<button class="tile" data-filter="toProhib" type="button">
+<button class="tile" data-filter="met_toProhib" type="button">
 <div class="tile__k">TO PROHIB</div>
 <div class="tile__v" id="tileToProhibCount">0</div>
 <div class="tile__s">TS/+SN/FZRA/GR…</div><div class="tile__iata" id="tileToProhibIata"></div>
 </button>
-<button class="tile" data-filter="lvto" type="button">
+<button class="tile" data-filter="met_lvto" type="button">
 <div class="tile__k">LVTO</div>
 <div class="tile__v" id="tileLvtoCount">0</div>
 <div class="tile__s">RVR/VIS &lt; 550</div><div class="tile__iata" id="tileLvtoIata"></div>
 </button>
-<button class="tile" data-filter="xwind" type="button">
+<button class="tile" data-filter="met_xwind" type="button">
 <div class="tile__k">XWIND</div>
 <div class="tile__v" id="tileXwindCount">0</div>
 <div class="tile__s">best RWY exceed</div><div class="tile__iata" id="tileXwindIata"></div>
 </button>
-<button class="tile" data-filter="va" type="button">
+<button class="tile" data-filter="met_va" type="button">
 <div class="tile__k">VA</div>
 <div class="tile__v" id="tileVACount">0</div>
 <div class="tile__s">ash detected</div><div class="tile__iata" id="tileVAIata"></div>
+</button>
+<!-- Collapsible TAF block summary -->
+<button class="tile tile--ghost tile--tafSummary" id="tileTafSummary" title="Toggle TAF forecast tiles" type="button">
+  <div class="tile__k">FORECAST (TAF)</div>
+  <div class="tile__v" id="tileTafAnyCount">0</div>
+  <div class="tile__s" id="tileTafAnySub">tap to expand</div>
+  <div class="tile__iata" id="tileTafAnyIata"></div>
 </button>
 <!-- Dataset + Reset are the last two tiles -->
 <button class="tile" disabled="" id="tileDataset" type="button">
@@ -92,11 +103,85 @@
 <div class="tile__v" id="tileResetCount">↺</div>
 <div class="tile__s">clear filters</div>
 </button>
-</div><div class="toolbar">
+</div>
+<!-- Collapsible TAF tiles (forecast-based). Hidden by default to reduce tile clutter. -->
+<div class="tiles tiles--taf hidden" id="tilesTaf">
+  <button class="tile tile--taf" data-filter="taf_crit" type="button">
+    <div class="tile__k">CRITICAL (TAF)</div>
+    <div class="tile__v" id="tileTafCritCount">0</div>
+    <div class="tile__s">TAF score ≥ 70</div>
+    <div class="tile__iata" id="tileTafCritIata"></div>
+  </button>
+  <button class="tile tile--taf" data-filter="taf_vis300" type="button">
+    <div class="tile__k">VIS/RVR &lt; 300 (TAF)</div>
+    <div class="tile__v" id="tileTafVis300Count">0</div>
+    <div class="tile__s">TAF worst VIS/RVR</div>
+    <div class="tile__iata" id="tileTafVis300Iata"></div>
+  </button>
+  <button class="tile tile--taf" data-filter="taf_ts" type="button">
+    <div class="tile__k">TS / CB (TAF)</div>
+    <div class="tile__v" id="tileTafTsCount">0</div>
+    <div class="tile__s">TAF</div>
+    <div class="tile__iata" id="tileTafTsIata"></div>
+  </button>
+  <button class="tile tile--taf" data-filter="taf_wind25" type="button">
+    <div class="tile__k">WIND (TAF)</div>
+    <div class="tile__v" id="tileTafWindCount">0</div>
+    <div class="tile__s">gust ≥ 25 kt</div>
+    <div class="tile__iata" id="tileTafWindIata"></div>
+  </button>
+  <button class="tile tile--taf" data-filter="taf_snow" type="button">
+    <div class="tile__k">SNOW (TAF)</div>
+    <div class="tile__v" id="tileTafSnowCount">0</div>
+    <div class="tile__s">TAF</div>
+    <div class="tile__iata" id="tileTafSnowIata"></div>
+  </button>
+  <button class="tile tile--taf" data-filter="taf_toProhib" type="button">
+    <div class="tile__k">TO PROHIB (TAF)</div>
+    <div class="tile__v" id="tileTafToProhibCount">0</div>
+    <div class="tile__s">TS/+SN/FZRA/GR…</div>
+    <div class="tile__iata" id="tileTafToProhibIata"></div>
+  </button>
+  <button class="tile tile--taf" data-filter="taf_lvto" type="button">
+    <div class="tile__k">LVTO (TAF)</div>
+    <div class="tile__v" id="tileTafLvtoCount">0</div>
+    <div class="tile__s">RVR/VIS &lt; 550</div>
+    <div class="tile__iata" id="tileTafLvtoIata"></div>
+  </button>
+  <button class="tile tile--taf" data-filter="taf_va" type="button">
+    <div class="tile__k">VA (TAF)</div>
+    <div class="tile__v" id="tileTafVACount">0</div>
+    <div class="tile__s">ash detected</div>
+    <div class="tile__iata" id="tileTafVAIata"></div>
+  </button>
+</div>
+<div class="toolbar">
 <div class="toolbar__left">
 <input autocomplete="off" class="q" id="q" placeholder="Search ICAO / IATA / name" type="search"/>
 <select class="sel" id="cond">
 <option value="all">All conditions</option>
+<optgroup label="Tiles (NOW / METAR)">
+  <option value="met_crit">Critical (METAR score ≥ 70)</option>
+  <option value="met_vis300">VIS/RVR &lt; 300 (METAR)</option>
+  <option value="met_ts">TS/CB (METAR)</option>
+  <option value="met_wind25">WIND gust ≥ 25KT (METAR)</option>
+  <option value="met_snow">SNOW (METAR)</option>
+  <option value="met_toProhib">TO PROHIB (METAR)</option>
+  <option value="met_lvto">LVTO (METAR)</option>
+  <option value="met_xwind">XWIND exceed (METAR)</option>
+  <option value="met_va">VA (METAR)</option>
+</optgroup>
+<optgroup label="Tiles (FORECAST / TAF)">
+  <option value="taf_any">Any TAF tile</option>
+  <option value="taf_crit">Critical (TAF score ≥ 70)</option>
+  <option value="taf_vis300">VIS/RVR &lt; 300 (TAF)</option>
+  <option value="taf_ts">TS/CB (TAF)</option>
+  <option value="taf_wind25">WIND gust ≥ 25KT (TAF)</option>
+  <option value="taf_snow">SNOW (TAF)</option>
+  <option value="taf_toProhib">TO PROHIB (TAF)</option>
+  <option value="taf_lvto">LVTO (TAF)</option>
+  <option value="taf_va">VA (TAF)</option>
+</optgroup>
 <optgroup label="Core">
 <option value="eng">ENG ICE OPS</option>
 <option value="crit">Critical (≥70)</option>
@@ -180,6 +265,11 @@
 <div class="kv__row"><div class="kv__k">Ceiling</div><div class="kv__v" id="dCig">—</div></div>
 <div class="kv__row"><div class="kv__k">Triggers</div><div class="kv__v" id="dTriggers">—</div></div>
 </div>
+<div class="omx">
+  <div class="omx__h">Minima / Policy (OM) – Why?</div>
+  <div class="omx__note">Advisory: derived only from METAR/TAF text and optional runways.json. Not a substitute for operational judgement.</div>
+  <div class="omx__list" id="dOmExplain">—</div>
+</div>
 <div class="raw">
 <div class="raw__h">METAR <span class="raw__age" id="dMetAge"></span></div>
 <div class="raw__dec" id="dMetDec"></div>
@@ -190,7 +280,8 @@
 </div>
 </div>
 </aside>
-<script src="assets/om_policy.js?v=50.OM1"></script>
-<script src="assets/app.js?v=50.OM1"></script>
+<div class="tvToast hidden" id="tvToast" aria-live="polite" role="status"></div>
+<script src="assets/om_policy.js?v=62.OM_TAGS_THRESH"></script>
+<script src="assets/app.js?v=62.OM_TAGS_THRESH"></script>
 </body>
 </html>
