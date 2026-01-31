@@ -368,10 +368,25 @@ function parseVisibilityMeters(raw){
   for (const t0 of toks){
     const t = t0.trim().toUpperCase();
     if (!t) continue;
+
+    // US fractional statute miles (e.g., 1/2SM, M1/4SM) contains '/'
+    if (/^M?\d+\/\d+SM$/.test(t)){
+      const frac = t.replace(/^M/,"").slice(0,-2);
+      const [a,b] = frac.split("/").map(Number);
+      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+        add(Math.round((a/b)*1609.34));
+      }
+      continue;
+    }
+
+    // Ignore validity/time ranges (TAF) and RVR groups
+    if (/^\d{4}\/\d{4}$/.test(t)) continue;
+    if (/^R\d{2}[LRC]?\//.test(t)) continue;
     if (t.includes("/")) continue;
 
-    if (/^\d{4}$/.test(t)){
-      const v = parseInt(t,10);
+    // Most common ICAO vis tokens: 0400, 9999, and also 9999NDV
+    if (/^\d{4}(?:[A-Z]{1,4})?$/.test(t)){
+      const v = parseInt(t.slice(0,4),10);
       if (!Number.isNaN(v)) add(v === 9999 ? 10000 : v);
       continue;
     }
@@ -384,13 +399,6 @@ function parseVisibilityMeters(raw){
       if (/^M?\d+SM$/.test(t)){
         const n = parseInt(t.replace(/^M/,"").slice(0,-2),10);
         return Number.isFinite(n) ? Math.round(n*1609.34) : null;
-      }
-      if (/^M?\d+\/\d+SM$/.test(t)){
-        const frac = t.replace(/^M/,"").slice(0,-2);
-        const [a,b] = frac.split("/").map(Number);
-        if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
-          return Math.round((a/b)*1609.34);
-        }
       }
       return null;
     })();
@@ -411,10 +419,24 @@ function extractAllVisibilityMetersFromTAF(raw){
   for (const t0 of toks){
     const t = t0.trim().toUpperCase();
     if (!t) continue;
+
+    // US fractional statute miles (e.g., 1/2SM) contains '/'
+    if (/^M?\d+\/\d+SM$/.test(t)){
+      const frac = t.replace(/^M/,"").slice(0,-2);
+      const [a,b] = frac.split("/").map(Number);
+      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+        out.push(Math.round((a/b)*1609.34));
+      }
+      continue;
+    }
+
+    // Ignore validity/time ranges (TAF) and RVR groups
+    if (/^\d{4}\/\d{4}$/.test(t)) continue;
+    if (/^R\d{2}[LRC]?\//.test(t)) continue;
     if (t.includes("/")) continue;
 
-    if (/^\d{4}$/.test(t)){
-      const v = parseInt(t,10);
+    if (/^\d{4}(?:[A-Z]{1,4})?$/.test(t)){
+      const v = parseInt(t.slice(0,4),10);
       if (!Number.isNaN(v)) out.push(v === 9999 ? 10000 : v);
       continue;
     }
@@ -428,13 +450,6 @@ function extractAllVisibilityMetersFromTAF(raw){
         const n = parseInt(t.replace(/^M/,"").slice(0,-2),10);
         return Number.isFinite(n) ? Math.round(n*1609.34) : null;
       }
-      if (/^M?\d+\/\d+SM$/.test(t)){
-        const frac = t.replace(/^M/,"").slice(0,-2);
-        const [a,b] = frac.split("/").map(Number);
-        if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
-          return Math.round((a/b)*1609.34);
-        }
-      }
       return null;
     })();
     if (sm != null) out.push(sm);
@@ -445,15 +460,20 @@ function extractAllVisibilityMetersFromTAF(raw){
 
 function extractRvrMeters(raw){
   if (!raw) return [];
-  const re = /\bR\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?\b/g;
+  // Accept common ICAO format and US-style optional FT suffix.
+  // Examples: R29/1000N, R06/0600V1000U, R27/P1500U, R09/M0050N, R11/1200FT
+  const re = /\bR\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?(FT)?\b/g;
   const vals = [];
   let m;
   while ((m = re.exec(raw)) !== null){
+    const isFt = !!m[6];
+    const toMeters = (x)=> isFt ? Math.round(x * 0.3048) : x;
+
     const v1 = parseInt(m[2],10);
-    if (!Number.isNaN(v1)) vals.push(v1);
+    if (!Number.isNaN(v1)) vals.push(toMeters(v1));
     if (m[4]){
       const v2 = parseInt(m[4],10);
-      if (!Number.isNaN(v2)) vals.push(v2);
+      if (!Number.isNaN(v2)) vals.push(toMeters(v2));
     }
   }
   return vals;
