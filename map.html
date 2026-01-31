@@ -11,7 +11,11 @@
     body{height:100vh; overflow:hidden;}
     .mapWrap{position:relative; height:calc(100vh - var(--top-h));}
     #map{position:absolute; inset:0;}
-    .mapPanel{position:absolute; top:14px; left:14px; right:14px; max-width:980px; margin:0 auto; z-index:500;}
+    /*
+      Map header panel: kept as an overlay but placed INSIDE the Leaflet container (see assets/map.js)
+      so popups can properly stack above it.
+    */
+    .mapPanel{position:absolute; top:14px; left:14px; right:14px; max-width:1080px; margin:0 auto; z-index:480;}
     .mapCard{background:rgba(23,20,42,.72); border:1px solid var(--line); border-radius:16px; backdrop-filter: blur(10px); box-shadow:0 18px 50px rgba(0,0,0,.35);}
     .mapCard__row{display:flex; gap:12px; align-items:center; padding:12px 14px; flex-wrap:wrap;}
     .mapCard__grow{flex:1 1 260px;}
@@ -36,31 +40,74 @@
     .pop .tag--lvto{border-color:rgba(122,60,255,.45);} 
     .pop .tag--eng{border-color:rgba(255,47,166,.55);} 
     .pop ul{margin:0; padding-left:18px; color:rgba(255,255,255,.86); font-size:12px;}
+
+    /* Hover tooltip (compact, does not fight with the header panel) */
+    .leaflet-tooltip.wxTip{
+      background:rgba(23,20,42,.92);
+      border:1px solid var(--line);
+      color:rgba(255,255,255,.92);
+      border-radius:14px;
+      padding:8px 10px;
+      box-shadow:0 18px 50px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    .leaflet-tooltip.wxTip:before{border-top-color:rgba(23,20,42,.92);} /* arrow */
+    .tipRow{display:flex; gap:10px; align-items:center; justify-content:space-between;}
+    .tipRow b{font:800 12px/1 var(--sans); letter-spacing:.04em; text-transform:uppercase;}
+    .tipSub{margin-top:6px; color:var(--mut); font-size:11px; max-width:340px;}
+    .tipPills{display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end;}
+    .tipPill{padding:3px 7px; border-radius:999px; border:1px solid rgba(255,255,255,.18); font-size:11px; color:rgba(255,255,255,.92);} 
+    .tipPill--base{border-color:rgba(255,47,166,.65);}
+    .tipPill--ok{border-color:rgba(46,244,255,.35);}
+    .tipPill--med{border-color:rgba(255,207,90,.45);}
+    .tipPill--high{border-color:rgba(255,132,64,.55);}
+    .tipPill--crit{border-color:rgba(255,75,92,.55);}
     
 
-    /* Ensure popups render above the header panel */
-    .leaflet-popup-pane{z-index:1200 !important;}
-    .leaflet-tooltip-pane{z-index:1200 !important;}
-    .mapPanel{z-index:850; pointer-events:none;}
+    /* Stacking: keep popups above the overlay panel */
+    .leaflet-popup-pane{z-index:2500 !important;}
+    .leaflet-tooltip-pane{z-index:2400 !important;}
+    .leaflet-control-container{z-index:2000 !important;}
+    .mapPanel{z-index:1800; pointer-events:none;}
     .mapPanel .mapCard, .mapPanel input, .mapPanel button, .mapPanel a {pointer-events:auto;}
 
     /* Marker icon system */
     .mkrIcon{width:22px; height:22px; display:grid; place-items:center;}
     .mkrInner{position:relative; width:22px; height:22px; display:grid; place-items:center;}
-    .markerDot{width:12px; height:12px; border-radius:50%; border:2px solid rgba(255,255,255,.22); box-shadow:0 0 18px rgba(0,0,0,.35);}
-    .mkrIcon--base .markerDot{width:12px; height:12px; border-color:rgba(255,47,166,.75); box-shadow:0 0 0 4px rgba(255,47,166,.22), 0 0 18px rgba(0,0,0,.35);}
-    .baseBadge{position:absolute; top:-2px; right:-2px; font:800 9px/1 var(--sans); letter-spacing:.02em;
-      color:rgba(255,255,255,.92); background:rgba(255,47,166,.92); border:1px solid rgba(255,255,255,.18);
-      padding:2px 4px; border-radius:999px; transform:scale(.92); box-shadow:0 10px 22px rgba(0,0,0,.35);}
+    .markerDot{position:relative; width:12px; height:12px; border-radius:50%; border:2px solid rgba(255,255,255,.22); box-shadow:0 0 18px rgba(0,0,0,.35);}
+
+    /* BASE: intentionally very visible at a glance */
+    .mkrIcon--base{width:30px; height:30px;}
+    .mkrIcon--base .mkrInner{width:30px; height:30px;}
+    .mkrIcon--base .markerDot{
+      width:14px; height:14px;
+      border-color:rgba(255,47,166,.95);
+      box-shadow:
+        0 0 0 5px rgba(255,47,166,.28),
+        0 0 0 10px rgba(255,47,166,.12),
+        0 0 26px rgba(255,47,166,.20),
+        0 0 18px rgba(0,0,0,.35);
+    }
+    .mkrIcon--base .markerDot::before{
+      content:"";
+      position:absolute;
+      inset:-9px;
+      border-radius:999px;
+      border:2px solid rgba(255,47,166,.35);
+      filter:drop-shadow(0 0 18px rgba(255,47,166,.18));
+    }
+    .baseBadge{position:absolute; top:-3px; right:-3px; font:900 10px/1 var(--sans); letter-spacing:.02em;
+      color:rgba(255,255,255,.98); background:rgba(255,47,166,.96); border:1px solid rgba(255,255,255,.22);
+      padding:2px 5px; border-radius:999px; transform:scale(1.0); box-shadow:0 12px 26px rgba(0,0,0,.42);}
     .mkrIcon.is-pulse .markerDot::after{
-      content:""; position:absolute; inset:-10px; border-radius:999px;
+      content:""; position:absolute; inset:-12px; border-radius:999px;
       border:2px solid rgba(255,255,255,.18);
       animation:pulseRing 2.2s ease-in-out infinite;
       filter:drop-shadow(0 0 14px rgba(255,255,255,.10));
     }
     .mkrIcon--base.is-pulse .markerDot::after{
-      border-color:rgba(255,47,166,.35);
-      filter:drop-shadow(0 0 14px rgba(255,47,166,.14));
+      border-color:rgba(255,47,166,.40);
+      filter:drop-shadow(0 0 18px rgba(255,47,166,.18));
     }
     @keyframes pulseRing{
       0%{transform:scale(.65); opacity:.18;}
@@ -102,6 +149,15 @@
     details.popDet{margin-top:10px;}
     details.popDet summary{cursor:pointer; color:rgba(255,255,255,.84); font-size:12px; letter-spacing:.02em;}
     details.popDet summary:hover{color:rgba(255,255,255,.96);}
+
+    /* Compact toggles */
+    .toggles{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .tgl{display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.18);
+      font:600 12px/1 var(--sans); color:rgba(255,255,255,.86);
+    }
+    .tgl input{accent-color: var(--wizz-pink);}
+    .tgl small{color:var(--mut); font-weight:600;}
 </style>
 <link href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" rel="stylesheet"/><link href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" rel="stylesheet"/></head>
 <body>
@@ -125,6 +181,12 @@
 <div class="mapCard__grow">
 <input autocomplete="off" class="mapQ" id="mapQ" placeholder="Search IATA / ICAO / airport name (Enter to jump)" type="search"/>
 </div>
+
+<div class="toggles" aria-label="Filters">
+  <label class="tgl"><input id="onlyBases" type="checkbox"/> Show only bases</label>
+  <label class="tgl"><input id="onlyTriggered" type="checkbox"/> Show only triggered</label>
+</div>
+
 <div aria-label="Legend" class="legend">
 <span><i class="sw sw--ok"></i> OK</span>
 <span><i class="sw sw--med"></i> MED</span>
@@ -140,6 +202,6 @@
 </div>
 <script crossorigin="" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script><script src="assets/om_policy.js?v=50.OM1"></script>
-<script src="assets/map.js?v=50.OM1"></script>
+<script src="assets/map.js?v=68.map"></script>
 </body>
 </html>
