@@ -126,14 +126,35 @@ function parseGustKt(raw){
 
 function parseRvrMin(raw){
   if(!raw) return null;
-  const matches = raw.match(/\bR\d{2}[LRC]?\/\d{4}(?:V\d{4})?\b/g) || [];
+
+  // Robust RVR parsing for typical ICAO METAR groups:
+  //   R29/1000N
+  //   R06/0600V1000U
+  //   R27/P1500U
+  //   R09/M0050N
+  //   (optional) FT suffix in some regions
+  // We take the *minimum* reported value across all RVR groups (and within a variable group, the lower bound).
+
+  const s = String(raw).toUpperCase();
+  const tokens = s.match(/\bR\d{2}[LRC]?\/[PM]?\d{4}(?:V[PM]?\d{4})?[UDN]?(?:FT)?\b/g) || [];
+
   let min = null;
-  for(const t of matches){
-    const mm = t.match(/\/(\d{4})/);
+  for(const t of tokens){
+    const mm = t.match(/^R\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?(?:FT)?$/);
     if(!mm) continue;
-    const v = parseInt(mm[1],10);
-    if(min===null || v<min) min=v;
+
+    const v1 = parseInt(mm[2], 10); // M0050 and P1500 still parse to 50/1500
+    if(!Number.isFinite(v1)) continue;
+
+    let v = v1;
+    if(mm[4]){
+      const v2 = parseInt(mm[4], 10);
+      if(Number.isFinite(v2)) v = Math.min(v, v2);
+    }
+
+    if(min === null || v < min) min = v;
   }
+
   return min;
 }
 
