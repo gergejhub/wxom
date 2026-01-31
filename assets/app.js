@@ -1274,7 +1274,8 @@ function applyFilters(list){
       case "med": if (st.alert !== "MED") return false; break;
 
       // Tiles (NOW / METAR)
-      case "met_crit": if (!(st.alert === "CRIT")) return false; break;
+      case "met_crit": if (!((st.met && typeof st.met.score === "number" && st.met.score >= 70))) return false; break;
+      case "alert_crit": if (!(st.alert === "CRIT")) return false; break;
       case "met_vis300": {
         const v = (st.met ? st.met.vis : null);
         const r = (st.met ? st.met.rvrMin : null);
@@ -1408,7 +1409,8 @@ function sortList(list){
 
 function computeTileLists(list){
   const metEng = list.filter(s=>s.engIceOps);
-  const metCrit = list.filter(s=> (s.alert === "CRIT"));
+  const metCrit = list.filter(s=> (s.met && typeof s.met.score === "number" && s.met.score >= 70));
+  const alertCrit = list.filter(s=> (s.alert === "CRIT"));
   const metVis300 = list.filter(s=> ((s.met && s.met.vis !== null && s.met.vis < 300) || (s.met && s.met.rvrMin !== null && s.met.rvrMin < 300)));
   const metTs = list.filter(s=>s.met && s.met.hz && s.met.hz.ts);
   const metWind = list.filter(s=> (s.met && s.met.gustMax !== null && s.met.gustMax >= 25));
@@ -1445,7 +1447,7 @@ function computeTileLists(list){
   );
 
   return {
-    met:{eng:metEng, crit:metCrit, vis300:metVis300, ts:metTs, wind:metWind, snow:metSnow, toProhib:metToProhib, lvto:metLvto, xwind:metXwind, va:metVa, any:metAny},
+    met:{eng:metEng, crit:metCrit, alertCrit:alertCrit, vis300:metVis300, ts:metTs, wind:metWind, snow:metSnow, toProhib:metToProhib, lvto:metLvto, xwind:metXwind, va:metVa, any:metAny},
     taf:{crit:tafCrit, vis300:tafVis300, ts:tafTs, wind:tafWind, snow:tafSnow, toProhib:tafToProhib, lvto:tafLvto, va:tafVa, any:tafAny}
   };
 }
@@ -1471,6 +1473,7 @@ function updateTiles(currentList){
   // NOW (METAR-priority) tiles
   setIf("tileEngCount", t.met.eng.length);
   setIf("tileCritCount", t.met.crit.length);
+  setIf("tileAlertCritCount", t.met.alertCrit.length);
   setIf("tileVis300Count", t.met.vis300.length);
   setIf("tileTsCount", t.met.ts.length);
   setIf("tileWindCount", t.met.wind.length);
@@ -1527,6 +1530,7 @@ function updateTiles(currentList){
 
   renderIata("tileEngIata", t.met.eng);
   renderIata("tileCritIata", t.met.crit);
+  renderIata("tileAlertCritIata", t.met.alertCrit);
   renderIata("tileVis300Iata", t.met.vis300);
   renderIata("tileTsIata", t.met.ts);
   renderIata("tileWindIata", t.met.wind);
@@ -1970,7 +1974,8 @@ function signalNewAlerts(fullList){
   const setsNow = {
     met: {
       eng: listToIcaoSet(t.met.eng),
-      crit: listToIcaoSet(t.met.crit),
+      metCrit: listToIcaoSet(t.met.crit),
+      alertCrit: listToIcaoSet(t.met.alertCrit),
       vis: listToIcaoSet(t.met.vis300),
       ts: listToIcaoSet(t.met.ts),
       wind: listToIcaoSet(t.met.wind),
@@ -2028,26 +2033,27 @@ function signalNewAlerts(fullList){
     const lines = [];
     const flashes = [];
 
-    function check(catKey, label, filterKey){
-      const nowS = setsNow[catKey][label];
-      const prevS = prevSignalSets[catKey][label] || new Set();
+    function check(catKey, key, display, filterKey){
+      const nowS = setsNow[catKey][key];
+      const prevS = (prevSignalSets && prevSignalSets[catKey]) ? (prevSignalSets[catKey][key] || new Set()) : new Set();
       const add = diffSet(nowS, prevS);
       if (add.size){
-        lines.push(`${label.toUpperCase()}: ${fmtCodesFromIcaos(add)}`);
+        lines.push(`${display}: ${fmtCodesFromIcaos(add)}`);
         if (filterKey) flashes.push(filterKey);
       }
     }
 
     // NOW (METAR) categories
-    check("met","crit","met_crit");
-    check("met","vis","met_vis300");
-    check("met","ts","met_ts");
-    check("met","wind","met_wind25");
-    check("met","snow","met_snow");
-    check("met","toProhib","met_toProhib");
-    check("met","lvto","met_lvto");
-    check("met","xwind","met_xwind");
-    check("met","va","met_va");
+    check("met","metCrit","METAR CRIT","met_crit");
+    check("met","alertCrit","ALERT CRIT","alert_crit");
+    check("met","vis","VIS/RVR<300","met_vis300");
+    check("met","ts","TS/CB","met_ts");
+    check("met","wind","WIND","met_wind25");
+    check("met","snow","SNOW","met_snow");
+    check("met","toProhib","TO PROHIB","met_toProhib");
+    check("met","lvto","LVTO","met_lvto");
+    check("met","xwind","XWIND","met_xwind");
+    check("met","va","VA","met_va");
     // ENG tile uses its legacy filter key "eng" in HTML? (we kept tile ENG as "eng")
     const addEng = diffSet(setsNow.met.eng, prevSignalSets.met.eng || new Set());
     if (addEng.size){
@@ -2056,14 +2062,14 @@ function signalNewAlerts(fullList){
     }
 
     // TAF categories (only if panel exists)
-    check("taf","crit","taf_crit");
-    check("taf","vis","taf_vis300");
-    check("taf","ts","taf_ts");
-    check("taf","wind","taf_wind25");
-    check("taf","snow","taf_snow");
-    check("taf","toProhib","taf_toProhib");
-    check("taf","lvto","taf_lvto");
-    check("taf","va","taf_va");
+    check("taf","crit","TAF CRIT","taf_crit");
+    check("taf","vis","TAF VIS/RVR<300","taf_vis300");
+    check("taf","ts","TAF TS/CB","taf_ts");
+    check("taf","wind","TAF WIND","taf_wind25");
+    check("taf","snow","TAF SNOW","taf_snow");
+    check("taf","toProhib","TAF TO PROHIB","taf_toProhib");
+    check("taf","lvto","TAF LVTO","taf_lvto");
+    check("taf","va","TAF VA","taf_va");
 
     if (lines.length){
       showTvToast("NEW ALERTS", lines.slice(0, 10));
@@ -2284,7 +2290,19 @@ const TILE_TOOLTIP = {
 };
 
 // Extra tooltip mappings for METAR-priority and TAF forecast tiles
-TILE_TOOLTIP.met_crit = {title:"CRITICAL (overall)", om:"Overall alert level derived from NOW (METAR) + FORECAST (TAF) scoring plus pillar escalations (WIND/SNOW) and ENG ICE OPS rule.", why:"This tile matches the Alert pill in the table. A row can be CRITICAL even if METAR score is below 70 (e.g., combined SNOW pillar + low VIS, or forecast-driven risk).", triggers:["Alert level = CRIT (combined NOW+FCST)"]};
+TILE_TOOLTIP.met_crit = {
+  title: "METAR CRIT",
+  om: "Internal severity score (METAR)",
+  why: "Shows stations where the METAR-only severity score reaches the CRITICAL band (score ≥ 70). This is based only on the current observed METAR conditions.",
+  triggers: ["METAR score ≥ 70"]
+};
+TILE_TOOLTIP.alert_crit = {
+  title: "ALERT CRIT (overall)",
+  om: "Overall alert level (NOW + FORECAST + escalation)",
+  why: "Matches the Alert pill in the table. Overall alert can be CRITICAL even if the METAR score is below 70, because it can be driven by TAF forecast risk and/or pillar escalation logic (e.g., SNOW/WIND/ENG ICE OPS). Use this tile to answer: 'Which stations are operationally CRIT overall?'.",
+  triggers: ["Alert level = CRIT (combined NOW + FORECAST + escalation)"]
+};
+
 TILE_TOOLTIP.met_vis300 = {title:"VIS/RVR < 300 (METAR)", om:"OM-A 8.1.4 (CAT II minima: RVR ≥ 300m)", why:"METAR-only (current) visibility/RVR banding.", triggers:["METAR VIS < 300 m", "or METAR RVRmin < 300 m"]};
 TILE_TOOLTIP.met_ts = {title:"TS / CB (METAR)", om:"OM-A 8.3.8.1 (Thunderstorms)", why:"Current report (METAR) indicates TS.", triggers:["METAR: TS"]};
 TILE_TOOLTIP.met_wind25 = {title:"WIND (METAR)", om:"Advisory", why:"Current gust threshold (METAR).", triggers:["METAR GUST ≥ 25 kt"]};
