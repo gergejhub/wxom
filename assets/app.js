@@ -1274,7 +1274,7 @@ function applyFilters(list){
       case "med": if (st.alert !== "MED") return false; break;
 
       // Tiles (NOW / METAR)
-      case "met_crit": if (!(st.met && st.met.score >= 70)) return false; break;
+      case "met_crit": if (!(st.alert === "CRIT")) return false; break;
       case "met_vis300": {
         const v = (st.met ? st.met.vis : null);
         const r = (st.met ? st.met.rvrMin : null);
@@ -1408,7 +1408,7 @@ function sortList(list){
 
 function computeTileLists(list){
   const metEng = list.filter(s=>s.engIceOps);
-  const metCrit = list.filter(s=> (s.met && typeof s.met.score === "number" && s.met.score >= 70));
+  const metCrit = list.filter(s=> (s.alert === "CRIT"));
   const metVis300 = list.filter(s=> ((s.met && s.met.vis !== null && s.met.vis < 300) || (s.met && s.met.rvrMin !== null && s.met.rvrMin < 300)));
   const metTs = list.filter(s=>s.met && s.met.hz && s.met.hz.ts);
   const metWind = list.filter(s=> (s.met && s.met.gustMax !== null && s.met.gustMax >= 25));
@@ -2284,7 +2284,7 @@ const TILE_TOOLTIP = {
 };
 
 // Extra tooltip mappings for METAR-priority and TAF forecast tiles
-TILE_TOOLTIP.met_crit = {title:"CRITICAL (METAR)", om:"Internal severity score (METAR)", why:"Same severity policy, but tile is driven by METAR score.", triggers:["METAR score ≥ 70"]};
+TILE_TOOLTIP.met_crit = {title:"CRITICAL (overall)", om:"Overall alert level derived from NOW (METAR) + FORECAST (TAF) scoring plus pillar escalations (WIND/SNOW) and ENG ICE OPS rule.", why:"This tile matches the Alert pill in the table. A row can be CRITICAL even if METAR score is below 70 (e.g., combined SNOW pillar + low VIS, or forecast-driven risk).", triggers:["Alert level = CRIT (combined NOW+FCST)"]};
 TILE_TOOLTIP.met_vis300 = {title:"VIS/RVR < 300 (METAR)", om:"OM-A 8.1.4 (CAT II minima: RVR ≥ 300m)", why:"METAR-only (current) visibility/RVR banding.", triggers:["METAR VIS < 300 m", "or METAR RVRmin < 300 m"]};
 TILE_TOOLTIP.met_ts = {title:"TS / CB (METAR)", om:"OM-A 8.3.8.1 (Thunderstorms)", why:"Current report (METAR) indicates TS.", triggers:["METAR: TS"]};
 TILE_TOOLTIP.met_wind25 = {title:"WIND (METAR)", om:"Advisory", why:"Current gust threshold (METAR).", triggers:["METAR GUST ≥ 25 kt"]};
