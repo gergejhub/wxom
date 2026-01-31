@@ -196,6 +196,10 @@
     const metarRaw = st.metarRaw || "";
     const tafRaw = st.tafRaw || "";
 
+    // Use the available report as the observation string for group extraction.
+    // IMPORTANT: define this before any logic that checks RVR groups.
+    const obsRaw = metarRaw || tafRaw;
+
     // Presence flags
     const tsOrCb = (met && met.hz && (met.hz.ts || met.hz.cb)) || (taf && taf.hz && (taf.hz.ts || taf.hz.cb)) || detectCB(metarRaw) || detectCB(tafRaw);
     const heavy = detectHeavyPrecipTOProhib(metarRaw) || detectHeavyPrecipTOProhib(tafRaw);
@@ -214,6 +218,7 @@
     const lvtoQualReq = (typeof rvrMinAll === "number") ? (rvrMinAll < 150) : false;
 
     // Approach/landing: RVR reporting must be available when VIS/CMV < 800m.
+    // (Advisory flag; based on the currently-available report string.)
     const rvrRequired = (typeof worstVis === "number" && worstVis < 800) ? (!detectAnyRvr(obsRaw)) : false;
 
     // CAT-driven tags (generic thresholds; actual minima depend on approach category and lights)
@@ -227,7 +232,7 @@
 
     // Crosswind advisory
     const rwys = runwaysMap ? runwaysMap[st.icao] : null;
-    const windRaw = metarRaw || tafRaw;
+    const windRaw = obsRaw;
     const bestX = computeBestCrosswind(windRaw, rwys);
     const condInfo = inferRunwayCondition(metarRaw, tafRaw);
     const narrow = (bestX.narrow === true);
@@ -238,7 +243,6 @@
 
     // Explanations for UI/audit (kept compact; derived only from raw METAR/TAF text + runways.json)
     const explainSrc = (metarRaw && !tafRaw) ? "M" : (!metarRaw && tafRaw) ? "T" : "MT";
-    const obsRaw = metarRaw || tafRaw;
     const rvrGroups = extractRvrGroups(obsRaw);
     const heavyMatches = [...new Set([...heavyPrecipMatches(metarRaw), ...heavyPrecipMatches(tafRaw)])];
     const w = parseWindKt(obsRaw);
