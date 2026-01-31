@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Alert Guide • WX Monitor</title>
+  <title>Útmutató • WX Monitor</title>
 
   <!-- Use the exact same stylesheet as the dashboard -->
   <link rel="stylesheet" href="assets/styles.css" />
@@ -14,46 +14,32 @@
     a:focus{ outline: 2px solid rgba(255,47,166,.55); outline-offset: 2px; border-radius: 12px; }
 
     .guideWrap{ width:min(1180px, 100%); margin:0 auto; padding: 14px 18px 42px; }
-
     .hero{
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:16px 16px;
+      border-radius: 22px;
+      padding: 16px 16px 14px;
       background:
-        radial-gradient(800px 260px at 20% 0%, rgba(255,47,166,.18), transparent 60%),
-        radial-gradient(700px 260px at 80% 0%, rgba(46,244,255,.10), transparent 58%),
-        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
-      box-shadow:
-        0 18px 34px rgba(0,0,0,.35),
-        0 0 0 1px rgba(255,255,255,.03) inset,
-        0 0 30px rgba(255,47,166,.10);
+        radial-gradient(1200px 600px at 20% 0%, rgba(255,47,166,.08), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(66,214,255,.08), transparent 55%),
+        rgba(255,255,255,.02);
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
     }
-    .hero__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .hero h1{ margin:0; font-size:22px; letter-spacing:.2px; }
-    .hero p{ margin:8px 0 0; color:var(--mut); line-height:1.55; max-width: 78ch; }
-
-    .heroBadges{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
-
-    .jump{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap:10px;
+    .hero__top{ display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap: wrap; }
+    .hero h1{ margin: 0 0 6px; font-size: 22px; letter-spacing: .2px; }
+    .hero p{ margin: 6px 0; color: var(--muted); line-height: 1.45; }
+    .hero .small{ font-size: 12px; }
+    .heroBadges{ display:flex; gap:8px; flex-wrap: wrap; justify-content:flex-end; }
+    .chip{
+      display:inline-flex; gap:8px; align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      font-size: 12px;
+      color: var(--text);
     }
-    @media (max-width: 980px){ .jump{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 520px){ .jump{ grid-template-columns: 1fr; } }
-
-    .jump a.tile{ text-decoration:none; min-height: 92px; }
-    .jump .tile__v{ font-size: 26px; }
-    .jump .tile__s{ white-space: normal; min-height: unset; }
-
-    .grid{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns: 360px 1fr;
-      gap: 14px;
-      align-items:start;
-    }
+    .chip code{ font-size: 12px; padding: 2px 6px; border-radius: 9px; border:1px solid var(--line); background: rgba(0,0,0,.2); }
+    .grid{ display:grid; grid-template-columns: 320px 1fr; gap:14px; margin-top: 14px; }
     @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
 
     .toc{
@@ -67,48 +53,101 @@
       overflow:auto;
     }
     @media (max-width: 980px){ .toc{ position: static; max-height: none; } }
-    .toc h3{ margin:0 0 10px; font-size: 13px; letter-spacing:.2px; }
-    .toc a{ display:block; text-decoration:none; padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.06); background: rgba(0,0,0,.16); color: rgba(255,255,255,.86); font-weight: 800; }
-    .toc a:hover{ border-color: rgba(255,47,166,.30); box-shadow: 0 0 0 4px rgba(255,47,166,.07); }
-    .toc .sub{ margin-top:8px; display:grid; gap:8px; }
-    .toc .sub a{ font-weight: 750; color: rgba(255,255,255,.82); }
-    .toc .note{ margin-top:12px; color: var(--mut); font-size: 12px; line-height:1.45; }
+    .toc h3{ margin:0 0 10px; font-size: 13px; letter-spacing:.3px; text-transform: uppercase; color: var(--muted); }
+    .toc .sub{ display:flex; flex-direction:column; gap: 8px; }
+    .toc a{
+      display:block;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border:1px solid transparent;
+      background: rgba(0,0,0,.08);
+      text-decoration:none;
+    }
+    .toc a:hover{ border-color: var(--line); background: rgba(255,255,255,.03); }
+    .toc .note{
+      margin-top: 10px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px dashed rgba(255,255,255,.18);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
 
-    .section{ border:1px solid var(--line); border-radius:16px; background: rgba(255,255,255,.02); overflow:hidden; }
-    .section + .section{ margin-top: 14px; }
-    .section__head{ padding: 12px 12px; background: rgba(255,255,255,.03); border-bottom: 1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-    .section__head h2{ margin:0; font-size: 14px; letter-spacing:.25px; }
-    .section__body{ padding: 12px 12px 14px; }
-    .section__body p{ margin: 8px 0; color: rgba(255,255,255,.86); line-height: 1.55; }
-    .section__body .muted{ color: var(--mut); }
-
-    .klist{ margin: 10px 0 0; padding-left: 18px; color: rgba(255,255,255,.88); line-height:1.55; }
-    .klist li{ margin: 6px 0; }
-
-    .miniTbl{ width:100%; border-collapse: collapse; border:1px solid rgba(255,255,255,.08); border-radius: 12px; overflow:hidden; }
-    .miniTbl th, .miniTbl td{ padding: 10px 10px; border-bottom:1px solid rgba(255,255,255,.07); vertical-align: top; }
-    .miniTbl th{ background: rgba(255,255,255,.03); font-size:12px; color: rgba(255,255,255,.84); }
-    .miniTbl td{ font-size: 13px; color: rgba(255,255,255,.88); }
-    .miniTbl tr:last-child td{ border-bottom:none; }
-
-    details{ border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.18); border-radius: 14px; padding: 10px 10px; }
-    details + details{ margin-top: 10px; }
-    summary{ cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight: 950; letter-spacing:.2px; }
+    /* Overrides to make details/summary more “dashboard-like” */
+    details{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.02);
+      padding: 10px 12px;
+      margin: 10px 0;
+    }
+    summary{ cursor:pointer; list-style:none; display:flex; gap:10px; align-items:center; justify-content:space-between; }
     summary::-webkit-details-marker{ display:none; }
-    .sumLeft{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    .sumTitle{ font-size: 13px; }
-    .sumRight{ color: var(--mut); font-weight: 850; font-size: 12px; }
-
-    .chip{ display:inline-flex; align-items:center; gap:8px; padding: 6px 10px; border-radius: 999px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); font-family: var(--mono); font-weight: 900; font-size: 12px; white-space:nowrap; }
-    .chip .pill{ margin-left: 2px; }
+    .sumLeft{ display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+    .sumTitle{ font-weight: 700; letter-spacing: .3px; }
+    .sumRight{ color: var(--muted); font-size: 12px; }
+    .kvline{ display:flex; gap:8px; flex-wrap: wrap; margin: 8px 0; }
+    .kvline > div{ padding: 6px 8px; border:1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.12); font-size:12px; color: var(--text); }
+    .kvline code{ font-size: 12px; }
+    .hl{
+      display:inline-block;
+      padding: 1px 6px;
+      border-radius: 10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+    .bul{ margin: 6px 0 6px 18px; color: var(--muted); }
+    .bul li{ margin: 4px 0; line-height: 1.35; }
 
     .backRow{ margin-top: 14px; display:flex; justify-content:flex-end; }
-    .backRow a{ display:inline-flex; align-items:center; gap:8px; padding: 10px 12px; border-radius: 14px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); text-decoration:none; font-weight: 950; }
-    .backRow a:hover{ border-color: rgba(255,47,166,.35); box-shadow: 0 0 0 4px rgba(255,47,166,.08); }
+    .backRow a{
+      text-decoration:none;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.02);
+      color: var(--text);
+      font-size: 12px;
+    }
+    .backRow a:hover{ background: rgba(255,255,255,.04); }
 
-    .small{ font-size: 12px; color: var(--mut); }
+    .callout{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,.02);
+      margin: 10px 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .callout strong{ color: var(--text); }
+
+    table.guideTbl{
+      width:100%;
+      border-collapse: collapse;
+      border:1px solid var(--line);
+      border-radius: 16px;
+      overflow:hidden;
+      background: rgba(255,255,255,.02);
+      margin: 10px 0 6px;
+    }
+    table.guideTbl th, table.guideTbl td{
+      padding: 10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      vertical-align: top;
+      text-align:left;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    table.guideTbl th{ color: var(--text); font-weight: 700; }
+    table.guideTbl tr:last-child td{ border-bottom: none; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
+
 <body>
   <!-- Dashboard-style header -->
   <header class="top">
@@ -122,7 +161,9 @@
           <a class="viewpill viewpill--link" href="alerts.html" aria-current="page"><span class="viewpill__k">Guide</span></a>
         </div>
       </div>
-      <div class="brand__sub">A practical, plain-English explanation of alerts, triggers, colors, and what the dashboard is actually doing.</div>
+      <div class="brand__sub">
+        METAR + TAF monitor (aviationweather.gov → GitHub Actions) · OM-A/OM-B policy layer (advisory) · auditálható “miért?”
+      </div>
     </div>
   </header>
 
@@ -130,65 +171,68 @@
     <section class="hero" id="top">
       <div class="hero__top">
         <div>
-          <h1>Alert Guide (Operations Manual aligned)</h1>
+          <h1>Riasztási útmutató – csempék, tagek és “miért” magyarázat (OM-hoz igazítva)</h1>
           <p>
-            This page explains every tile, every trigger, and the color / scoring logic in one place.
-            It is designed so that a first-time user can understand the dashboard at a glance, while still being
-            precise and traceable to OM references where applicable.
+            Ez az oldal <strong>minden</strong> csempét (tile), trigger-szabályt, score/szín logikát és OM-alapú policy taget
+            elmagyaráz <span class="hl">közérthetően</span>, de úgy, hogy OCC-ben is visszakövethető legyen: <em>mit miért jelez</em> a rendszer.
           </p>
           <p class="small" style="margin-top:10px;">
-            Important: this tool is an <strong>advisory monitor</strong>. It does not replace SOP, captain’s judgement, or official operational documentation.
+            Fontos: ez egy <strong>advisory monitor</strong>. Nem helyettesíti az OM/SOP-t, a kapitány döntését, a performance számítást,
+            a valós RWY-in-use/RWYCC/SNOWTAM információkat vagy a hivatalos briefinget. A cél: <strong>korai észlelés</strong> és
+            <strong>gyors triage</strong> egy nagy hálózaton.
           </p>
         </div>
-        <div class="heroBadges" aria-label="Key guide badges">
+        <div class="heroBadges" aria-label="Legenda">
           <span class="chip"><span>Alert State</span> <span class="pill pill--ok">OK</span> <span class="pill pill--med">MED</span> <span class="pill pill--high">HIGH</span> <span class="pill pill--crit">CRIT</span></span>
-          <span class="chip"><span>Base airport</span> <span class="iata-chip iata-chip--base">BUD</span></span>
+          <span class="chip"><span>Forrás jelölés</span> <code>M</code> METAR · <code>T</code> TAF · <code>M+T</code> mindkettő</span>
+          <span class="chip"><span>Bázis</span> <span class="iata-chip iata-chip--base">BASE</span> (lista: <code>base.txt</code>)</span>
+          <span class="chip"><span>Audit</span> tag/csempe → katt → Drawer → <code>Minima / Policy (OM) – Why?</code></span>
         </div>
       </div>
 
-      <div class="jump" aria-label="Quick jump">
+      <div class="heroTiles" style="margin-top: 12px;">
         <a class="tile tile--ghost" href="#how-to-read">
-          <div class="tile__k">How to read the dashboard</div>
+          <div class="tile__k">Hogyan olvasd</div>
           <div class="tile__v">01</div>
-          <div class="tile__s">What you see, what is computed, and what is advisory.</div>
+          <div class="tile__s">Csempék (NOW/TAF), táblázat, tagek, Drawer, szűrés, rendezés.</div>
         </a>
         <a class="tile tile--ghost" href="#colors">
-          <div class="tile__k">Colors & severity</div>
+          <div class="tile__k">Színek & Alert</div>
           <div class="tile__v">02</div>
-          <div class="tile__s">Border colors, pills, and why they look the way they do.</div>
+          <div class="tile__s">OK/MED/HIGH/CRIT mit jelent, mikor escalál a szél/hó pillér.</div>
         </a>
         <a class="tile tile--ghost" href="#score">
-          <div class="tile__k">Score explained</div>
+          <div class="tile__k">Score / CIG / VIS / RVR</div>
           <div class="tile__v">03</div>
-          <div class="tile__s">How VIS/RVR/CIG/WX/Gusts combine into one severity number.</div>
+          <div class="tile__s">Pontozás részletei (küszöbök, pontok), “Worst visibility” logika.</div>
         </a>
         <a class="tile tile--ghost" href="#tiles">
-          <div class="tile__k">Tile-by-tile triggers</div>
+          <div class="tile__k">Csempe & Trigger szabályok</div>
           <div class="tile__v">04</div>
-          <div class="tile__s">Exact rules for ENG, CRIT, VIS/RVR, TS, WIND, SNOW, OM policy tiles.</div>
+          <div class="tile__s">Tile-by-tile: METAR NOW + TAF FORECAST, OM policy tagek és “miért”.</div>
         </a>
         <a class="tile tile--ghost" href="#faq">
-          <div class="tile__k">FAQ</div>
+          <div class="tile__k">FAQ / hibakeresés</div>
           <div class="tile__v">05</div>
-          <div class="tile__s">Common questions: “Why is it red?”, “Why LVTO?”, “Why XWIND?”.</div>
+          <div class="tile__s">Miért piros? Miért rossz a worst vis? Miért nincs XWIND? Pages/Actions tippek.</div>
         </a>
       </div>
     </section>
 
     <div class="grid">
       <!-- TOC -->
-      <aside class="toc" aria-label="Table of contents">
-        <h3>On this page</h3>
+      <aside class="toc" aria-label="Tartalomjegyzék">
+        <h3>Ezen az oldalon</h3>
         <div class="sub">
-          <a href="#how-to-read">1) How to read the dashboard</a>
-          <a href="#colors">2) Colors & severity (OK/MED/HIGH/CRIT)</a>
-          <a href="#score">3) Score, CIG, and how it is calculated</a>
-          <a href="#tiles">4) Tiles, triggers, OM references</a>
+          <a href="#how-to-read">1) Dashboard olvasása</a>
+          <a href="#colors">2) Színek & Alert szintek</a>
+          <a href="#score">3) Score, VIS/RVR/CIG és “Worst” logika</a>
+          <a href="#tiles">4) Csempék, tagek, triggerek, OM magyarázat</a>
           <a href="#faq">5) FAQ / troubleshooting</a>
         </div>
         <div class="note">
-          Tip: on the dashboard, <strong>click a tile</strong> to filter the table to only the airports that trigger that tile.
-          Base airports (from <code>base.txt</code>) are shown first and highlighted.
+          Tipp: a dashboardon <strong>kattints egy csempére</strong>, és a táblázat csak azokat a reptereket mutatja, amelyek ezt a csempét triggerelik.
+          A bázis repterek (<code>base.txt</code>) kiemelve és előresorolva jelennek meg – és AUTO nézetben ezekre jön a böngészős popup.
         </div>
       </aside>
 
@@ -196,351 +240,672 @@
       <div>
         <section class="section" id="how-to-read">
           <div class="section__head">
-            <h2>1) How to read the dashboard</h2>
-            <span class="pill pill--high">Reading</span>
+            <h2>1) Dashboard olvasása</h2>
+            <span class="pill pill--high">Alapok</span>
           </div>
           <div class="section__body">
             <p>
-              The dashboard is a <strong>network monitor</strong> built around METAR/TAF. Every row is an aerodrome. The system parses the raw strings and computes
-              a few consistent “signals” (visibility, RVR, ceiling, weather codes, gusts) plus an overall <strong>severity score</strong>.
+              A WX Monitor egy <strong>hálózati időjárás-monitor</strong>: a táblázat minden sora egy repülőtér (állomás).
+              A rendszer a nyers <span class="hl">METAR</span> és <span class="hl">TAF</span> szövegből kinyeri a legfontosabb operatív jeleket
+              (VIS, RVR, CIG, gust, jelenségek), majd ebből képez:
+              <strong>csempéket</strong> (gyors összegzés), <strong>tageket</strong> (mi triggel), és egy <strong>severity score</strong>-t.
             </p>
-            <ul class="klist">
-              <li><strong>Tiles</strong> (top): counts + affected airports (IATA/ICAO). They are fast “what changed?” indicators.</li>
-              <li><strong>Table</strong>: operational view by airport with alert state, worst values, triggers, age, raw METAR/TAF.</li>
-              <li><strong>Hover tooltips on tiles</strong>: explain “why this exists” and show OM reference links for the rule.</li>
-              <li><strong>Base airports</strong>: your priority list (from <code>base.txt</code>). In tiles they appear first and are visually highlighted.</li>
-            </ul>
-            <p class="muted">
-              Note: Some OM concepts require runway condition, runway in use, RWYCC, or SNOWTAM data. This system runs with <strong>zero manual inputs</strong>, so those
-              parts are treated conservatively and marked as advisory.
-            </p>
+
+            <div class="callout">
+              <strong>METAR vs TAF szerepe:</strong>
+              <ul class="bul">
+                <li><strong>Csempék (NOW)</strong>: alapvetően <strong>METAR-prioritás</strong> (aktuális megfigyelés).</li>
+                <li><strong>TAF panel</strong>: külön blokkban “FORECAST” jelleggel (nem keveredik össze a “most”-tal).</li>
+                <li><strong>Worst visibility</strong> oszlop: szándékosan <em>konzervatív</em> – a METAR + a TAF-ban előforduló összes VIS érték minimuma.</li>
+              </ul>
+            </div>
+
+            <table class="guideTbl" aria-label="Oszlopok és jelentésük">
+              <thead>
+                <tr>
+                  <th>Elem</th>
+                  <th>Mit látsz</th>
+                  <th>Mit jelent operatívan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Csempék (Tiles)</strong></td>
+                  <td>Fent, nagy számmal: hány reptér triggel, alatta kódlista</td>
+                  <td>Gyors triage. Kattintás → táblázat szűrés az adott csempére.</td>
+                </tr>
+                <tr>
+                  <td><strong>Alert (OK/MED/HIGH/CRIT)</strong></td>
+                  <td>Színes pill a sorban</td>
+                  <td>Aggregált állapot (score + “pillér” eskaláció: szél/hó). Részletek a 2–3. pontban.</td>
+                </tr>
+                <tr>
+                  <td><strong>Triggers (tagek)</strong></td>
+                  <td>Színes “chipek” a sorban + <span class="mono">M / T / M+T</span> jelölés</td>
+                  <td>Konkrét okok: pl. <span class="hl">VIS/RVR</span>, <span class="hl">TS</span>, <span class="hl">SN</span>, vagy OM policy jelzések.
+                      Kattintás tagre/repülőtérre → Drawer.</td>
+                </tr>
+                <tr>
+                  <td><strong>Worst visibility</strong></td>
+                  <td>1 szám (m) + jelölés, hogy miből jött</td>
+                  <td>“Legrosszabb” VIS: METAR VIS minimuma és a TAF-ban talált összes VIS minimuma közül a kisebb.
+                      Cél: ne maradjon rejtve egy forecast romlás.</td>
+                </tr>
+                <tr>
+                  <td><strong>Drawer</strong></td>
+                  <td>Részletes panel: Summary, raw METAR/TAF, “Minima/Policy (OM) – Why?”</td>
+                  <td>Audit: itt látod, hogy melyik tag milyen token/érték miatt jött fel, és milyen küszöbhöz viszonyít.</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="callout">
+              <strong>Szűrés & rendezés:</strong>
+              <ul class="bul">
+                <li>A “Condition” dropdown ugyanazokra a logikákra szűr, mint a csempék (METAR NOW, TAF FORECAST, valamint OM policy tagek).</li>
+                <li>A sorok rendezése METAR-prioritású: bázis repterek előre, majd a súlyosabb helyzetek.</li>
+              </ul>
+            </div>
+
+            <div class="backRow">
+              <a href="#top" aria-label="Vissza a tetejére">Vissza a tetejére</a>
+            </div>
           </div>
         </section>
 
         <section class="section" id="colors">
           <div class="section__head">
-            <h2>2) Colors & severity</h2>
-            <span class="pill pill--med">Visual language</span>
+            <h2>2) Színek & Alert szintek</h2>
+            <span class="pill pill--med">Legenda</span>
           </div>
           <div class="section__body">
             <p>
-              You will see color in two places: (a) the <strong>row alert pill</strong> (OK/MED/HIGH/CRIT), and (b) <strong>tile border glow</strong>.
-              The color represents a computed severity state driven mainly by the score.
+              A sor színe/pill-je egy <strong>Alert</strong> állapotot mutat. Ez <span class="hl">nem</span> egy hivatalos OM-minima,
+              hanem egy “figyelmi” kategória, ami segít priorizálni.
             </p>
 
-            <div class="legend" style="margin:12px 0 0;">
-              <div class="legend__tip">Severity buckets (used across the dashboard)</div>
-              <div class="legend__row">
-                <span class="pill pill--ok">OK</span>
-                <span class="muted">Score &lt; 20</span>
-              </div>
-              <div class="legend__row">
-                <span class="pill pill--med">MED</span>
-                <span class="muted">Score 20–44</span>
-              </div>
-              <div class="legend__row">
-                <span class="pill pill--high">HIGH</span>
-                <span class="muted">Score 45–69</span>
-              </div>
-              <div class="legend__row">
-                <span class="pill pill--crit">CRIT</span>
-                <span class="muted">Score ≥ 70 (or escalated by wind/snow pillars)</span>
-              </div>
-              <div class="legend__row" style="margin-top:10px;">
-                <span class="tag tag--stop">TO/LND PROHIBITED</span>
-                <span class="muted">Policy tag (OM-based advisory). Displayed in triggers when inferred.</span>
-              </div>
-              <div class="legend__row">
-                <span class="tag tag--lvto">LVTO</span>
-                <span class="muted">Policy tag: VIS/RVR below 550 m band (OM-A take-off minima).</span>
-              </div>
-              <div class="legend__row">
-                <span class="tag tag--warn">LVP required</span>
-                <span class="muted">Policy tag: VIS/RVR below 400 m → LVP must be in force.</span>
-              </div>
+            <div class="kvline" aria-label="Alert küszöbök">
+              <div><strong>OK</strong>: score &lt; 20</div>
+              <div><strong>MED</strong>: 20–44</div>
+              <div><strong>HIGH</strong>: 45–69</div>
+              <div><strong>CRIT</strong>: ≥ 70</div>
             </div>
 
-            <p class="muted" style="margin-top:10px;">
-              Base airports are highlighted with a subtle pulse. This is not a different severity; it is a priority indicator.
+            <p>
+              Az <strong>összesített alert</strong> 3 komponensből áll:
             </p>
+            <ul class="bul">
+              <li><strong>Base alert</strong>: a severity score alapján.</li>
+              <li><strong>Wind pillér</strong>: a METAR és TAF gust maximumából (G25→MED, G30→HIGH, G40→CRIT).</li>
+              <li><strong>Snow pillér</strong>: ha SN/BLSN jelen van, akkor a worst VIS/RVR/CIG alapján eskalál.</li>
+            </ul>
+
+            <div class="callout">
+              <strong>Miért lehet CRIT akkor is, ha a METAR “nem néz ki vészesnek”?</strong><br/>
+              Mert a rendszer a <strong>wind/snow pillérrel</strong> feljebb emeli az alertet, ha a szél/hó kombináció operatívan kockázatos,
+              és/vagy a TAF már romlást jelez (a TAF score 0.85 szorzóval beleszól a severity-be).
+            </div>
+
+            <div class="backRow">
+              <a href="#top" aria-label="Vissza a tetejére">Vissza a tetejére</a>
+            </div>
           </div>
         </section>
 
         <section class="section" id="score">
           <div class="section__head">
-            <h2>3) Score, CIG, and how the score is calculated</h2>
-            <span class="pill pill--high">Math</span>
+            <h2>3) Score, VIS/RVR/CIG és “Worst visibility” logika</h2>
+            <span class="pill pill--crit">Részletek</span>
           </div>
           <div class="section__body">
             <p>
-              The score is a simple, deterministic sum of points from: <strong>Visibility</strong>, <strong>RVR</strong>, <strong>Ceiling (CIG)</strong>,
-              <strong>weather codes</strong>, and <strong>wind gusts</strong>. It is capped at 100.
+              A <strong>severity score (0–100)</strong> egy determinisztikus pontszám a nyers METAR/TAF szöveg alapján.
+              A cél: ugyanazokat a jelenségeket <em>mindig ugyanúgy</em> pontozza, hogy összehasonlítható legyen egy 150+ reptér háló.
             </p>
 
-            <p>
-              <strong>CIG (Ceiling)</strong> is derived as the <em>lowest</em> of any <code>BKN</code>, <code>OVC</code>, or <code>VV</code> layer in the report.
-              Layers like <code>FEW</code> and <code>SCT</code> are <em>not</em> a ceiling and are ignored.
-              Example: <code>BKN008</code> → ceiling 800 ft.
-            </p>
-
-            <table class="miniTbl" aria-label="Score contributions">
+            <table class="guideTbl" aria-label="Score fő komponensei és pontok">
               <thead>
                 <tr>
-                  <th style="width: 220px;">Signal</th>
-                  <th>What is measured</th>
-                  <th style="width: 250px;">Points added</th>
+                  <th>Komponens</th>
+                  <th>Küszöb</th>
+                  <th>Pont</th>
+                  <th>Megjegyzés</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>Visibility (VIS)</strong></td>
-                  <td>Parsed in meters (METAR: explicit, TAF: minimum across all visibility groups)</td>
-                  <td>
-                    ≤150:+35, ≤175:+30, ≤250:+26, ≤300:+24, ≤500:+18, ≤550:+16, ≤800:+12
-                  </td>
+                  <td>VIS (m)</td>
+                  <td>≤150 / ≤175 / ≤250 / ≤300 / ≤500 / ≤550 / ≤800</td>
+                  <td>+35 / +30 / +26 / +24 / +18 / +16 / +12</td>
+                  <td>Ha van VIS. METAR-ban és TAF-ban külön számolódik.</td>
                 </tr>
                 <tr>
-                  <td><strong>RVR</strong></td>
-                  <td>Minimum RVR found in RVR groups (both METAR + TAF)</td>
-                  <td>
-                    ≤75:+28, ≤200:+22, ≤300:+18, ≤500:+12
-                  </td>
+                  <td>RVR min (m)</td>
+                  <td>≤75 / ≤200 / ≤300 / ≤500</td>
+                  <td>+28 / +22 / +18 / +12</td>
+                  <td>Ha van RVR group. A minimum számít.</td>
                 </tr>
                 <tr>
-                  <td><strong>Ceiling (CIG)</strong></td>
-                  <td>Lowest BKN/OVC/VV in feet</td>
-                  <td>
-                    &lt;500ft:+22, &lt;800ft:+12
-                  </td>
+                  <td>Ceiling (ft)</td>
+                  <td>&lt;500 / &lt;800</td>
+                  <td>+22 / +12</td>
+                  <td>A legalacsonyabb BKN/OVC/VV réteg (ceiling) becsült értéke.</td>
                 </tr>
                 <tr>
-                  <td><strong>Weather codes</strong></td>
-                  <td>Presence of selected WX tokens</td>
-                  <td>
-                    TS:+22, FZFG:+18, FG:+14, SN:+10, RA/DZ:+8, BR:+6
-                  </td>
+                  <td>Wx: TS</td>
+                  <td>TS… / -TSRA / +TSGR / VCTS</td>
+                  <td>+22</td>
+                  <td>Token-szinten vizsgálva (nem ICAO substring!).</td>
                 </tr>
                 <tr>
-                  <td><strong>Wind gust</strong></td>
-                  <td>Maximum gust (G) in knots</td>
-                  <td>
-                    ≥25:+4, ≥30:+6, ≥40:+10
-                  </td>
+                  <td>Wx: CB/TCU</td>
+                  <td>pl. BKN020CB, SCT030TCU</td>
+                  <td>+12</td>
+                  <td>Önmagában nem feltétlen hozza fel a TS csempét, de a score-t emeli.</td>
+                </tr>
+                <tr>
+                  <td>Wx: FZFG / FG / BR</td>
+                  <td>FZFG / FG / BR</td>
+                  <td>+18 / +14 / +6</td>
+                  <td>Jelentős operatív kockázat (jeges köd, köd, párásság).</td>
+                </tr>
+                <tr>
+                  <td>Wx: SN / RA</td>
+                  <td>SN/SHSN/BLSN; illetve RA/DZ</td>
+                  <td>+10 / +8</td>
+                  <td>Hó és csapadék pontozása.</td>
+                </tr>
+                <tr>
+                  <td>Gust (kt)</td>
+                  <td>≥25 / ≥30 / ≥40</td>
+                  <td>+4 / +6 / +10</td>
+                  <td>A score-ban “enyhe” súly, az alertben külön “wind pillér” eskalál.</td>
                 </tr>
               </tbody>
             </table>
 
-            <p class="muted" style="margin-top:10px;">
-              Final alert state is derived from the score, then optionally escalated by the wind/snow “pillars” so that clear operational hazards cannot be hidden by a single low score dimension.
-            </p>
+            <div class="callout">
+              <strong>Worst visibility (táblázat oszlop):</strong>
+              <ul class="bul">
+                <li>METAR: a reportolt VIS (m).</li>
+                <li>TAF: az összes VIS érték közül a minimum (a rendszer több szegmensből is kinyeri).</li>
+                <li>A kettő közül a kisebb kerül kiírásra, mert operatív triage-ban jobb “túl óvatosnak” lenni, mint elsiklani egy romlás felett.</li>
+              </ul>
+            </div>
+
+            <div class="backRow">
+              <a href="#top" aria-label="Vissza a tetejére">Vissza a tetejére</a>
+            </div>
           </div>
         </section>
 
         <section class="section" id="tiles">
           <div class="section__head">
-            <h2>4) Tile-by-tile triggers and OM references</h2>
-            <span class="pill pill--crit">Details</span>
+            <h2>4) Csempék, tagek, triggerek és OM magyarázat</h2>
+            <span class="pill pill--crit">Szabályok</span>
           </div>
           <div class="section__body">
             <p>
-              Each tile is a fast summary of a specific condition. Tiles show the number of affected airports and a prioritized list of IATA/ICAO codes.
-              Clicking a tile on the dashboard filters the table to the airports that trigger it.
+              A csempék a leggyakoribb operatív kockázatokat “egy pillantásra” megmutatják.
+              A rendszer két nagy blokkot tart:
+              <strong>NOW (METAR)</strong> és <strong>FORECAST (TAF)</strong>.
+              A táblázatban a tagekhez forrásjelölés tartozik: <span class="mono">M / T / M+T</span>.
             </p>
+
+            <div class="callout">
+              <strong>Anti-false-positive védelem (TS/CB és ICAO kódok):</strong><br/>
+              A jelenség-keresés előtt a rendszer levágja a report eleji fejlécet és az ICAO állomáskódot.
+              Így <span class="hl">LGTS</span> / <span class="hl">GCTS</span> nem tudja “véletlenül” TS-nek triggerelni a TS csempét.
+            </div>
+
+            <h3 style="margin:14px 0 6px;">4.1 NOW (METAR) csempék</h3>
 
             <details open>
               <summary>
                 <span class="sumLeft"><span class="sumTitle">ENG ICE OPS</span> <span class="tag tag--eng">Priority</span></span>
-                <span class="sumRight">Operational icing / very low vis flag</span>
+                <span class="sumRight">FZFG + extrém alacsony VIS (now)</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: METAR indicates <code>FZFG</code> and METAR visibility ≤ <strong>150 m</strong>.</p>
-                <p><strong>Why it matters</strong>: highlights a “high consequence” combination: freezing fog + extreme low visibility. This is also pinned to the top in sorting.</p>
-                <p><strong>OM reference</strong>: OM-A 8.3.8.2 (Icing) – Clean Aircraft Concept (policy context).</p>
+                <p><strong>Trigger</strong>: METAR-ben <code>FZFG</code> és a reportolt visibility ≤ <strong>150 m</strong>.</p>
+                <p><strong>Miért</strong>: ez a kombináció operatívan kiemelt (jeges köd + nagyon alacsony látás), ezért a rendszer ezt a csempét
+                   “hard” prioritással kezeli.</p>
+                <p><strong>Megjegyzés</strong>: ez egy monitor-logika, nem OM-minima. A cél a gyors figyelmeztetés.</p>
               </div>
             </details>
 
             <details>
               <summary>
                 <span class="sumLeft"><span class="sumTitle">CRITICAL</span> <span class="pill pill--crit">CRIT</span></span>
-                <span class="sumRight">Composite state</span>
+                <span class="sumRight">METAR score ≥ 70 (pillérrel eskalálhat)</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: overall score ≥ <strong>70</strong>, or escalated by wind/snow pillars.</p>
-                <p><strong>Why it matters</strong>: multiple hazards / minima-adjacent values are present. Treat as “needs attention now”.</p>
-                <p><strong>OM reference</strong>: this is an internal dashboard severity layer (not a single OM paragraph), but it is built from OM-relevant observables.</p>
+                <p><strong>Trigger</strong>: METAR severity score ≥ <strong>70</strong>.</p>
+                <p><strong>Miért</strong>: több súlyos jel együttesen (alacsony VIS/RVR, TS, CB, alacsony CIG, csapadék, gust).</p>
+                <p><strong>Mit nézz</strong>: a sorban a tagek és a Drawer “Summary/Triggers” része megmutatja, pontosan mi adta a pontszámot.</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">VIS/RVR &lt; 300</span> <span class="tag tag--vis">VIS</span> <span class="tag tag--rvr">RVR</span></span>
-                <span class="sumRight">Below CAT II band</span>
+                <span class="sumLeft"><span class="sumTitle">VIS/RVR &lt; 300</span> <span class="pill pill--high">LOW VIS</span></span>
+                <span class="sumRight">METAR VIS vagy RVR minimum</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: worst-case visibility &lt; <strong>300 m</strong> or minimum RVR &lt; <strong>300 m</strong> (computed from METAR + TAF).</p>
-                <p><strong>Why it matters</strong>: 300 m is a key operational reference band (e.g., CAT II minimum RVR).</p>
-                <p><strong>OM reference</strong>: OM-A 8.1.4 (Approach & landing minima; CAT II RVR ≥ 300 m).</p>
+                <p><strong>Trigger</strong>: METAR visibility &lt; <strong>300 m</strong> <em>vagy</em> METAR RVR-minimum &lt; <strong>300 m</strong>.</p>
+                <p><strong>Miért</strong>: ez az a sáv, ahol LVO környezet és kapacitás/operációs kockázat jellemző.</p>
+                <p><strong>Megjegyzés</strong>: ha van RVR, azt tekinti “erősebb” jelnek; VIS-t nem konvertál RVR-re.</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">TS / CB</span> <span class="tag tag--wx">WX</span></span>
-                <span class="sumRight">Thunderstorm / convective risk</span>
+                <span class="sumLeft"><span class="sumTitle">TS/CB</span> <span class="pill pill--high">WX</span></span>
+                <span class="sumRight">Zivataros jelenség (TS / VCTS); CB/TCU a score-t emeli</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: <code>TS</code> appears in METAR or TAF.</p>
-                <p><strong>Why it matters</strong>: TS implies convective risk; company policy is avoidance. “Overhead / approaching” cannot be reliably inferred from raw strings, so treat this tile as a strong caution flag.</p>
-                <p><strong>OM reference</strong>: OM-A 8.3.8.1 (Thunderstorms avoidance / warnings).</p>
+                <p><strong>Trigger (csempe)</strong>: METAR-ben TS-t tartalmazó wx token:
+                  <code>TS</code>, <code>-TSRA</code>, <code>+TSGR</code>, <code>VCTS</code> stb.</p>
+                <p><strong>CB/TCU</strong>: a rendszer felismeri a <code>BKN020CB</code> / <code>SCT030TCU</code> formátumot is – ez a score-t emeli és tagként megjelenhet,
+                   de <em>önmagában</em> nem minden esetben hozza fel a TS csempét.</p>
+                <p><strong>False-positive védelem</strong>: ICAO kódból (LGTS/GCTS) nem triggel TS-t.</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">WIND</span> <span class="tag tag--gust">GUST</span></span>
-                <span class="sumRight">Gust highlighting (advisory)</span>
+                <span class="sumLeft"><span class="sumTitle">WIND</span> <span class="pill pill--med">GUST</span></span>
+                <span class="sumRight">METAR gust ≥ 25 kt</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: gust ≥ <strong>25 kt</strong> in METAR or TAF.</p>
-                <p><strong>Why it matters</strong>: gusts drive handling risk and performance margins. Crosswind limit checking is handled by the separate <strong>XWIND</strong> tile (estimated).</p>
-                <p><strong>OM reference</strong>: gust tile is an operational highlight; crosswind limits are per OM-B 1.3.1 (see XWIND).</p>
+                <p><strong>Trigger</strong>: METAR-ben a maximum gust ≥ <strong>25 kt</strong>.</p>
+                <p><strong>Miért</strong>: már G25-től érdemes “operatív zajként” kiemelni (ground handling, alternates, turbulence, crosswind risk).</p>
+                <p><strong>Fontos</strong>: az “Alert” oszlopban a szél külön pillérrel eskalál (<span class="mono">25→MED, 30→HIGH, 40→CRIT</span>).</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">SNOW</span> <span class="tag tag--wx">WX</span></span>
-                <span class="sumRight">Snow phenomena present</span>
+                <span class="sumLeft"><span class="sumTitle">SNOW</span> <span class="pill pill--med">SN</span></span>
+                <span class="sumRight">METAR SN / SHSN / BLSN</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: snow-related tokens present (<code>SN</code>, <code>SHSN</code>, <code>BLSN</code>, and combined groups containing SN) in METAR or TAF.</p>
-                <p><strong>Why it matters</strong>: contamination, braking, and operational limits can tighten rapidly. Prohibitive heavy precipitation is flagged separately under <strong>TO PROHIB</strong>.</p>
-                <p><strong>OM reference</strong>: OM-A 8.3.8.7 (Heavy precipitation – takeoff prohibited) as policy context.</p>
+                <p><strong>Trigger</strong>: METAR-ben <code>SN</code>, <code>SHSN</code> vagy <code>BLSN</code> (blowing snow).</p>
+                <p><strong>Miért</strong>: hó esetén a “snow pillér” a worst VIS/RVR/CIG alapján eskalál, mert a kombinált hatás a döntő.</p>
+                <p><strong>Extra</strong>: <code>BLSN</code> automatikusan CRIT snow-pillér (nagyon gyakran rossz VIS és drift).</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">TO PROHIB</span> <span class="tag tag--stop">STOP</span></span>
-                <span class="sumRight">OM policy layer: inferred prohibition flags</span>
+                <span class="sumLeft"><span class="sumTitle">TO PROHIB (METAR)</span> <span class="tag tag--src">M</span></span>
+                <span class="sumRight">OM-A heavy precip lista (advisory)</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong> (policy inference from METAR/TAF tokens):</p>
-                <ul class="klist">
-                  <li><strong>TS or CB/TCU</strong> detected (TS in METAR/TAF, and CB/TCU keywords when present).</li>
-                  <li><strong>Heavy precipitation / freezing / hail</strong>: <code>+SN</code>, <code>+GS</code>, <code>+SG</code>, <code>+PL</code>, <code>FZRA</code>/<code>+FZRA</code>, <code>GR</code>/<code>+GR</code>.</li>
+                <p><strong>Trigger</strong>: METAR-ben OM-A szerinti “takeoff prohibited” jelenségek észlelése (heavy precip lista).</p>
+                <p><strong>Mit jelent az OM</strong>: bizonyos intenzív csapadék/jelenségek esetén a felszállás tiltott.
+                   A rendszer a nyers reportban keresi a releváns tokeneket (pl. <code>+SN</code>, <code>FZRA</code>, <code>GR</code>, stb.).</p>
+                <p><strong>Hol látod a bizonyítékot?</strong> Drawer → <code>Minima / Policy (OM) – Why?</code> → “matches”.</p>
+                <p><strong>OM kontextus</strong>: OM-A “Heavy precipitation” rész (8.3.8.7) – itt van a tiltó lista logikája.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">LVTO (METAR)</span> <span class="tag tag--src">M</span></span>
+                <span class="sumRight">RVR/VIS &lt; 550 (advisory)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: METAR alapján a referencia érték (RVR ha van, különben VIS) &lt; <strong>550 m</strong>.</p>
+                <p><strong>Mit jelent az OM</strong>: LVTO környezet (alacsony RVR) speciális eljárásokat/korlátozásokat vonhat maga után.
+                   A rendszer további sávokat is tagel a kártyán (pl. LVP &lt;400, LVTO&lt;150 crew qual, RVR&lt;125 abszolút min).</p>
+                <p><strong>OM kontextus</strong>: OM-A LVO/LVTO részek (pl. 8.4.11 / 8.1.4.4) – RVR-prioritás és LVTO definíció.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">XWIND (METAR)</span> <span class="tag tag--src">M</span></span>
+                <span class="sumRight">OM-B RWYCC crosswind limit (becslés + best RWY)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: a METAR szél alapján számolt <strong>legkisebb</strong> crosswind (best runway) meghaladja a limitet.</p>
+                <p><strong>Hogyan számol</strong>:
+                  <ul class="bul">
+                    <li>Runway adatok: <code>runways.json</code> (heading/width). Ha nincs adat, XWIND nem számolható → a Drawer jelzi.</li>
+                    <li>Szél: gust ha van, különben steady speed. (A “usedSpd” látszik a Drawerben.)</li>
+                    <li>Best runway: a rendszer minden ismert RWY headingre kiszámolja a crosswindet és a legkisebbet választja.</li>
+                  </ul>
+                </p>
+                <p><strong>Limit honnan jön?</strong> OM-B RWYCC táblázat szerint (advisory). RWYCC-t a rendszer a METAR/TAF wx tokenekből
+                   <em>konzervatívan becsli</em> (nincs SNOWTAM / nincs valós reported RWYCC), és ezt is megmutatja a Drawerben (“evidence”).</p>
+                <p><strong>OM kontextus</strong>: OM-B 1.3.1 – crosswind limits RWYCC szerint; “narrow runway” külön limit (width alapján).</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">VA (METAR)</span> <span class="tag tag--src">M</span></span>
+                <span class="sumRight">Volcanic ash észlelés</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: METAR-ben <code>VA</code> token észlelése.</p>
+                <p><strong>Miért</strong>: VA esetén az operáció tipikusan külön döntési folyamat és kockázatkezelés.</p>
+              </div>
+            </details>
+
+            <h3 style="margin:14px 0 6px;">4.2 FORECAST (TAF) panel</h3>
+            <p class="small" style="color:var(--muted); margin-top:0;">
+              A TAF csempék egy külön, összecsukható blokkban vannak, hogy a “most” (METAR) ne keveredjen a forecasttal.
+              Ha a panel csukva van és új TAF riasztás jön, TV nézetben a TAF összegző csempe külön villan.
+            </p>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">CRITICAL (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">TAF score ≥ 70 (forecast)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: TAF-ból számolt score ≥ <strong>70</strong>.</p>
+                <p><strong>Miért</strong>: forecastban több súlyos jel (pl. TS, nagyon alacsony VIS, alacsony CIG, erős gust, SN).</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">VIS/RVR &lt; 300 (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">TAF-ban szereplő bármely VIS/RVR érték</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: a TAF-ban kinyert VIS minimum &lt; <strong>300 m</strong> vagy TAF RVR-min &lt; <strong>300 m</strong>.</p>
+                <p><strong>Megjegyzés</strong>: a rendszer a TAF összes VIS értékét átnézi, és a legkisebbet tekinti “worst”-nek.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">TS/CB (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">Forecast zivatar (TS / VCTS), CB/TCU felismerés</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: TAF wx token TS… vagy VCTS.</p>
+                <p><strong>CB/TCU</strong>: cloud group jelölések felismerése (score/tag).</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">WIND (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">TAF gust ≥ 25 kt</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: TAF alapján gust ≥ <strong>25 kt</strong>.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">SNOW (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">TAF SN/SHSN/BLSN</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: TAF-ben <code>SN</code>, <code>SHSN</code> vagy <code>BLSN</code>.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">TO PROHIB (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">OM-A heavy precip lista (forecast)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: a TAF-ban OM-A szerinti tiltó listás heavy precip token(ek) észlelése.</p>
+                <p><strong>Hol látod?</strong> Drawer → OM “Why?” → match lista.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">LVTO (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">RVR/VIS &lt; 550 forecast</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: TAF referencia (RVR ha van, különben VIS worst) &lt; <strong>550 m</strong>.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">VA (TAF)</span> <span class="tag tag--src">T</span></span>
+                <span class="sumRight">Volcanic ash forecast</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: TAF-ben <code>VA</code> észlelése.</p>
+              </div>
+            </details>
+
+            <h3 style="margin:14px 0 6px;">4.3 OM policy tagek a sorban – mit jelentenek?</h3>
+            <p class="small" style="color:var(--muted); margin-top:0;">
+              Ezek a tagek <strong>nem</strong> a csempe számát adják, hanem a sorban lévő konkrét OM-alapú jelzéseket.
+              Mindig ott a forrás: <span class="mono">M / T / M+T</span>. A rendszer <strong>hierarchikusan</strong> tagel, hogy ne legyen zaj:
+              pl. ha RVR&lt;125, akkor nem tesz mellé LVTO-t is ugyanarra a forrásra.
+            </p>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">RVR&lt;125</span> <span class="pill pill--crit">STOP</span></span>
+                <span class="sumRight">Abszolút minima alatti tartomány (advisory)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: RVR-minimum &lt; <strong>125 m</strong> (csak akkor, ha van RVR report).</p>
+                <p><strong>Miért</strong>: a rendszer ezt “abszolút minimum alatti” jelzésnek kezeli, mert ilyen tartományban a lehetőségek erősen korlátozottak.</p>
+                <p><strong>Hol auditálsz?</strong> Drawer → OM “Why?” → RVR groupok + refVis típus/érték.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">LVTO&lt;150 QUAL</span> <span class="pill pill--high">Crew</span></span>
+                <span class="sumRight">LVTO nagyon alacsony RVR – crew qualification requirement</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: RVR-minimum &lt; <strong>150 m</strong>.</p>
+                <p><strong>OM magyarázat</strong>: ilyen tartományban a crew qualification / engedélyezés kérdése előjön (OM-A LVO/LVTO környezet).</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">LVP (&lt;400)</span> <span class="pill pill--high">LVP</span></span>
+                <span class="sumRight">Alacsony RVR – LVP in force / approval jelleg</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: referencia (RVR vagy VIS) &lt; <strong>400 m</strong>.</p>
+                <p><strong>OM magyarázat</strong>: alacsony RVR környezetben LVP eljárások léphetnek életbe, és a kezelési folyamat szigorodik.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">LVTO (&lt;550)</span> <span class="pill pill--med">LVTO</span></span>
+                <span class="sumRight">LVTO küszöb (RVR preferált, különben VIS)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: referencia (RVR ha van, különben VIS) &lt; <strong>550 m</strong>.</p>
+                <p><strong>Miért</strong>: ez a monitorban egy “alacsony láthatóságú takeoff környezet” jel.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">RVR REQ (&lt;800)</span> <span class="pill pill--high">Req</span></span>
+                <span class="sumRight">VIS/CMV &lt; 800 → RVR reporting szükséges (ha nincs)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: reportolt visibility &lt; <strong>800 m</strong>, és a nyers reportban nincs RVR group.</p>
+                <p><strong>OM magyarázat</strong>: alacsony VIS környezetben RVR információ szükséges a minima/eljárás helyes megítéléséhez.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">CAT2+ / CAT3 ONLY / CAT3&lt;75</span> <span class="pill pill--high">LVO</span></span>
+                <span class="sumRight">RVR-sávok (általánosított küszöbök, advisory)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Hierarchia (egy forrásra csak egy):</strong></p>
+                <ul class="bul">
+                  <li><strong>CAT3&lt;75</strong>: RVR &lt; 75 m (nagyon alacsony tartomány)</li>
+                  <li><strong>CAT3 ONLY &lt;200</strong>: RVR &lt; 200 m</li>
+                  <li><strong>CAT2+ &lt;450</strong>: RVR &lt; 450 m</li>
                 </ul>
-                <p><strong>Why it matters</strong>: these are OM-defined “do not take off” weather elements. The system can only see the tokens, not local tactical context; treat as a strong stop signal for investigation.</p>
-                <p><strong>OM reference</strong>: OM-A 8.3.8.1 (TS) and OM-A 8.3.8.7 (Heavy precipitation – TO prohibited).</p>
+                <p><strong>Megjegyzés</strong>: a valódi minima függ az eljárás típusától (CAT I/II/III), fénytechnikától, etc.
+                   A monitor itt csak “sávokat” jelöl, hogy gyorsan lásd: CAT2+ / CAT3 környezet felé megy a helyzet.</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">LVTO</span> <span class="tag tag--lvto">MINIMA</span></span>
-                <span class="sumRight">OM policy layer: take-off minima bands</span>
+                <span class="sumLeft"><span class="sumTitle">XWIND&gt;limit + RWYCC&lt;3 likely</span> <span class="pill pill--high">OM-B</span></span>
+                <span class="sumRight">Crosswind limit táblázat + RWYCC becslés (advisory)</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: reference VIS/RVR &lt; <strong>550 m</strong>. If &lt; <strong>400 m</strong>, an additional “LVP required” tag is shown. If RVR &lt; <strong>125 m</strong>, a hard-stop tag is shown.</p>
-                <p><strong>How it is computed</strong>: if any RVR group exists, RVR is used; otherwise worst-case VIS is used.</p>
-                <p><strong>OM reference</strong>: OM-A 8.1.4.4 (Take-off minima; LVP below 400 m; absolute minimum 125 m with required visual aids).</p>
+                <p><strong>XWIND&gt;limit</strong> akkor jelenik meg, ha a best RWY-re számolt crosswind meghaladja a limitet.</p>
+                <p><strong>RWYCC&lt;3 likely</strong> akkor jelenhet meg, ha a jelenségek alapján a pálya valószínűleg szennyezett/súlyos (proxy).
+                   Ez nem SNOWTAM – csak <em>becslés</em> (evidence listával).</p>
+                <p><strong>OM magyarázat</strong>: OM-B RWYCC táblázat crosswind limitekkel; a monitor a runway szélességet is figyelembe veszi
+                   (narrow runway = más limit).</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">XWIND</span> <span class="tag tag--gust">WIND</span></span>
-                <span class="sumRight">OM policy layer: estimated crosswind exceedance</span>
+                <span class="sumLeft"><span class="sumTitle">COLD CORR</span> <span class="pill pill--med">TEMP</span></span>
+                <span class="sumRight">Hideg miatti altimetria/eljárási korrekciók jelzése</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: estimated crosswind component exceeds the company limit (OM-B 1.3.1), based on a best-runway estimate.</p>
-                <p><strong>How it is computed</strong>:</p>
-                <ul class="klist">
-                  <li>Runway headings/widths come from <code>data/runways.json</code> (if available).</li>
-                  <li>Wind uses the maximum of steady speed and gust.</li>
-                  <li>Runway condition is inferred conservatively from METAR/TAF tokens (DRY / WET / CONTAM).</li>
-                  <li>If runway width is known and &lt;45 m → “narrow runway” limits are applied.</li>
+                <p><strong>Trigger</strong>: METAR hőmérséklet ≤ <strong>0°C</strong> (egyszerű “flag”).</p>
+                <p><strong>Megjegyzés</strong>: a részletes táblázatok és alkalmazási szabályok az OM-ban vannak; itt csak figyelemfelhívás.</p>
+              </div>
+            </details>
+
+            <h3 style="margin:14px 0 6px;">4.4 Értesítések (AUTO) és TV “NEW ALERTS” jelzés</h3>
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">AUTO böngészős popup</span> <span class="pill pill--med">Notification</span></span>
+                <span class="sumRight">Csak új METAR + újonnan érintett BASE esetén</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Mikor küld?</strong> Csak akkor, ha:</p>
+                <ul class="bul">
+                  <li><strong>AUTO</strong> nézet aktív (TV-ben nincs böngésző-notification),</li>
+                  <li>be van kapcsolva a Notifications gomb,</li>
+                  <li><strong>új METAR</strong> érkezett (új obs time),</li>
+                  <li>és a “NOW (METAR)” impacted halmazban <strong>új bázis reptér</strong> jelent meg a korábbihoz képest.</li>
                 </ul>
-                <p><strong>Why it matters</strong>: a fast, network-wide “heads-up” that some airports may be outside crosswind policy limits. Always confirm against the actual runway in use and actual condition/RWYCC.</p>
-                <p><strong>OM reference</strong>: OM-B 1.3.1 (Crosswind limitations including gusts).</p>
+                <p><strong>Mi számít bázisnak?</strong> A <code>base.txt</code> listában szereplő IATA-kódok (illetve station role = BASE).</p>
+                <p><strong>Miért így?</strong> Ne legyen zaj: csak a “frissen érintett” bázisokra ad pop-upot, és csak akkor, amikor a METAR ténylegesen frissült.</p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">VA</span> <span class="tag tag--stop">STOP</span></span>
-                <span class="sumRight">Volcanic ash indication</span>
+                <span class="sumLeft"><span class="sumTitle">TV nézet: NEW ALERTS toast + tile flash</span> <span class="pill pill--high">TV</span></span>
+                <span class="sumRight">Feltűnő, de nem folyamatos</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: token <code>VA</code> present in METAR or TAF.</p>
-                <p><strong>Why it matters</strong>: OM policy requires avoidance of medium/high contamination and visible ash. METAR/TAF tokens alone do not represent ash polygons, but any VA mention is treated as a high-importance signal.</p>
-                <p><strong>OM reference</strong>: OM-A 8.3.8.6 (Volcanic ash).</p>
+                <p><strong>Mit csinál?</strong> TV nézetben új riasztások esetén feljön egy rövid “NEW ALERTS” overlay lista (max 10 sor),
+                  és a releváns csempék <strong>időzítetten villannak</strong>. A cél: a változás feltűnjön, de ne “szirénázzon” folyamatosan.</p>
+                <p><strong>TAF panel csukva?</strong> Ha TAF oldalon jön új trigger és a panel zárva van, a TAF összegző csempe is villan.</p>
               </div>
             </details>
+
+            <div class="backRow">
+              <a href="#top" aria-label="Vissza a tetejére">Vissza a tetejére</a>
+            </div>
           </div>
         </section>
 
         <section class="section" id="faq">
           <div class="section__head">
             <h2>5) FAQ / troubleshooting</h2>
-            <span class="pill pill--ok">Help</span>
+            <span class="pill pill--high">Help</span>
           </div>
           <div class="section__body">
-            <details>
+
+            <details open>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">“Why is the table showing WORST VIS that differs from METAR VIS?”</span></span>
-                <span class="sumRight">WORST VIS logic</span>
+                <span class="sumLeft"><span class="sumTitle">Miért rosszabb a “Worst visibility”, mint a METAR VIS?</span></span>
+                <span class="sumRight">Konzervatív design</span>
               </summary>
               <div style="margin-top:10px;">
                 <p>
-                  WORST VIS is computed as the minimum of:
-                  (a) METAR visibility, and (b) the minimum visibility found in any TAF visibility groups.
-                  This is intentionally conservative for planning/monitoring.
+                  A “Worst visibility” nem csak a METAR-t nézi.
+                  A TAF-ból kinyert összes VIS érték minimumát is figyelembe veszi, és a kettő közül a kisebbet írja ki.
+                  Ez szándékos: forecast romlás ne maradjon rejtve.
                 </p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">“Why LVTO is triggered when there is no RVR?”</span></span>
-                <span class="sumRight">VIS fallback</span>
+                <span class="sumLeft"><span class="sumTitle">A TS/CB csempe miért nem jelez pusztán CB/TCU-ra?</span></span>
+                <span class="sumRight">TS token vs CB tag</span>
               </summary>
               <div style="margin-top:10px;">
                 <p>
-                  LVTO uses RVR if any RVR groups exist. If not, it falls back to worst-case VIS.
-                  This matches the principle that you must still consider visibility minima even when RVR is not reported.
+                  A csempe főleg a zivataros jelenségre (TS/VCTS) van. A CB/TCU felismerés a score-t emeli és tagként megjelenhet,
+                  de a csempe nem mindig CB-alapú.
+                  Ha szeretnéd, ezt át tudjuk hangolni úgy, hogy CB-only esetben is feljöjjön a csempe – de akkor több “noise” lesz.
                 </p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">“XWIND is flagged but the runway in use is different.”</span></span>
-                <span class="sumRight">Advisory nature</span>
+                <span class="sumLeft"><span class="sumTitle">Miért nem számol XWIND egy reptérnél?</span></span>
+                <span class="sumRight">Hiányzó runway adatok</span>
               </summary>
               <div style="margin-top:10px;">
                 <p>
-                  XWIND is advisory. Without runway-in-use data, the system computes crosswind for available runways and picks the best.
-                  It is meant to surface potential crosswind issues quickly, not to replace actual performance / runway selection logic.
+                  Az XWIND számításhoz runway heading (és ideálisan width) kell. Ezt a rendszer a <code>runways.json</code>-ból olvassa.
+                  Ha nincs ilyen adat az adott ICAO-ra, a crosswind nem számolható – a Drawer ezt jelzi az OM “Why?” részben.
                 </p>
               </div>
             </details>
 
             <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">“The dataset tile shows old time. Is the dashboard broken?”</span></span>
-                <span class="sumRight">GitHub Actions pipeline</span>
+                <span class="sumLeft"><span class="sumTitle">Miért nincs böngészős popup (AUTO)?</span></span>
+                <span class="sumRight">Permission + feltételek</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <ul class="bul">
+                  <li>Ellenőrizd, hogy <strong>AUTO</strong> nézetben vagy-e (TV-ben nincs popup).</li>
+                  <li>Kapcsold be a “Notifications” gombot a dashboardon.</li>
+                  <li>A böngésző engedélyezte-e az értesítéseket (Site settings / Notifications).</li>
+                  <li>Csak akkor küld, ha <strong>új METAR</strong> érkezik, és azon belül <strong>újonnan érintett bázis</strong> jelenik meg.</li>
+                </ul>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">A “Last update” régi. Miért nem frissül?</span></span>
+                <span class="sumRight">GitHub Actions / Pages</span>
               </summary>
               <div style="margin-top:10px;">
                 <p>
-                  The dashboard is static HTML. Data is refreshed by GitHub Actions, which updates <code>data/latest.json</code> and then redeploys Pages.
-                  If schedules are paused or rate-limited, the site can appear stale until the next successful run.
+                  A dashboard statikus HTML, a frissítés GitHub Actions futásokból jön: az action felülírja a <code>data/latest.json</code>-t és újra deployol.
+                  Ha a workflow nincs engedélyezve, rate limit van, vagy a schedule leállt, a site “megállhat” a legutóbbi sikeres futásnál.
+                </p>
+                <p>
+                  Ellenőrizd: Repo Settings → Pages → <strong>Build and deployment = GitHub Actions</strong>, és Actions fülön a legutóbbi futások státuszát.
                 </p>
               </div>
             </details>
 
             <div class="backRow">
-              <a href="#top" aria-label="Back to top">Back to top</a>
+              <a href="#top" aria-label="Vissza a tetejére">Vissza a tetejére</a>
             </div>
           </div>
         </section>
