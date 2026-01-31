@@ -91,16 +91,16 @@
     // +SN, +GS, +SG, +PL, (moderate/heavy) FZRA, (moderate/heavy) GR
     const up = String(raw || "").toUpperCase();
     const out = [];
-    if (/\+SN/.test(up)) out.push("+SN");
-    if (/\+GS/.test(up)) out.push("+GS");
-    if (/\+SG/.test(up)) out.push("+SG");
-    if (/\+PL/.test(up)) out.push("+PL");
+    if (/\+SN\b/.test(up)) out.push("+SN");
+    if (/\+GS\b/.test(up)) out.push("+GS");
+    if (/\+SG\b/.test(up)) out.push("+SG");
+    if (/\+PL\b/.test(up)) out.push("+PL");
 
-    if (/\+FZRA/.test(up)) out.push("+FZRA");
-    else if (/FZRA/.test(up)) out.push("FZRA");
+    if (/\+FZRA\b/.test(up)) out.push("+FZRA");
+    else if (/\bFZRA\b/.test(up)) out.push("FZRA");
 
-    if (/\+GR/.test(up)) out.push("+GR");
-    else if (/GR/.test(up)) out.push("GR");
+    if (/\+GR\b/.test(up)) out.push("+GR");
+    else if (/\bGR\b/.test(up)) out.push("GR");
 
     return out;
   }
@@ -121,20 +121,20 @@
 
     const ev = [];
 
-    const severeRe = /(FZRA|FZDZ|PL|GR)/g;
+    const severeRe = /\b(FZRA|FZDZ|PL|GR)\b/g;
     let mm;
     while ((mm = severeRe.exec(up)) !== null) ev.push(mm[1]);
     if (ev.length){
       return {cond:"SEVERE", rwyccEst:2, evidence:[...new Set(ev)]};
     }
 
-    const snowRe = /(SN|SG|GS|BLSN|DRSN|SHSN)/g;
+    const snowRe = /\b(SN|SG|GS|BLSN|DRSN|SHSN)\b/g;
     while ((mm = snowRe.exec(up)) !== null) ev.push(mm[1]);
     if (ev.length){
       return {cond:"CONTAM", rwyccEst:3, evidence:[...new Set(ev)]};
     }
 
-    const wetRe = /(RA|DZ)/g;
+    const wetRe = /\b(RA|DZ)\b/g;
     while ((mm = wetRe.exec(up)) !== null) ev.push(mm[1]);
     if (ev.length){
       return {cond:"WET", rwyccEst:5, evidence:[...new Set(ev)]};

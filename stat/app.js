@@ -71,48 +71,65 @@ function parseVisM(raw){
   const up = String(raw).toUpperCase();
   if(/\bCAVOK\b/.test(up)) return 10000;
 
-  // Token-based parsing avoids false positives from:
-  // - TAF validity/time groups (e.g. 3012/3112)
-  // - RVR groups (e.g. R27/0600)
-  // We only accept whitespace-delimited tokens with no '/'.
   const toks = up.trim().split(/\s+/);
-
   let best = null;
   const add = (m)=>{ if(m==null) return; best = (best==null)?m:Math.min(best,m); };
 
-  for(const t of toks){
-    if(!t) continue;
-    if(t.includes("/")) continue;
+  for (let idx=0; idx<toks.length; idx++){
+    const t0 = toks[idx].trim();
+    if(!t0) continue;
 
-    if(/^\d{4}$/.test(t)){
-      const v = parseInt(t,10);
-      if(Number.isFinite(v)) add(v===9999?10000:v);
-      continue;
+    // Split SM format: "1 1/2SM"
+    if(/^\d+$/.test(t0) && idx+1 < toks.length){
+      const t1 = toks[idx+1].trim();
+      if(/^M?\d+\/\d+SM$/.test(t1)){
+        const whole = parseInt(t0,10);
+        const frac = t1.replace(/^M/,"").slice(0,-2);
+        const [a,b] = frac.split("/").map(Number);
+        if(Number.isFinite(whole) && Number.isFinite(a) && Number.isFinite(b) && b!==0){
+          add(Math.round((whole + (a/b))*1609.34));
+          idx++;
+          continue;
+        }
+      }
     }
 
-    // statute miles
-    if(/^P\d+SM$/.test(t)){
-      const n = parseInt(t.slice(1,-2),10);
-      if(Number.isFinite(n)) add(Math.round(n*1609.34));
-      continue;
-    }
-    if(/^M?\d+SM$/.test(t)){
-      const n = parseInt(t.replace(/^M/,"").slice(0,-2),10);
-      if(Number.isFinite(n)) add(Math.round(n*1609.34));
-      continue;
-    }
-    if(/^M?\d+\/\d+SM$/.test(t)){
-      const frac = t.replace(/^M/,"").slice(0,-2);
+    // Fractional SM token: 1/2SM, M1/4SM
+    if(/^M?\d+\/\d+SM$/.test(t0)){
+      const frac = t0.replace(/^M/,"").slice(0,-2);
       const [a,b] = frac.split("/").map(Number);
       if(Number.isFinite(a) && Number.isFinite(b) && b!==0){
         add(Math.round((a/b)*1609.34));
       }
       continue;
     }
+
+    // Ignore validity/time ranges and RVR groups
+    if(/^\d{4}\/\d{4}$/.test(t0)) continue;
+    if(/^R\d{2}[LRC]?\//.test(t0)) continue;
+    if(t0.includes("/")) continue;
+
+    if(/^\d{4}(?:[A-Z]{1,4})?$/.test(t0)){
+      const v = parseInt(t0.slice(0,4),10);
+      if(Number.isFinite(v)) add(v===9999?10000:v);
+      continue;
+    }
+
+    if(/^P\d+SM$/.test(t0)){
+      const n = parseInt(t0.slice(1,-2),10);
+      if(Number.isFinite(n)) add(Math.round(n*1609.34));
+      continue;
+    }
+    if(/^M?\d+SM$/.test(t0)){
+      const n = parseInt(t0.replace(/^M/,"").slice(0,-2),10);
+      if(Number.isFinite(n)) add(Math.round(n*1609.34));
+      continue;
+    }
   }
 
   return best;
 }
+
 
 
 function parseGustKt(raw){
@@ -140,16 +157,19 @@ function parseRvrMin(raw){
 
   let min = null;
   for(const t of tokens){
-    const mm = t.match(/^R\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?(?:FT)?$/);
+    const mm = t.match(/^R\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?(FT)?$/);
     if(!mm) continue;
 
-    const v1 = parseInt(mm[2], 10); // M0050 and P1500 still parse to 50/1500
-    if(!Number.isFinite(v1)) continue;
+    const isFt = !!mm[6];
+    const toMeters = (x)=> isFt ? Math.round(x * 0.3048) : x;
 
-    let v = v1;
+    const v1i = parseInt(mm[2], 10); // M0050 and P1500 still parse to 50/1500
+    if(!Number.isFinite(v1i)) continue;
+
+    let v = toMeters(v1i);
     if(mm[4]){
-      const v2 = parseInt(mm[4], 10);
-      if(Number.isFinite(v2)) v = Math.min(v, v2);
+      const v2i = parseInt(mm[4], 10);
+      if(Number.isFinite(v2i)) v = Math.min(v, toMeters(v2i));
     }
 
     if(min === null || v < min) min = v;
@@ -157,6 +177,7 @@ function parseRvrMin(raw){
 
   return min;
 }
+
 
 function parseCeilingFt(raw){
   if(!raw) return null;

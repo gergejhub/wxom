@@ -31,69 +31,125 @@ function parseVisibilityMeters(raw){
   const up = String(raw).toUpperCase();
   if (/\bCAVOK\b/.test(up)) return 10000;
 
-  // Prefer 4-digit meters (treat 9999 as 10km+)
   const toks = up.trim().split(/\s+/);
-  for (const t of toks){
-    if (/^\d{4}$/.test(t)){
-      const v = parseInt(t,10);
-      if (!Number.isNaN(v)) return (v === 9999 ? 10000 : v);
-    }
-  }
+  let best = null;
+  const add = (m)=>{ if (m == null) return; best = (best==null) ? m : Math.min(best, m); };
 
-  // Statute miles (SM)
-  for (const t of toks){
-    if (!/SM$/.test(t)) continue;
-    // Examples: 1SM, P6SM, M1/4SM, 1 1/2SM (split tokens)
-    let x = t;
-    if (/^P\d+SM$/.test(x)){
-      const n = parseInt(x.slice(1,-2),10);
-      return Number.isFinite(n) ? Math.round(n*1609.34) : null;
+  for (let idx=0; idx<toks.length; idx++){
+    const t0 = toks[idx].trim();
+    if (!t0) continue;
+
+    // Split statute miles: "1 1/2SM"
+    if (/^\d+$/.test(t0) && idx+1 < toks.length){
+      const t1 = toks[idx+1].trim();
+      if (/^M?\d+\/\d+SM$/.test(t1)){
+        const whole = parseInt(t0,10);
+        const frac = t1.replace(/^M/,"").slice(0,-2);
+        const [a,b] = frac.split("/").map(Number);
+        if (Number.isFinite(whole) && Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+          add(Math.round((whole + (a/b))*1609.34));
+          idx++;
+          continue;
+        }
+      }
     }
-    if (/^M?\d+SM$/.test(x)){
-      const n = parseInt(x.replace(/^M/,"").slice(0,-2),10);
-      return Number.isFinite(n) ? Math.round(n*1609.34) : null;
-    }
-    if (/^M?\d+\/\d+SM$/.test(x)){
-      const frac = x.replace(/^M/,"").slice(0,-2);
+
+    // Fractional statute miles token
+    if (/^M?\d+\/\d+SM$/.test(t0)){
+      const frac = t0.replace(/^M/,"").slice(0,-2);
       const [a,b] = frac.split("/").map(Number);
-      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) return Math.round((a/b)*1609.34);
+      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+        add(Math.round((a/b)*1609.34));
+      }
+      continue;
+    }
+
+    // Ignore validity/time ranges and RVR groups
+    if (/^\d{4}\/\d{4}$/.test(t0)) continue;
+    if (/^R\d{2}[LRC]?\//.test(t0)) continue;
+    if (t0.includes("/")) continue;
+
+    // ICAO meters tokens (0400, 9999, 9999NDV)
+    if (/^\d{4}(?:[A-Z]{1,4})?$/.test(t0)){
+      const v = parseInt(t0.slice(0,4),10);
+      if (!Number.isNaN(v)) add(v === 9999 ? 10000 : v);
+      continue;
+    }
+
+    // Whole SM tokens
+    if (/^P\d+SM$/.test(t0)){
+      const n = parseInt(t0.slice(1,-2),10);
+      if (Number.isFinite(n)) add(Math.round(n*1609.34));
+      continue;
+    }
+    if (/^M?\d+SM$/.test(t0)){
+      const n = parseInt(t0.replace(/^M/,"").slice(0,-2),10);
+      if (Number.isFinite(n)) add(Math.round(n*1609.34));
+      continue;
     }
   }
-  return null;
+  return best;
 }
+
 
 function extractAllVisibilityMetersFromTAF(raw){
   if (!raw) return [];
   const out = [];
   const up = String(raw).toUpperCase();
   if (/\bCAVOK\b/.test(up)) out.push(10000);
+
   const toks = up.trim().split(/\s+/);
-  for (const t of toks){
-    if (!t) continue;
-    if (t.includes("/")) continue;
-    if (/^\d{4}$/.test(t)){
-      const v = parseInt(t,10);
+  for (let idx=0; idx<toks.length; idx++){
+    const t0 = toks[idx].trim();
+    if (!t0) continue;
+
+    if (/^\d+$/.test(t0) && idx+1 < toks.length){
+      const t1 = toks[idx+1].trim();
+      if (/^M?\d+\/\d+SM$/.test(t1)){
+        const whole = parseInt(t0,10);
+        const frac = t1.replace(/^M/,"").slice(0,-2);
+        const [a,b] = frac.split("/").map(Number);
+        if (Number.isFinite(whole) && Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+          out.push(Math.round((whole + (a/b))*1609.34));
+          idx++;
+          continue;
+        }
+      }
+    }
+
+    if (/^M?\d+\/\d+SM$/.test(t0)){
+      const frac = t0.replace(/^M/,"").slice(0,-2);
+      const [a,b] = frac.split("/").map(Number);
+      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+        out.push(Math.round((a/b)*1609.34));
+      }
+      continue;
+    }
+
+    if (/^\d{4}\/\d{4}$/.test(t0)) continue;
+    if (/^R\d{2}[LRC]?\//.test(t0)) continue;
+    if (t0.includes("/")) continue;
+
+    if (/^\d{4}(?:[A-Z]{1,4})?$/.test(t0)){
+      const v = parseInt(t0.slice(0,4),10);
       if (!Number.isNaN(v)) out.push(v === 9999 ? 10000 : v);
       continue;
     }
-    if (/SM$/.test(t)){
-      let m = null;
-      if (/^P\d+SM$/.test(t)){
-        const n = parseInt(t.slice(1,-2),10);
-        m = Number.isFinite(n) ? Math.round(n*1609.34) : null;
-      } else if (/^M?\d+SM$/.test(t)){
-        const n = parseInt(t.replace(/^M/,"").slice(0,-2),10);
-        m = Number.isFinite(n) ? Math.round(n*1609.34) : null;
-      } else if (/^M?\d+\/\d+SM$/.test(t)){
-        const frac = t.replace(/^M/,"").slice(0,-2);
-        const [a,b] = frac.split("/").map(Number);
-        if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) m = Math.round((a/b)*1609.34);
-      }
-      if (m != null) out.push(m);
+
+    if (/^P\d+SM$/.test(t0)){
+      const n = parseInt(t0.slice(1,-2),10);
+      if (Number.isFinite(n)) out.push(Math.round(n*1609.34));
+      continue;
+    }
+    if (/^M?\d+SM$/.test(t0)){
+      const n = parseInt(t0.replace(/^M/,"").slice(0,-2),10);
+      if (Number.isFinite(n)) out.push(Math.round(n*1609.34));
+      continue;
     }
   }
   return out;
 }
+
 
 function extractRvrMeters(raw){
   if (!raw) return [];
