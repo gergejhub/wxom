@@ -56,6 +56,9 @@ jobs:
           if [ -d "config" ]; then cp -R config dist/config; fi
           if [ -d "data" ]; then cp -R data dist/data; fi
 
+          # Secret subpage(s)
+          if [ -d "1030" ]; then cp -R 1030 dist/1030; fi
+
           # Optional root files
           if [ -f "favicon.ico" ]; then cp -f favicon.ico dist/; fi
           if [ -f "robots.txt" ]; then cp -f robots.txt dist/; fi
@@ -77,6 +80,11 @@ jobs:
           if [ -d "dist/assets" ]; then
             test -f dist/assets/app.js
           fi
+
+          if [ -d "dist/1030" ]; then
+            test -f dist/1030/index.html
+          fi
+
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
