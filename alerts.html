@@ -165,7 +165,7 @@
         <a class="tile tile--ghost" href="#tiles">
           <div class="tile__k">Tile-by-tile triggers</div>
           <div class="tile__v">04</div>
-          <div class="tile__s">Exact rules for ENG, CRIT, VIS/RVR, TS, WIND, SNOW, OM policy tiles.</div>
+          <div class="tile__s">Exact rules for ENG ICE OPS, METAR CRIT, ALERT CRIT, VIS/RVR, TS/CB, WIND, SNOW, and OM policy tags.</div>
         </a>
         <a class="tile tile--ghost" href="#faq">
           <div class="tile__k">FAQ</div>
@@ -209,7 +209,31 @@
               <li><strong>Table</strong>: operational view by airport with alert state, worst values, triggers, age, raw METAR/TAF.</li>
               <li><strong>Hover tooltips on tiles</strong>: explain “why this exists” and show OM reference links for the rule.</li>
               <li><strong>Base airports</strong>: your priority list (from <code>base.txt</code>). In tiles they appear first and are visually highlighted.</li>
-            </ul>
+                          <li><strong>Filters</strong>: use the search box and the condition dropdown to focus on a subset (e.g., only METAR CRIT, only LVTO, only bases).</li>
+              <li><strong>Priority sort</strong> (optional): when enabled, the table is ordered by operational relevance (ENG ICE OPS first, then alert level, then CRIT reason, then bases).</li>
+              <li><strong>CRIT reason tags</strong>: for CRIT rows you will see <strong>METAR</strong>, <strong>TAF</strong> or <strong>ESC</strong>—this explains why the overall state is CRIT and is also used by Priority sort.</li>
+</ul>
+            <details style="margin-top:12px;">
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">Priority sort – how the table is ordered</span> <span class="tag tag--eng">Ops</span></span>
+                <span class="sumRight">Recommended for monitoring</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  When <strong>Priority sort</strong> is ON, the table is not alphabetical. It is a queue of “what you should look at first”:
+                </p>
+                <ol class="klist" style="margin-top:8px;">
+                  <li><strong>ENG ICE OPS</strong> airports first.</li>
+                  <li>Then by <strong>overall alert bucket</strong>: <strong>CRIT</strong> → HIGH → MED → OK.</li>
+                  <li>Within CRIT: <strong>METAR-driven</strong> CRIT first, then <strong>TAF-driven</strong> CRIT, then <strong>ESC</strong> (escalation).</li>
+                  <li><strong>Base airports</strong> are promoted inside the same bucket.</li>
+                  <li>Then by scores (METAR score, composite severity, TAF score) and finally by ICAO.</li>
+                </ol>
+                <p class="muted" style="margin-top:10px;">
+                  Tip: If you need an airport-specific view, use the search/filter instead of turning Priority sort off.
+                </p>
+              </div>
+            </details>
             <p class="muted">
               Note: Some OM concepts require runway condition, runway in use, RWYCC, or SNOWTAM data. This system runs with <strong>zero manual inputs</strong>, so those
               parts are treated conservatively and marked as advisory.
@@ -227,6 +251,12 @@
               You will see color in two places: (a) the <strong>row alert pill</strong> (OK/MED/HIGH/CRIT), and (b) <strong>tile border glow</strong>.
               The color represents a computed severity state driven mainly by the score.
             </p>
+
+            <p class="muted">
+              Note: the <strong>Alert</strong> pill in the table is a <strong>composite</strong> state (NOW + FORECAST + escalation).
+              The <strong>METAR CRIT</strong> tile is different: it counts only “METAR score ≥ 70” situations.
+            </p>
+
 
             <div class="legend" style="margin:12px 0 0;">
               <div class="legend__tip">Severity buckets (used across the dashboard)</div>
@@ -359,19 +389,37 @@
               </div>
             </details>
 
-            <details>
+                        <details>
               <summary>
-                <span class="sumLeft"><span class="sumTitle">CRITICAL</span> <span class="pill pill--crit">CRIT</span></span>
-                <span class="sumRight">Composite state</span>
+                <span class="sumLeft"><span class="sumTitle">METAR CRIT</span> <span class="pill pill--crit">CRIT</span></span>
+                <span class="sumRight">METAR score ≥ 70 (NOW only)</span>
               </summary>
               <div style="margin-top:10px;">
-                <p><strong>Trigger</strong>: overall score ≥ <strong>70</strong>, or escalated by wind/snow pillars.</p>
-                <p><strong>Why it matters</strong>: multiple hazards / minima-adjacent values are present. Treat as “needs attention now”.</p>
-                <p><strong>OM reference</strong>: this is an internal dashboard severity layer (not a single OM paragraph), but it is built from OM-relevant observables.</p>
+                <p><strong>Trigger</strong>: the <strong>METAR</strong>-derived score is <strong>≥ 70</strong>.</p>
+                <p><strong>What it means</strong>: based on the <em>current observation</em>, multiple risk signals are simultaneously present (e.g., low visibility/RVR, strong wind gusts, convective hazards, snow/contamination signals).</p>
+                <p><strong>Important</strong>: this tile is <strong>METAR-only</strong>. A forecast-driven critical situation (TAF) will not increase this counter.</p>
               </div>
             </details>
 
             <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">ALERT CRIT</span> <span class="pill pill--crit">CRIT</span></span>
+                <span class="sumRight">overall alert = CRIT (NOW + FORECAST)</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p><strong>Trigger</strong>: the airport’s <strong>overall alert state</strong> is <strong>CRIT</strong>. This is the same “Alert” pill you see in the table.</p>
+                <p><strong>Inputs</strong>: a composite of <strong>METAR</strong> + <strong>TAF</strong> signals and escalation pillars (e.g., SNOW, WIND, ENG ICE OPS). It answers: “Is this airport critical <em>right now</em> or <em>imminently</em>?”</p>
+                <p><strong>Why you may see CRIT in the table but METAR CRIT = 0</strong>: the table can be critical due to <strong>TAF</strong> or escalation, while the METAR score remains below 70.</p>
+                <p><strong>CRIT source label</strong>: in the table, CRIT rows also show a small reason tag:</p>
+                <ul class="klist" style="margin-top:6px;">
+                  <li><strong>METAR</strong> – CRIT primarily because METAR score ≥ 70.</li>
+                  <li><strong>TAF</strong> – CRIT primarily because TAF score ≥ 70 (forecast-driven).</li>
+                  <li><strong>ESC</strong> – CRIT reached by escalation pillars (e.g., SNOW/WIND/ENG ICE OPS), even if neither score is ≥ 70.</li>
+                </ul>
+              </div>
+            </details>
+
+<details>
               <summary>
                 <span class="sumLeft"><span class="sumTitle">VIS/RVR &lt; 300</span> <span class="tag tag--vis">VIS</span> <span class="tag tag--rvr">RVR</span></span>
                 <span class="sumRight">Below CAT II band</span>
