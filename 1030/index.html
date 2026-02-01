@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Copilot briefing prompt</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    /* Local-only tweaks (no impact outside /1030/) */
+    .wrap{ margin: 0 18px 22px 18px; padding-top: calc(var(--top-h) + 10px); }
+    .controls{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px; }
+    .pillbtn{ cursor:pointer; }
+    .field{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px;
+            border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04); }
+    .field label{ color:var(--mut); font-size:12px; }
+    .field select, .field input[type="checkbox"]{ background:transparent; color:inherit; border:none; outline:none; }
+    .prompt{ width:100%; min-height: 320px; resize:vertical; padding:12px 12px; border-radius:14px;
+             border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.02); color:inherit;
+             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:13px; line-height:1.35; }
+    .muted2{ color:var(--mut); font-size:12px; margin-top:8px; }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
+    @media (max-width: 920px){ .grid2{ grid-template-columns: 1fr; } }
+    .list{ margin-top:10px; }
+    .list pre{ white-space:pre-wrap; word-break:break-word; }
+    /* Hidden iframe: still loads, but never visible */
+    #dashFrame{ position:fixed; left:-99999px; top:-99999px; width:1200px; height:800px; border:0; opacity:0; pointer-events:none; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="brand__row">
+        <div class="brand__title">Copilot briefing prompt</div>
+        <div class="brand__spacer"></div>
+
+        <button class="viewpill pillbtn" id="btnRefresh" type="button" title="Refresh from dashboard dataset">
+          <span class="viewpill__k">DATA</span>
+          <span class="viewpill__v" id="btnRefreshLabel">REFRESH</span>
+        </button>
+        <button class="viewpill pillbtn" id="btnCopy" type="button" title="Copy prompt to clipboard">
+          <span class="viewpill__k">PROMPT</span>
+          <span class="viewpill__v" id="btnCopyLabel">COPY</span>
+        </button>
+      </div>
+
+      <div class="controls">
+        <div class="field">
+          <label for="langSel">Language</label>
+          <select id="langSel">
+            <option value="en">EN (management)</option>
+            <option value="hu">HU</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="lenSel">Length</label>
+          <select id="lenSel">
+            <option value="short">~20–30s (60–90 words)</option>
+            <option value="mid" selected>~30–45s (90–130 words)</option>
+            <option value="long">~45–60s (130–170 words)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fullLists">Include full IATA lists in prompt</label>
+          <input id="fullLists" type="checkbox" />
+        </div>
+
+        <div class="field">
+          <span id="status" class="muted">Loading dashboard…</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="legend">
+      <div class="legend__tip" id="metaLine">Dataset: —</div>
+      <div class="legend__row">
+        <div class="legend__item"><span class="dot dot--crit"></span><span id="nowSummary">NOW (METAR): —</span></div>
+        <div class="legend__item"><span class="dot dot--wind"></span><span id="fcSummary">FORECAST (TAF): —</span></div>
+      </div>
+      <div class="muted2">This page reads the <b>same trigger logic</b> as the main dashboard by loading it in a hidden iframe and reusing its computed station list.</div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <div class="card__k">Copilot prompt</div>
+          <textarea class="prompt" id="promptOut" spellcheck="false"></textarea>
+          <div class="muted2" id="hintLine">Tip: paste into Microsoft Copilot. The instructions ask Copilot to keep output short and non-technical.</div>
+        </div>
+      </div>
+      <div>
+        <div class="card list">
+          <div class="card__k">Triggered tiles (reference)</div>
+          <pre class="muted2" id="tileRef">—</pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <iframe id="dashFrame" src="../index.html?src=1030"></iframe>
+
+<script>
+/* /1030/ — private helper page (not linked anywhere)
+   Goal: produce a Microsoft Copilot prompt from the dashboard's triggered METAR/TAF tiles,
+   without modifying the dashboard code or design. */
+
+const $ = (id)=>document.getElementById(id);
+
+const dashFrame = $("dashFrame");
+let lastPayload = null;
+
+function fmtZ(iso){
+  try{
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    const s = d.toISOString().replace(".000","").replace("T"," ").replace("Z","Z");
+    return s;
+  }catch(e){ return String(iso); }
+}
+
+function pickExamples(bases, outs, n=3){
+  const ex = [];
+  for (const c of bases){ if (ex.length>=n) break; ex.push(c); }
+  for (const c of outs){ if (ex.length>=n) break; ex.push(c); }
+  return ex;
+}
+
+function humanTileName(key){
+  const map = {
+    eng: "ENG ICE OPS (icing/engine anti-ice ops)",
+    met_crit: "METAR CRIT (severity score ≥ 70)",
+    alert_crit: "ALERT CRIT (overall alert escalated)",
+    met_vis300: "Very low VIS/RVR (< 300 m) — observed",
+    met_ts: "Thunderstorm / CB — observed",
+    met_wind25: "Wind gusts ≥ 25 kt — observed",
+    met_snow: "Snow — observed",
+    met_toProhib: "OM advisory: TO PROHIB — observed",
+    met_lvto: "OM advisory: LVTO — observed",
+    met_xwind: "OM advisory: XWIND exceed — observed",
+    met_va: "Volcanic ash — observed",
+    taf_crit: "CRITICAL (TAF score ≥ 70) — forecast",
+    taf_vis300: "Very low VIS/RVR (< 300 m) — forecast",
+    taf_ts: "Thunderstorm / CB — forecast",
+    taf_wind25: "Wind gusts ≥ 25 kt — forecast",
+    taf_snow: "Snow — forecast",
+    taf_toProhib: "OM advisory: TO PROHIB — forecast",
+    taf_lvto: "OM advisory: LVTO — forecast",
+    taf_va: "Volcanic ash — forecast"
+  };
+  return map[key] || key;
+}
+
+function buildTileRef(payload){
+  const lines = [];
+  const add = (groupLabel, obj) => {
+    const any = [];
+    for (const [k,v] of Object.entries(obj)){
+      if (!v || !v.iata) continue;
+      if ((v.iata.length || 0) === 0) continue;
+      any.push([k,v]);
+    }
+    if (!any.length) return;
+    lines.push(groupLabel);
+    for (const [k,v] of any){
+      const ex = pickExamples(v.bases||[], v.outs||[], 3);
+      const exStr = ex.length ? (" e.g. " + ex.join(", ")) : "";
+      const baseStr = (v.bases && v.bases.length) ? ` bases:${v.bases.length}` : "";
+      const outStr  = (v.outs  && v.outs.length)  ? ` out:${v.outs.length}` : "";
+      lines.push(`- ${humanTileName(k)}: ${v.iata.length}${baseStr}${outStr}${exStr}`);
+    }
+    lines.push("");
+  };
+
+  add("NOW (METAR-priority)", payload.met);
+  add("FORECAST (TAF)", payload.taf);
+  return lines.join("\n").trim() || "—";
+}
+
+function buildPromptEN(payload, length, includeFull){
+  const gen = payload.generatedAt ? fmtZ(payload.generatedAt) : "—";
+  const lengthSpec = (length==="short") ? "60–90 words" : (length==="long" ? "130–170 words" : "90–130 words");
+
+  // Build compact input lines: only include triggered tiles
+  const linesNow = [];
+  const linesFc  = [];
+
+  function addLine(outArr, k, v){
+    if (!v || !v.iata || v.iata.length===0) return;
+    const ex = pickExamples(v.bases||[], v.outs||[], 3);
+    const exStr = ex.length ? `Examples: ${ex.join(", ")}.` : "";
+    const baseStr = (v.bases && v.bases.length) ? ` Bases: ${v.bases.length}.` : "";
+    const outStr  = (v.outs  && v.outs.length)  ? ` Outstations: ${v.outs.length}.` : "";
+    let full = "";
+    if (includeFull){
+      full = ` Full list: ${v.iata.join(", ")}.`;
+    }
+    outArr.push(`- ${humanTileName(k)} → ${v.iata.length} airports.${baseStr}${outStr} ${exStr}${full}`.replace(/\s+/g," ").trim());
+  }
+
+  // Prefer overall CRIT first if present
+  const nowOrder = ["alert_crit","met_crit","eng","met_vis300","met_wind25","met_ts","met_snow","met_toProhib","met_lvto","met_xwind","met_va"];
+  const fcOrder  = ["taf_crit","taf_vis300","taf_wind25","taf_ts","taf_snow","taf_toProhib","taf_lvto","taf_va"];
+
+  for (const k of nowOrder) addLine(linesNow, k, payload.met[k]);
+  for (const k of fcOrder)  addLine(linesFc,  k, payload.taf[k]);
+
+  const nowBlock = linesNow.length ? linesNow.join("\n") : "- No triggered tiles.";
+  const fcBlock  = linesFc.length  ? linesFc.join("\n")  : "- No forecast tiles triggered.";
+
+  return [
+`You are Microsoft Copilot. Create a spoken update for a management meeting about weather-related operational risks.`,
+`Audience: non-aviation. Use plain English. Avoid jargon; if you must use METAR/TAF/RVR, explain briefly in one phrase.`,
+`Length: ${lengthSpec} (≈20–60 seconds). Tone: calm, factual, actionable.`,
+`Structure: (1) NOW (observations) (2) NEXT HOURS (forecast) (3) one-sentence takeaway.`,
+`Rules: Do NOT read long airport lists. Mention counts and at most 2–3 example airports, prioritizing BASE airports.`,
+`Timestamp of dataset: ${gen}.`,
+"",
+"INPUT — NOW (dashboard METAR-priority tiles):",
+nowBlock,
+"",
+"INPUT — FORECAST (dashboard TAF tiles):",
+fcBlock,
+"",
+`Output only the final script (no bullets, no headings).`
+].join("\n");
+}
+
+function buildPromptHU(payload, length, includeFull){
+  const gen = payload.generatedAt ? fmtZ(payload.generatedAt) : "—";
+  const lengthSpec = (length==="short") ? "60–90 szó" : (length==="long" ? "130–170 szó" : "90–130 szó");
+
+  const linesNow = [];
+  const linesFc  = [];
+
+  function addLine(outArr, k, v){
+    if (!v || !v.iata || v.iata.length===0) return;
+    const ex = pickExamples(v.bases||[], v.outs||[], 3);
+    const exStr = ex.length ? `Példák: ${ex.join(", ")}.` : "";
+    const baseStr = (v.bases && v.bases.length) ? ` Bázis: ${v.bases.length}.` : "";
+    const outStr  = (v.outs  && v.outs.length)  ? ` Outstation: ${v.outs.length}.` : "";
+    let full = "";
+    if (includeFull){
+      full = ` Teljes lista: ${v.iata.join(", ")}.`;
+    }
+    outArr.push(`- ${humanTileName(k)} → ${v.iata.length} repülőtér.${baseStr}${outStr} ${exStr}${full}`.replace(/\s+/g," ").trim());
+  }
+
+  const nowOrder = ["alert_crit","met_crit","eng","met_vis300","met_wind25","met_ts","met_snow","met_toProhib","met_lvto","met_xwind","met_va"];
+  const fcOrder  = ["taf_crit","taf_vis300","taf_wind25","taf_ts","taf_snow","taf_toProhib","taf_lvto","taf_va"];
+
+  for (const k of nowOrder) addLine(linesNow, k, payload.met[k]);
+  for (const k of fcOrder)  addLine(linesFc,  k, payload.taf[k]);
+
+  const nowBlock = linesNow.length ? linesNow.join("\n") : "- Nincs triggerelt csempe.";
+  const fcBlock  = linesFc.length  ? linesFc.join("\n")  : "- Nincs triggerelt forecast (TAF) csempe.";
+
+  return [
+`Te vagy a Microsoft Copilot. Írj egy felolvasható, vezetőségi meetingre szánt rövid összefoglalót az időjárás miatti operációs kockázatokról.`,
+`Közönség: laikus. Egyszerű magyar nyelv, rövid mondatok. Ha METAR/TAF/RVR előkerül, egy rövid magyarázó kifejezéssel tedd érthetővé.`,
+`Terjedelem: ${lengthSpec} (≈20–60 mp). Hangnem: nyugodt, tényszerű.`,
+`Szerkezet: (1) MOST (aktuális megfigyelés) (2) KÖVETKEZŐ ÓRÁK (várható) (3) 1 mondatos takeaway.`,
+`Szabály: ne sorolj fel hosszú repterlistát. Inkább darabszám + legfeljebb 2–3 példa, bázisokra fókuszálva.`,
+`Adatkészlet időbélyege: ${gen}.`,
+"",
+"INPUT — MOST (dashboard METAR-priority csempék):",
+nowBlock,
+"",
+"INPUT — VÁRHATÓ (dashboard TAF csempék):",
+fcBlock,
+"",
+`Csak a végső szöveget add vissza (ne legyenek felsorolások/címek).`
+].join("\n");
+}
+
+function buildPrompt(payload){
+  const lang = $("langSel").value;
+  const len  = $("lenSel").value;
+  const includeFull = $("fullLists").checked;
+  if (lang === "hu") return buildPromptHU(payload, len, includeFull);
+  return buildPromptEN(payload, len, includeFull);
+}
+
+async function collectFromIframe(){
+  // Use the dashboard's own computed station list and tile logic, via eval in the iframe realm.
+  const w = dashFrame.contentWindow;
+  if (!w) throw new Error("Dashboard frame not available.");
+
+  // Force a fresh read of data/latest.json (no changes to dashboard code).
+  try{
+    const p = w.refreshData ? w.refreshData(true) : null;
+    if (p && typeof p.then === "function") await p;
+  }catch(e){
+    // Continue: even if refresh fails, we can still read existing state.
+  }
+
+  const payload = w.eval(`(function(){
+    const safeArr = (x)=>Array.isArray(x)?x:[];
+    const uniqStationsByIata = (arr, sortKey)=>{
+      const seen = new Set();
+      const out = [];
+      for (const s of safeArr(arr)){
+        const c = (s && s.iata) ? String(s.iata).toUpperCase() : "";
+        if (!c || seen.has(c)) continue;
+        seen.add(c);
+        out.push(s);
+      }
+      out.sort((a,b)=>((b && b[sortKey])||0) - ((a && a[sortKey])||0));
+      return out;
+    };
+    const pack = (arr, sortKey)=>{
+      const u = uniqStationsByIata(arr, sortKey);
+      const bases = [];
+      const outs = [];
+      for (const s of u){
+        const c = (s && s.iata) ? String(s.iata).toUpperCase() : "";
+        if (!c) continue;
+        (s.isBase ? bases : outs).push(c);
+      }
+      return {
+        iata: u.map(s=>String(s.iata||"").toUpperCase()).filter(Boolean),
+        bases, outs
+      };
+    };
+
+    const list = (typeof stations !== "undefined") ? stations : [];
+    const t = (typeof computeTileLists === "function") ? computeTileLists(list) : {met:{}, taf:{}};
+
+    return {
+      generatedAt: (typeof lastGeneratedAt !== "undefined" && lastGeneratedAt) ? String(lastGeneratedAt) : null,
+      met: {
+        eng:        pack(t.met.eng||[], "metPri"),
+        met_crit:   pack(t.met.crit||[], "metPri"),
+        alert_crit: pack(t.met.alertCrit||[], "metPri"),
+        met_vis300: pack(t.met.vis300||[], "metPri"),
+        met_ts:     pack(t.met.ts||[], "metPri"),
+        met_wind25: pack(t.met.wind||[], "metPri"),
+        met_snow:   pack(t.met.snow||[], "metPri"),
+        met_toProhib: pack(t.met.toProhib||[], "metPri"),
+        met_lvto:     pack(t.met.lvto||[], "metPri"),
+        met_xwind:    pack(t.met.xwind||[], "metPri"),
+        met_va:       pack(t.met.va||[], "metPri")
+      },
+      taf: {
+        taf_crit:   pack(t.taf.crit||[], "tafPri"),
+        taf_vis300: pack(t.taf.vis300||[], "tafPri"),
+        taf_ts:     pack(t.taf.ts||[], "tafPri"),
+        taf_wind25: pack(t.taf.wind||[], "tafPri"),
+        taf_snow:   pack(t.taf.snow||[], "tafPri"),
+        taf_toProhib: pack(t.taf.toProhib||[], "tafPri"),
+        taf_lvto:     pack(t.taf.lvto||[], "tafPri"),
+        taf_va:       pack(t.taf.va||[], "tafPri")
+      }
+    };
+  })()`);
+
+  // Normalize in host realm (payload is plain JSON-like)
+  const norm = (grp)=>{
+    for (const [k,v] of Object.entries(grp)){
+      if (!v) continue;
+      v.iata  = Array.isArray(v.iata)  ? v.iata  : [];
+      v.bases = Array.isArray(v.bases) ? v.bases : [];
+      v.outs  = Array.isArray(v.outs)  ? v.outs  : [];
+    }
+  };
+  norm(payload.met);
+  norm(payload.taf);
+  return payload;
+}
+
+function countTriggered(group){
+  let tiles=0, airports=0;
+  for (const v of Object.values(group)){
+    if (!v || !v.iata) continue;
+    if (v.iata.length>0){ tiles++; airports += v.iata.length; }
+  }
+  return {tiles, airports};
+}
+
+function updateUI(payload){
+  lastPayload = payload;
+
+  const gen = payload.generatedAt ? fmtZ(payload.generatedAt) : "—";
+  $("metaLine").textContent = `Dataset: ${gen}`;
+
+  const now = countTriggered(payload.met);
+  const fc  = countTriggered(payload.taf);
+
+  $("nowSummary").textContent = `NOW (METAR): ${now.tiles} tiles / ${now.airports} airports`;
+  $("fcSummary").textContent  = `FORECAST (TAF): ${fc.tiles} tiles / ${fc.airports} airports`;
+
+  $("tileRef").textContent = buildTileRef(payload);
+  $("promptOut").value = buildPrompt(payload);
+}
+
+async function refreshAll(){
+  $("status").textContent = "Refreshing…";
+  try{
+    const payload = await collectFromIframe();
+    updateUI(payload);
+    $("status").textContent = "Ready.";
+  }catch(e){
+    console.error(e);
+    $("status").textContent = "Error: " + (e && e.message ? e.message : String(e));
+  }
+}
+
+async function waitForDashboardReady(){
+  const t0 = Date.now();
+  while (Date.now() - t0 < 30000){
+    try{
+      const w = dashFrame.contentWindow;
+      if (w){
+        const ok = w.eval(`typeof computeTileLists === "function" && typeof refreshData === "function"`);
+        if (ok) return true;
+      }
+    }catch(e){}
+    await new Promise(r=>setTimeout(r, 250));
+  }
+  return false;
+}
+
+async function init(){
+  const ok = await waitForDashboardReady();
+  if (!ok){
+    $("status").textContent = "Dashboard not ready (timeout).";
+    return;
+  }
+  await refreshAll();
+}
+
+$("btnRefresh").addEventListener("click", refreshAll);
+
+$("btnCopy").addEventListener("click", async ()=>{
+  try{
+    const txt = $("promptOut").value || "";
+    await navigator.clipboard.writeText(txt);
+    $("btnCopyLabel").textContent = "COPIED";
+    setTimeout(()=>{ $("btnCopyLabel").textContent = "COPY"; }, 900);
+  }catch(e){
+    $("btnCopyLabel").textContent = "FAILED";
+    setTimeout(()=>{ $("btnCopyLabel").textContent = "COPY"; }, 900);
+  }
+});
+
+$("langSel").addEventListener("change", ()=>{ if (lastPayload) $("promptOut").value = buildPrompt(lastPayload); });
+$("lenSel").addEventListener("change", ()=>{ if (lastPayload) $("promptOut").value = buildPrompt(lastPayload); });
+$("fullLists").addEventListener("change", ()=>{ if (lastPayload) $("promptOut").value = buildPrompt(lastPayload); });
+
+init();
+</script>
+</body>
+</html>
