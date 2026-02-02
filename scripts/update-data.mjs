@@ -485,6 +485,20 @@ async function main(){
   }
 
 
+  // Optional approach minima table (per-airport). Used by dashboard tiles.
+  const minimaByIcao = (()=>{
+    const p = path.join(ROOT, 'config', 'airport_minima.json');
+    if (!fs.existsSync(p)) return {};
+    try{
+      const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+      return j.byIcao || j || {};
+    }catch(e){
+      errors.push(`Minima load failed: ${String(e?.message ?? e)}`);
+      return {};
+    }
+  })();
+
+
   let metars = new Map();
   let tafs = new Map();
 
@@ -541,6 +555,7 @@ async function main(){
       severityScore: score,
       metarRaw: metar,
       tafRaw: taf,
+      minima: minimaByIcao[icao] ?? null,
     };
   });
 
