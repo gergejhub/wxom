@@ -134,6 +134,8 @@ function humanTileName(key){
     met_crit: "METAR CRIT (severity score ≥ 70)",
     alert_crit: "ALERT CRIT (overall alert escalated)",
     met_vis300: "Very low VIS/RVR (< 300 m) — observed",
+    met_min_best: "Approach minima: below BEST minima — observed",
+    met_min_onlybest: "Approach minima: below 2nd minima (only best approach) — observed",
     met_ts: "Thunderstorm / CB — observed",
     met_wind25: "Wind gusts ≥ 25 kt — observed",
     met_snow: "Snow — observed",
@@ -143,6 +145,8 @@ function humanTileName(key){
     met_va: "Volcanic ash — observed",
     taf_crit: "CRITICAL (TAF score ≥ 70) — forecast",
     taf_vis300: "Very low VIS/RVR (< 300 m) — forecast",
+    taf_min_best: "Approach minima: below BEST minima — forecast",
+    taf_min_onlybest: "Approach minima: below 2nd minima (only best approach) — forecast",
     taf_ts: "Thunderstorm / CB — forecast",
     taf_wind25: "Wind gusts ≥ 25 kt — forecast",
     taf_snow: "Snow — forecast",
@@ -201,8 +205,8 @@ function buildPromptEN(payload, length, includeFull){
   }
 
   // Prefer overall CRIT first if present
-  const nowOrder = ["alert_crit","met_crit","eng","met_vis300","met_wind25","met_ts","met_snow","met_toProhib","met_lvto","met_xwind","met_va"];
-  const fcOrder  = ["taf_crit","taf_vis300","taf_wind25","taf_ts","taf_snow","taf_toProhib","taf_lvto","taf_va"];
+  const nowOrder = ["alert_crit","met_crit","eng","met_vis300","met_min_best","met_min_onlybest","met_wind25","met_ts","met_snow","met_toProhib","met_lvto","met_xwind","met_va"];
+  const fcOrder  = ["taf_crit","taf_vis300","taf_min_best","taf_min_onlybest","taf_wind25","taf_ts","taf_snow","taf_toProhib","taf_lvto","taf_va"];
 
   for (const k of nowOrder) addLine(linesNow, k, payload.met[k]);
   for (const k of fcOrder)  addLine(linesFc,  k, payload.taf[k]);
@@ -248,8 +252,8 @@ function buildPromptHU(payload, length, includeFull){
     outArr.push(`- ${humanTileName(k)} → ${v.iata.length} repülőtér.${baseStr}${outStr} ${exStr}${full}`.replace(/\s+/g," ").trim());
   }
 
-  const nowOrder = ["alert_crit","met_crit","eng","met_vis300","met_wind25","met_ts","met_snow","met_toProhib","met_lvto","met_xwind","met_va"];
-  const fcOrder  = ["taf_crit","taf_vis300","taf_wind25","taf_ts","taf_snow","taf_toProhib","taf_lvto","taf_va"];
+  const nowOrder = ["alert_crit","met_crit","eng","met_vis300","met_min_best","met_min_onlybest","met_wind25","met_ts","met_snow","met_toProhib","met_lvto","met_xwind","met_va"];
+  const fcOrder  = ["taf_crit","taf_vis300","taf_min_best","taf_min_onlybest","taf_wind25","taf_ts","taf_snow","taf_toProhib","taf_lvto","taf_va"];
 
   for (const k of nowOrder) addLine(linesNow, k, payload.met[k]);
   for (const k of fcOrder)  addLine(linesFc,  k, payload.taf[k]);
@@ -335,6 +339,8 @@ async function collectFromIframe(){
         met_crit:   pack(t.met.crit||[], "metPri"),
         alert_crit: pack(t.met.alertCrit||[], "metPri"),
         met_vis300: pack(t.met.vis300||[], "metPri"),
+        met_min_best: pack(t.met.minBest||[], "metPri"),
+        met_min_onlybest: pack(t.met.minOnlyBest||[], "metPri"),
         met_ts:     pack(t.met.ts||[], "metPri"),
         met_wind25: pack(t.met.wind||[], "metPri"),
         met_snow:   pack(t.met.snow||[], "metPri"),
@@ -346,6 +352,8 @@ async function collectFromIframe(){
       taf: {
         taf_crit:   pack(t.taf.crit||[], "tafPri"),
         taf_vis300: pack(t.taf.vis300||[], "tafPri"),
+        taf_min_best: pack(t.taf.minBest||[], "tafPri"),
+        taf_min_onlybest: pack(t.taf.minOnlyBest||[], "tafPri"),
         taf_ts:     pack(t.taf.ts||[], "tafPri"),
         taf_wind25: pack(t.taf.wind||[], "tafPri"),
         taf_snow:   pack(t.taf.snow||[], "tafPri"),
