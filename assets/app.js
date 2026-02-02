@@ -1,5 +1,6 @@
 
-/* v62: changes
+/* v63: changes
+   - Added per-airport approach minima (BEST vs 2nd) tiles + forecast equivalents
    - Quick View triggers layout (CSS flex-wrap)
    - Raw highlight overlap fixed via CSS .hl inline-block margins
    - Priority: METAR-driven hazards outrank TAF-only hazards
@@ -746,6 +747,59 @@ function deriveStation(st){
     return Math.min(a,b);
   })();
 
+  // Per-airport approach minima (optional; merged into latest.json as stations[].minima)
+  // best = best approach minima; alt = second-best / different approach type.
+  const minimaNow = (() => {
+    const m = st.minima || null;
+    if (!m || !m.best || !m.alt) return null;
+
+    const effVis = (() => {
+      const a = (met.vis === null || met.vis === undefined) ? Infinity : met.vis;
+      const b = (metRvrMin === null || metRvrMin === undefined) ? Infinity : metRvrMin;
+      const v = Math.min(a,b);
+      return (v === Infinity) ? null : v;
+    })();
+
+    const cig = (met.cig === undefined) ? null : met.cig;
+
+    const belowBest =
+      ((cig !== null && m.best.cig_ft != null && cig < m.best.cig_ft) ||
+       (effVis !== null && m.best.vis_m != null && effVis < m.best.vis_m));
+
+    const belowAlt =
+      ((cig !== null && m.alt.cig_ft != null && cig < m.alt.cig_ft) ||
+       (effVis !== null && m.alt.vis_m != null && effVis < m.alt.vis_m));
+
+    return { belowBest, belowAlt, onlyBest: (!belowBest && belowAlt), effVis, cig };
+  })();
+
+  const minimaTaf = (() => {
+    const m = st.minima || null;
+    if (!m || !m.best || !m.alt) return null;
+
+    const effVis = (() => {
+      const a = (tafWorstVis === null || tafWorstVis === undefined) ? Infinity : tafWorstVis;
+      const b = (tafRvrMin === null || tafRvrMin === undefined) ? Infinity : tafRvrMin;
+      const v = Math.min(a,b);
+      return (v === Infinity) ? null : v;
+    })();
+
+    const cig = (taf.cig === undefined) ? null : taf.cig;
+
+    const belowBest =
+      ((cig !== null && m.best.cig_ft != null && cig < m.best.cig_ft) ||
+       (effVis !== null && m.best.vis_m != null && effVis < m.best.vis_m));
+
+    const belowAlt =
+      ((cig !== null && m.alt.cig_ft != null && cig < m.alt.cig_ft) ||
+       (effVis !== null && m.alt.vis_m != null && effVis < m.alt.vis_m));
+
+    return { belowBest, belowAlt, onlyBest: (!belowBest && belowAlt), effVis, cig };
+  })();
+
+  st.minimaNow = minimaNow;
+  st.minimaTaf = minimaTaf;
+
 
   // OM policy layer (derived from METAR/TAF only; no manual runway heading/condition)
   st.om = computeOmPolicy(st, met, taf, worstVis, rvrMinAll);
@@ -1307,6 +1361,8 @@ function applyFilters(list){
         const r = (st.met ? st.met.rvrMin : null);
         if (!((v !== null && v < 300) || (r !== null && r < 300))) return false;
       } break;
+      case "met_min_best": if (!(st.minimaNow && st.minimaNow.belowBest)) return false; break;
+      case "met_min_onlybest": if (!(st.minimaNow && st.minimaNow.onlyBest)) return false; break;
       case "met_ts": if (!(st.met && st.met.hz && st.met.hz.ts)) return false; break;
       case "met_wind25": if (!((st.met && st.met.gustMax !== null && st.met.gustMax >= 25))) return false; break;
       case "met_snow": if (!(st.met && st.met.hz && st.met.hz.sn)) return false; break;
@@ -1328,6 +1384,8 @@ function applyFilters(list){
         const r = (st.taf ? st.taf.rvrMin : null);
         if (!((v !== null && v < 300) || (r !== null && r < 300))) return false;
       } break;
+      case "taf_min_best": if (!(st.minimaTaf && st.minimaTaf.belowBest)) return false; break;
+      case "taf_min_onlybest": if (!(st.minimaTaf && st.minimaTaf.onlyBest)) return false; break;
       case "taf_ts": if (!(st.taf && st.taf.hz && st.taf.hz.ts)) return false; break;
       case "taf_wind25": if (!((st.taf && st.taf.gustMax !== null && st.taf.gustMax >= 25))) return false; break;
       case "taf_snow": if (!(st.taf && st.taf.hz && st.taf.hz.sn)) return false; break;
@@ -1474,6 +1532,8 @@ function computeTileLists(list){
   const metLvto = list.filter(s=>s.omMet && s.omMet.lvto);
   const metXwind = list.filter(s=>s.omMet && s.omMet.xwindExceed);
   const metVa = list.filter(s=>s.omMet && s.omMet.va);
+  const metMinBest = list.filter(s=>s.minimaNow && s.minimaNow.belowBest);
+  const metMinOnlyBest = list.filter(s=>s.minimaNow && s.minimaNow.onlyBest);
 
   const tafCrit = list.filter(s=> (s.taf && typeof s.taf.score === "number" && s.taf.score >= 70));
   const tafVis300 = list.filter(s=> ((s.tafWorstVis !== null && s.tafWorstVis < 300) || (s.taf && s.taf.rvrMin !== null && s.taf.rvrMin < 300)));
@@ -1483,9 +1543,12 @@ function computeTileLists(list){
   const tafToProhib = list.filter(s=>s.omTaf && s.omTaf.toProhib);
   const tafLvto = list.filter(s=>s.omTaf && s.omTaf.lvto);
   const tafVa = list.filter(s=>s.omTaf && s.omTaf.va);
+  const tafMinBest = list.filter(s=>s.minimaTaf && s.minimaTaf.belowBest);
+  const tafMinOnlyBest = list.filter(s=>s.minimaTaf && s.minimaTaf.onlyBest);
 
   const metAny = list.filter(s=>
     s.engIceOps ||
+    (s.minimaNow && (s.minimaNow.belowBest || s.minimaNow.onlyBest)) ||
     (s.met && s.met.score >= 70) ||
     ((s.met && s.met.vis !== null && s.met.vis < 300) || (s.met && s.met.rvrMin !== null && s.met.rvrMin < 300)) ||
     (s.met && s.met.hz && (s.met.hz.ts || s.met.hz.sn)) ||
@@ -1494,6 +1557,7 @@ function computeTileLists(list){
   );
 
   const tafAny = list.filter(s=>
+    (s.minimaTaf && (s.minimaTaf.belowBest || s.minimaTaf.onlyBest)) ||
     (s.taf && s.taf.score >= 70) ||
     ((s.tafWorstVis !== null && s.tafWorstVis < 300) || (s.taf && s.taf.rvrMin !== null && s.taf.rvrMin < 300)) ||
     (s.taf && s.taf.hz && (s.taf.hz.ts || s.taf.hz.sn)) ||
@@ -1502,8 +1566,8 @@ function computeTileLists(list){
   );
 
   return {
-    met:{eng:metEng, crit:metCrit, alertCrit:alertCrit, vis300:metVis300, ts:metTs, wind:metWind, snow:metSnow, toProhib:metToProhib, lvto:metLvto, xwind:metXwind, va:metVa, any:metAny},
-    taf:{crit:tafCrit, vis300:tafVis300, ts:tafTs, wind:tafWind, snow:tafSnow, toProhib:tafToProhib, lvto:tafLvto, va:tafVa, any:tafAny}
+    met:{eng:metEng, crit:metCrit, alertCrit:alertCrit, vis300:metVis300, ts:metTs, wind:metWind, snow:metSnow, toProhib:metToProhib, lvto:metLvto, xwind:metXwind, va:metVa, minBest:metMinBest, minOnlyBest:metMinOnlyBest, any:metAny},
+    taf:{crit:tafCrit, vis300:tafVis300, ts:tafTs, wind:tafWind, snow:tafSnow, toProhib:tafToProhib, lvto:tafLvto, va:tafVa, minBest:tafMinBest, minOnlyBest:tafMinOnlyBest, any:tafAny}
   };
 }
 
@@ -1533,6 +1597,8 @@ function updateTiles(currentList){
   setIf("tileTsCount", t.met.ts.length);
   setIf("tileWindCount", t.met.wind.length);
   setIf("tileSnowCount", t.met.snow.length);
+  setIf("tileMinBestCount", t.met.minBest.length);
+  setIf("tileMinOnlyBestCount", t.met.minOnlyBest.length);
 
   setIf("tileToProhibCount", t.met.toProhib.length);
   setIf("tileLvtoCount", t.met.lvto.length);
@@ -1546,6 +1612,8 @@ function updateTiles(currentList){
   setIf("tileTafTsCount", t.taf.ts.length);
   setIf("tileTafWindCount", t.taf.wind.length);
   setIf("tileTafSnowCount", t.taf.snow.length);
+  setIf("tileTafMinBestCount", t.taf.minBest.length);
+  setIf("tileTafMinOnlyBestCount", t.taf.minOnlyBest.length);
   setIf("tileTafToProhibCount", t.taf.toProhib.length);
   setIf("tileTafLvtoCount", t.taf.lvto.length);
   setIf("tileTafVACount", t.taf.va.length);
@@ -1590,6 +1658,8 @@ function updateTiles(currentList){
   renderIata("tileTsIata", t.met.ts);
   renderIata("tileWindIata", t.met.wind);
   renderIata("tileSnowIata", t.met.snow);
+  renderIata("tileMinBestIata", t.met.minBest);
+  renderIata("tileMinOnlyBestIata", t.met.minOnlyBest);
 
   renderIata("tileToProhibIata", t.met.toProhib);
   renderIata("tileLvtoIata", t.met.lvto);
@@ -1602,6 +1672,8 @@ function updateTiles(currentList){
   renderIata("tileTafTsIata", t.taf.ts);
   renderIata("tileTafWindIata", t.taf.wind);
   renderIata("tileTafSnowIata", t.taf.snow);
+  renderIata("tileTafMinBestIata", t.taf.minBest);
+  renderIata("tileTafMinOnlyBestIata", t.taf.minOnlyBest);
   renderIata("tileTafToProhibIata", t.taf.toProhib);
   renderIata("tileTafLvtoIata", t.taf.lvto);
   renderIata("tileTafVAIata", t.taf.va);
