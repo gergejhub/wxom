@@ -52,12 +52,10 @@ jobs:
 
           # Static folders (copy only if they exist)
           if [ -d "assets" ]; then cp -R assets dist/assets; fi
+          if [ -d "1030" ]; then cp -R 1030 dist/1030; fi
           if [ -d "stat" ]; then cp -R stat dist/stat; fi
           if [ -d "config" ]; then cp -R config dist/config; fi
           if [ -d "data" ]; then cp -R data dist/data; fi
-
-          # Secret subpage(s)
-          if [ -d "1030" ]; then cp -R 1030 dist/1030; fi
 
           # Optional root files
           if [ -f "favicon.ico" ]; then cp -f favicon.ico dist/; fi
@@ -69,6 +67,7 @@ jobs:
 
           # Sanity checks
           test -f dist/index.html
+          if [ -d "dist/1030" ]; then test -f dist/1030/index.html; fi
           if [ -f "alerts.html" ]; then test -f dist/alerts.html; fi
           if [ -f "settings.html" ]; then test -f dist/settings.html; fi
 
@@ -80,11 +79,6 @@ jobs:
           if [ -d "dist/assets" ]; then
             test -f dist/assets/app.js
           fi
-
-          if [ -d "dist/1030" ]; then
-            test -f dist/1030/index.html
-          fi
-
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
