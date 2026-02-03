@@ -187,6 +187,25 @@ function buildPromptEN(payload, length, includeFull){
   const gen = payload.generatedAt ? fmtZ(payload.generatedAt) : "—";
   const lengthSpec = (length==="short") ? "60–90 words" : (length==="long" ? "130–170 words" : "90–130 words");
 
+  // Collect BASE airports impacted by ANY triggered tile (NOW or FORECAST).
+  // This ensures the prompt always explicitly names affected BASE airports.
+  const baseAll = (function(){
+    const s = new Set();
+    const addGrp = (grp)=>{
+      for (const v of Object.values(grp||{})){
+        if (!v || !v.iata || v.iata.length===0) continue;
+        for (const b of (v.bases||[])){
+          const c = String(b||"").toUpperCase();
+          if (c) s.add(c);
+        }
+      }
+    };
+    addGrp(payload.met);
+    addGrp(payload.taf);
+    return Array.from(s).sort();
+  })();
+  const baseLine = baseAll.length ? baseAll.join(", ") : "None";
+
   // Build compact input lines: only include triggered tiles
   const linesNow = [];
   const linesFc  = [];
@@ -219,8 +238,9 @@ function buildPromptEN(payload, length, includeFull){
 `Audience: non-aviation. Use plain English. Avoid jargon; if you must use METAR/TAF/RVR, explain briefly in one phrase.`,
 `Length: ${lengthSpec} (≈20–60 seconds). Tone: calm, factual, actionable.`,
 `Structure: (1) NOW (observations) (2) NEXT HOURS (forecast) (3) one-sentence takeaway.`,
-`Rules: Do NOT read long airport lists. Mention counts and at most 2–3 example airports, prioritizing BASE airports.`,
+`Rules: Do NOT read long airport lists. Mention counts and at most 2–3 example airports, but always name any affected BASE airports.`,
 `Timestamp of dataset: ${gen}.`,
+`Affected BASE airports (any trigger in NOW or FORECAST): ${baseLine}.`,
 "",
 "INPUT — NOW (dashboard METAR-priority tiles):",
 nowBlock,
@@ -235,6 +255,24 @@ fcBlock,
 function buildPromptHU(payload, length, includeFull){
   const gen = payload.generatedAt ? fmtZ(payload.generatedAt) : "—";
   const lengthSpec = (length==="short") ? "60–90 szó" : (length==="long" ? "130–170 szó" : "90–130 szó");
+
+  // Érintett bázis repülőterek összegyűjtése bármely triggerelt csempéből (MOST vagy VÁRHATÓ).
+  const baseAll = (function(){
+    const s = new Set();
+    const addGrp = (grp)=>{
+      for (const v of Object.values(grp||{})){
+        if (!v || !v.iata || v.iata.length===0) continue;
+        for (const b of (v.bases||[])){
+          const c = String(b||"").toUpperCase();
+          if (c) s.add(c);
+        }
+      }
+    };
+    addGrp(payload.met);
+    addGrp(payload.taf);
+    return Array.from(s).sort();
+  })();
+  const baseLine = baseAll.length ? baseAll.join(", ") : "Nincs";
 
   const linesNow = [];
   const linesFc  = [];
@@ -266,8 +304,9 @@ function buildPromptHU(payload, length, includeFull){
 `Közönség: laikus. Egyszerű magyar nyelv, rövid mondatok. Ha METAR/TAF/RVR előkerül, egy rövid magyarázó kifejezéssel tedd érthetővé.`,
 `Terjedelem: ${lengthSpec} (≈20–60 mp). Hangnem: nyugodt, tényszerű.`,
 `Szerkezet: (1) MOST (aktuális megfigyelés) (2) KÖVETKEZŐ ÓRÁK (várható) (3) 1 mondatos takeaway.`,
-`Szabály: ne sorolj fel hosszú repterlistát. Inkább darabszám + legfeljebb 2–3 példa, bázisokra fókuszálva.`,
+`Szabály: ne sorolj fel hosszú repterlistát. Inkább darabszám + legfeljebb 2–3 példa, de az érintett bázisokat mindenképpen nevezd meg.`,
 `Adatkészlet időbélyege: ${gen}.`,
+`Érintett bázisok (bármely trigger MOST vagy VÁRHATÓ): ${baseLine}.`,
 "",
 "INPUT — MOST (dashboard METAR-priority csempék):",
 nowBlock,
