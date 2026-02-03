@@ -231,6 +231,8 @@ let runwaysMap = null;
 
 let stationMap = new Map();
 let lastGeneratedAt = null; // string (ISO) from data.generatedAt
+let lastStationsHash = null; // hash of data.stations to avoid full re-render when only generatedAt changes
+let refreshInFlight = false; // prevent overlapping refresh cycles
 
 // Shared airport roles (multi-user): fetched from repo-backed JSON.
 let rolesMap = {}; // { ICAO: "BASE" | "DEST" | "ALT" }
@@ -340,6 +342,44 @@ function escapeHtml(s){
   return (s ?? "").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 }
 
+
+function fnv1a32(str){
+  // Fast, deterministic hash for change detection (not for security).
+  let h = 0x811c9dc5;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8,"0");
+}
+
+function stationsHash(rawStations){
+  if(!Array.isArray(rawStations) || rawStations.length === 0) return "00000000";
+  let acc = "";
+  for(const s of rawStations){
+    // Include the fields that can affect UI logic/output.
+    const icao = (s.icao || s.station || "");
+    const iata = (s.iata || "");
+    const name = (s.name || s.airportName || "");
+    const met = (s.metarRaw || s.metar || "");
+    const taf = (s.tafRaw || s.taf || "");
+    const min = (s.minima !== undefined) ? s.minima : null;
+    const lat = (s.lat !== undefined) ? s.lat : null;
+    const lon = (s.lon !== undefined) ? s.lon : null;
+    acc += `${icao}|${iata}|${name}|${lat}|${lon}|${met}|${taf}|${JSON.stringify(min)}\n`;
+  }
+  return fnv1a32(acc);
+}
+
+function applyGeneratedAtOnly(generatedAt){
+  const gen = generatedAt ? new Date(generatedAt) : null;
+  const genStr = generatedAt ? String(generatedAt) : null;
+  lastGeneratedAt = genStr;
+
+  $("statUpdated").textContent = (gen && !isNaN(gen.getTime()))
+    ? `Last update: ${gen.toISOString().replace('T',' ').slice(0,16)}Z`
+    : "Last update: —";
+}
 
 function parseTempC(raw){
   // METAR temp/dewpoint group like 02/00 or M05/M10
@@ -2227,6 +2267,8 @@ function applyDataFromLatest(data){
     : "Last update: —";
 
   const rawStations = Array.isArray(data.stations) ? data.stations : [];
+  // Change detection: avoid expensive full re-render when only generatedAt changes.
+  lastStationsHash = stationsHash(rawStations);
   stations = rawStations.map(s => ({
     icao: (s.icao || s.station || "").toUpperCase(),
     iata: (s.iata || "").toUpperCase(),
@@ -2235,6 +2277,9 @@ function applyDataFromLatest(data){
     tafRaw: s.tafRaw || s.taf || "",
     metarAgeMin: s.metarAgeMin ?? s.metarAge ?? null,
     tafAgeMin: s.tafAgeMin ?? s.tafAge ?? null,
+    minima: (s.minima !== undefined) ? s.minima : null,
+    lat: (s.lat !== undefined) ? s.lat : null,
+    lon: (s.lon !== undefined) ? s.lon : null,
   })).filter(s=>s.icao && s.icao.length===4)
     .map(deriveStation)
     .map(st=>{
@@ -2288,18 +2333,33 @@ async function updateDatasetTile(){
 }
 
 async function refreshData(force=false){
+  if (refreshInFlight) return;
+  refreshInFlight = true;
+
   const tbody = $("rows");
   try{
     await fetchBaseList();
     await fetchRoles();
     await fetchRunways();
+
     const res = await fetch("data/latest.json?cb=" + Date.now(), {cache:"no-store"});
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
     const genStr = (data && data.generatedAt) ? String(data.generatedAt) : null;
+    const newHash = stationsHash(Array.isArray(data?.stations) ? data.stations : []);
+
     if (!force && genStr && lastGeneratedAt && genStr === lastGeneratedAt){
       // Data unchanged: only update ages in-place.
+      updateAgesInPlace();
+      refreshDrawerAges();
+      await updateDatasetTile();
+      return;
+    }
+
+    if (!force && newHash && lastStationsHash && newHash === lastStationsHash){
+      // Only generatedAt changed (common with frequent CI runs): avoid full rebuild to prevent TV "blinking".
+      applyGeneratedAtOnly(data.generatedAt);
       updateAgesInPlace();
       refreshDrawerAges();
       await updateDatasetTile();
@@ -2315,12 +2375,15 @@ async function refreshData(force=false){
     $("statUpdated").textContent = "Last update: —";
     updateTiles([]);
     await updateDatasetTile();
+  }finally{
+    refreshInFlight = false;
   }
 }
 
 async function load(){
   return refreshData(true);
 }
+
 
 
 // Tile hover tooltips (detailed triggers + OM reference) --------------------

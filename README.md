@@ -19,16 +19,14 @@ It runs on **GitHub Pages** and refreshes data via **GitHub Actions** (server-si
   - Priority and display ordering: **BASE > DESTINATION > ALTERNATE > OTHER**
   - Role filters are available on the main page
 
-### Settings (`/settings.html`)
-A shared, repo-based configuration workflow (multi-user friendly):
-- Edit the monitored airport list (add/remove ICAO).
-- Assign roles per airport: **BASE / DESTINATION / ALTERNATE / OTHER**.
-- Export:
-  - `airports.txt`
-  - `airport_roles.json` (to be saved in the repo as `config/airport_roles.json`)
+### Configuration (repo files)
+Keep configuration in the repo so every user sees the same setup:
+- `airports.txt` — monitored ICAO list (one ICAO per line)
+- `base.txt` — IATA base list used for BASE highlighting (optional)
+- `config/airport_roles.json` — optional shared roles per ICAO (BASE/DEST/ALT)
+- `config/airport_minima.json` — optional approach minima per ICAO (for MINIMA tiles)
 
-> Note: GitHub Pages is static, so Settings **cannot commit** changes automatically.  
-> To apply changes for all users, export the files and **commit them to the repo**.
+> GitHub Pages is static, so changes are applied by editing these files and committing to the repo.
 
 ### Stats (`/stat/`)
 A non-technical, “at-a-glance” operational view with a WOW-style visualisation:
@@ -60,13 +58,14 @@ A non-technical, “at-a-glance” operational view with a WOW-style visualisati
 
 ## Data flow (high level)
 
-1. **GitHub Actions** runs every ~10 minutes:
+1. **GitHub Actions** runs every 5 minutes (cron) to refresh the dataset:
    - reads `airports.txt`
    - downloads METAR/TAF from `aviationweather.gov`
    - updates:
      - `data/latest.json`
      - `data/status.json`
      - `data/iata_map.json` (ICAO→IATA/name mapping via OurAirports CSV)
+     - `data/runways.json` (runway headings/widths via OurAirports runways.csv; used for XWIND estimates)
 2. **GitHub Pages** serves static files:
    - main UI loads `data/latest.json`
    - stats UI loads `data/latest.json` and builds local history/trends
@@ -104,16 +103,17 @@ Allowed values:
 
 ---
 
-## How to change the monitored airports / roles (recommended workflow)
+## How to change the monitored airports / roles
 
-1. Open `settings.html` on your GitHub Pages site.
-2. Add/remove ICAOs and set roles (BASE/DEST/ALT/OTHER).
-3. Export both files.
-4. Commit to the repo:
-   - overwrite `airports.txt`
-   - overwrite `config/airport_roles.json`
+1. Edit and commit:
+   - `airports.txt` (ICAO list)
+   - optional: `config/airport_roles.json` (BASE/DEST/ALT)
+   - optional: `config/airport_minima.json` (MINIMA tiles)
+2. Trigger the dataset refresh:
+   - wait for the next scheduled Actions run, **or**
+   - run the workflow manually via **Actions → Update METAR/TAF Dataset → Run workflow**.
 
-After the next scheduled Actions run, the dataset will refresh for everyone.
+After the refresh, GitHub Pages will serve the updated `data/latest.json` for everyone.
 
 ---
 
@@ -137,7 +137,6 @@ After the next scheduled Actions run, the dataset will refresh for everyone.
 
 - `index.html` — main dashboard UI
 - `assets/` — main UI JS/CSS
-- `settings.html`, `assets/settings.js` — shared configuration UI + export
 - `stat/` — stats + Change Atlas UI
 - `airports.txt` — monitored ICAO list
 - `config/airport_roles.json` — shared role configuration
@@ -148,7 +147,7 @@ After the next scheduled Actions run, the dataset will refresh for everyone.
 ---
 
 ## Version notes
-This README reflects the **shared roles + settings + Change Atlas** build series (v51+).
+This README reflects the **shared roles + Change Atlas** build series (v51+).
 
 
 ## OM-A / OM-B Policy Layer (Wizz Air)

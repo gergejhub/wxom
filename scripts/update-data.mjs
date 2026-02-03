@@ -19,11 +19,19 @@ const OUT_IATA_MAP = path.join(ROOT, 'data', 'iata_map.json');
 const OUT_STATUS = path.join(ROOT, 'data', 'status.json');
 const OUT_RUNWAYS = path.join(ROOT, 'data', 'runways.json');
 
-const OURAIRPORTS_CSV_URL = 'https://ourairports.com/airports.csv';
-const OURAIRPORTS_RUNWAYS_CSV_URL = 'https://ourairports.com/runways.csv';
-// Fallback mirror (same data dump, usually less likely to rate-limit / block CI runners)
-// Source: https://github.com/davidmegginson/ourairports-data
-const OURAIRPORTS_RUNWAYS_FALLBACK_URL = 'https://davidmegginson.github.io/ourairports-data/runways.csv';
+const OURAIRPORTS_AIRPORTS_URLS = [
+  'https://ourairports.com/airports.csv',
+  'https://davidmegginson.github.io/ourairports-data/airports.csv',
+  'https://raw.githubusercontent.com/davidmegginson/ourairports-data/master/airports.csv',
+  'https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv',
+];
+
+const OURAIRPORTS_RUNWAYS_URLS = [
+  'https://ourairports.com/runways.csv',
+  'https://davidmegginson.github.io/ourairports-data/runways.csv',
+  'https://raw.githubusercontent.com/davidmegginson/ourairports-data/master/runways.csv',
+  'https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/runways.csv',
+];
 
 const AWC_METAR = 'https://aviationweather.gov/api/data/metar';
 const AWC_TAF = 'https://aviationweather.gov/api/data/taf';
@@ -288,19 +296,68 @@ function highlightRaw(text, visTokensToHighlight = new Set(), visThreshold_m = 8
   return html;
 }
 
-async function fetchText(url){
-  const res = await fetch(url, {
-    headers: {
-      // AWC guidance: use a custom UA to prevent automated filtering issues
-      'User-Agent': 'wizz-awc-watch (github-actions)'
-    }
-  });
-  if(!res.ok){
-    const body = await res.text().catch(()=> '');
-    throw new Error(`Fetch failed ${res.status} ${res.statusText}: ${body.slice(0,200)}`);
-  }
-  return await res.text();
+function sleep(ms){
+  return new Promise(r => setTimeout(r, ms));
 }
+
+function headersForUrl(url){
+  const u = String(url || "");
+  const headers = {};
+
+  // AWC guidance: use a custom UA to prevent automated filtering issues
+  if (u.includes("aviationweather.gov")){
+    headers["User-Agent"] = "wizz-awc-monitor (github-actions)";
+    headers["Accept"] = "text/plain,*/*";
+    return headers;
+  }
+
+  // OurAirports sources can be picky about bot-like UAs; use a browser-like UA.
+  if (u.includes("ourairports.com") || u.includes("ourairports-data") || u.includes("githubusercontent.com")){
+    headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
+    headers["Accept"] = "text/csv,text/plain,*/*";
+    return headers;
+  }
+
+  headers["User-Agent"] = "Mozilla/5.0";
+  headers["Accept"] = "*/*";
+  return headers;
+}
+
+async function fetchText(url, {timeoutMs = 25_000, retries = 2} = {}){
+  let lastErr = null;
+
+  for(let attempt = 0; attempt <= retries; attempt++){
+    const ac = new AbortController();
+    const t = setTimeout(()=> ac.abort(), timeoutMs);
+
+    try{
+      const res = await fetch(url, {
+        headers: headersForUrl(url),
+        redirect: "follow",
+        signal: ac.signal,
+      });
+
+      clearTimeout(t);
+
+      if(!res.ok){
+        const body = await res.text().catch(()=> "");
+        throw new Error(`Fetch failed ${res.status} ${res.statusText}: ${body.slice(0,200)}`);
+      }
+
+      return await res.text();
+    }catch(e){
+      clearTimeout(t);
+      lastErr = e;
+      if (attempt < retries){
+        await sleep(700 * (attempt + 1));
+        continue;
+      }
+    }
+  }
+
+  throw lastErr;
+}
+
 
 async function fetchMetars(icaos){
   const map = new Map();
@@ -371,7 +428,21 @@ async function buildIataMap(icaos){
   if(missing.length === 0) return existing;
 
   console.log(`IATA map: ${missing.length} missing ICAO codes, downloading OurAirports airports.csv…`);
-  const csv = await fetchText(OURAIRPORTS_CSV_URL);
+  let csv;
+  {
+    let lastErr = null;
+    for (const url of OURAIRPORTS_AIRPORTS_URLS){
+      try{
+        csv = await fetchText(url);
+        lastErr = null;
+        break;
+      }catch(e){
+        lastErr = e;
+        console.log(`IATA map: source failed (${url}): ${String(e?.message ?? e)}`);
+      }
+    }
+    if (!csv) throw lastErr || new Error('IATA map: all sources failed');
+  }
 
   const lines = csv.split(/\r?\n/).filter(Boolean);
   const header = parseCsvLine(lines[0]);
@@ -413,11 +484,19 @@ async function buildRunwaysMap(icaos){
   const wanted = new Set(icaos);
   console.log(`Runways: downloading OurAirports runways.csv…`);
   let csv;
-  try {
-    csv = await fetchText(OURAIRPORTS_RUNWAYS_CSV_URL);
-  } catch (e1) {
-    console.log(`Runways: primary source failed (${String(e1?.message ?? e1)}). Trying fallback…`);
-    csv = await fetchText(OURAIRPORTS_RUNWAYS_FALLBACK_URL);
+  {
+    let lastErr = null;
+    for (const url of OURAIRPORTS_RUNWAYS_URLS){
+      try{
+        csv = await fetchText(url);
+        lastErr = null;
+        break;
+      }catch(e){
+        lastErr = e;
+        console.log(`Runways: source failed (${url}): ${String(e?.message ?? e)}`);
+      }
+    }
+    if (!csv) throw lastErr || new Error('Runways: all sources failed');
   }
 
   const lines = csv.split(/\r?\n/).filter(Boolean);
@@ -493,7 +572,20 @@ async function main(){
   const iataMap = await buildIataMap(icaos);
   fs.writeFileSync(OUT_IATA_MAP, JSON.stringify(iataMap, null, 2));
   try{
-    await buildRunwaysMap(icaos);
+    // Runways dataset is heavy and changes rarely. Refresh at most daily,
+    // but always re-try if file is missing or suspiciously tiny (e.g. "{}").
+    const st = fs.existsSync(OUT_RUNWAYS) ? fs.statSync(OUT_RUNWAYS) : null;
+    const isTiny = !!st && st.size < 10;
+    const ageMs = st ? (Date.now() - st.mtimeMs) : Number.POSITIVE_INFINITY;
+    const refreshMs = 24 * 60 * 60 * 1000; // 24h
+
+    const shouldRefresh = (!st) || isTiny || (ageMs > refreshMs);
+
+    if (shouldRefresh){
+      await buildRunwaysMap(icaos);
+    }else{
+      console.log(`Runways: using cached ${OUT_RUNWAYS} (age ${(ageMs/3600000).toFixed(1)}h).`);
+    }
   }catch(e){
     const msg = `Runways refresh failed: ${String(e?.message ?? e)}`;
     console.log(msg);
