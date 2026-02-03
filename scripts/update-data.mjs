@@ -21,6 +21,9 @@ const OUT_RUNWAYS = path.join(ROOT, 'data', 'runways.json');
 
 const OURAIRPORTS_CSV_URL = 'https://ourairports.com/airports.csv';
 const OURAIRPORTS_RUNWAYS_CSV_URL = 'https://ourairports.com/runways.csv';
+// Fallback mirror (same data dump, usually less likely to rate-limit / block CI runners)
+// Source: https://github.com/davidmegginson/ourairports-data
+const OURAIRPORTS_RUNWAYS_FALLBACK_URL = 'https://davidmegginson.github.io/ourairports-data/runways.csv';
 
 const AWC_METAR = 'https://aviationweather.gov/api/data/metar';
 const AWC_TAF = 'https://aviationweather.gov/api/data/taf';
@@ -409,7 +412,13 @@ async function buildRunwaysMap(icaos){
   // Creates OUT_RUNWAYS with runway headings/widths for crosswind advisory.
   const wanted = new Set(icaos);
   console.log(`Runways: downloading OurAirports runways.csv…`);
-  const csv = await fetchText(OURAIRPORTS_RUNWAYS_CSV_URL);
+  let csv;
+  try {
+    csv = await fetchText(OURAIRPORTS_RUNWAYS_CSV_URL);
+  } catch (e1) {
+    console.log(`Runways: primary source failed (${String(e1?.message ?? e1)}). Trying fallback…`);
+    csv = await fetchText(OURAIRPORTS_RUNWAYS_FALLBACK_URL);
+  }
 
   const lines = csv.split(/\r?\n/).filter(Boolean);
   const header = parseCsvLine(lines[0]);
@@ -449,8 +458,13 @@ async function buildRunwaysMap(icaos){
     out[icao].push(r);
   }
 
+  const airportsWithRunways = Object.keys(out).length;
+  if (airportsWithRunways === 0){
+    throw new Error(`runways.csv parsed but 0 matching airports found (watchlist=${icaos.length}). Source may be blocked or format changed.`);
+  }
+
   fs.writeFileSync(OUT_RUNWAYS, JSON.stringify(out, null, 2));
-  console.log(`Wrote ${OUT_RUNWAYS} (${Object.keys(out).length} airports).`);
+  console.log(`Wrote ${OUT_RUNWAYS} (${airportsWithRunways} airports).`);
   return out;
 }
 
@@ -481,7 +495,14 @@ async function main(){
   try{
     await buildRunwaysMap(icaos);
   }catch(e){
-    console.log("Runways: failed to refresh runways.json (will keep previous if present):", String(e));
+    const msg = `Runways refresh failed: ${String(e?.message ?? e)}`;
+    console.log(msg);
+    errors.push(msg);
+    // Keep the previous runways.json if present (most useful behavior for CI hiccups).
+    // If it doesn't exist, write an empty object so the frontend stays stable.
+    if (!fs.existsSync(OUT_RUNWAYS)){
+      fs.writeFileSync(OUT_RUNWAYS, JSON.stringify({}, null, 2));
+    }
   }
 
 
