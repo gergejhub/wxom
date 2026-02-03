@@ -1,0 +1,73 @@
+name: Force Dataset Refresh (30m)
+
+on:
+  schedule:
+    # Extra safety net: runs every 30 minutes, even if the 5-min workflow is delayed or disabled.
+    # Using offset minutes to reduce collisions with the */5 schedule.
+    - cron: "2,32 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dataset
+  cancel-in-progress: true
+
+jobs:
+  force_update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Force update data (3 retries)
+        run: |
+          set -e
+          for i in 1 2 3; do
+            echo "[FORCE] Update attempt $i/3"
+            if node scripts/update-data.mjs; then
+              echo "[FORCE] Update succeeded"
+              break
+            fi
+            echo "[FORCE] Attempt $i failed" >&2
+            if [ "$i" -lt 3 ]; then
+              sleep $((i*20))
+            else
+              echo "[FORCE] All retries failed" >&2
+              exit 1
+            fi
+          done
+
+      - name: Stamp force heartbeat (always changes)
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = 'data/force_heartbeat.json';
+          fs.mkdirSync('data', { recursive: true });
+          fs.writeFileSync(
+            path,
+            JSON.stringify({ forcedAt: new Date().toISOString() }, null, 2) + '\n'
+          );
+          console.log('Wrote', path);
+          NODE
+
+      - name: Commit & push (always)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json data/status.json data/runways.json data/iata_map.json data/force_heartbeat.json
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Force refresh dataset (30m safety net)"
+            git push
+          else
+            echo "Nothing to commit (unexpected)."
+          fi
