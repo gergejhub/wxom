@@ -2497,7 +2497,17 @@ TILE_TOOLTIP.met_vis300 = {title:"VIS/RVR < 300 (METAR)", om:"OM-A 8.1.4 (CAT II
 TILE_TOOLTIP.met_ts = {title:"TS / CB (METAR)", om:"OM-A 8.3.8.1 (Thunderstorms)", why:"Current report (METAR) indicates TS.", triggers:["METAR: TS"]};
 TILE_TOOLTIP.met_wind25 = {title:"WIND (METAR)", om:"Advisory", why:"Current gust threshold (METAR).", triggers:["METAR GUST ≥ 25 kt"]};
 TILE_TOOLTIP.met_snow = {title:"SNOW (METAR)", om:"Advisory", why:"Current snow signals (METAR).", triggers:["METAR: SN / snow-related"]};
-TILE_TOOLTIP.met_min_best = {title:"MINIMA CRIT (METAR)", om:"Approach minima", why:"Airport-specific approach minima check. Triggers when METAR ceiling or effective visibility (min of VIS and RVRmin) is below the configured BEST minima.", triggers:["METAR: ceiling < BEST.cig_ft (if provided)", "or METAR: min(VIS, RVRmin) < BEST.vis_m (if provided)", "Thresholds from airport minima settings (BEST)"]};
+TILE_TOOLTIP.met_min_best = {
+  title:"MINIMA CRIT (METAR)",
+  om:"Approach minima",
+  why:"Airport-specific approach minima check based on the current METAR. Compares observed ceiling and effective visibility against the airport’s BEST minima.",
+  triggers:[
+    "Trigger if ceiling (ft) < BEST ceiling minima (if defined)",
+    "or effective visibility (m) < BEST visibility minima (if defined)",
+    "Effective visibility = min(reported VIS, lowest RVR)",
+    "Where to verify: in the METAR text (BKN/OVC for ceiling, VIS/RVR groups for visibility)"
+  ]
+};
 TILE_TOOLTIP.met_min_onlybest = {title:"MINIMA LIMIT (METAR)", om:"Approach minima", why:"Triggers when METAR is below the configured 2nd-best (ALT) minima but still NOT below BEST. Operationally: only the BEST approach remains within minima.", triggers:["NOT below BEST minima", "BUT below ALT minima (ceiling or min(VIS, RVRmin))", "Thresholds from airport minima settings (ALT)"]};
 TILE_TOOLTIP.met_toProhib = {title:"TO PROHIB (METAR)", om:"OM-A 8.3.8.1/8.3.8.7", why:"METAR-only prohibitive WX flags.", triggers:["TS", "+SN", "FZRA/+FZRA", "GR", "PL/GS/SG"]};
 TILE_TOOLTIP.met_lvto = {title:"LVTO (METAR)", om:"OM-A 8.1.4.4", why:"METAR-only LVTO band.", triggers:["RVR/VIS < 550 m"]};
@@ -2509,7 +2519,17 @@ TILE_TOOLTIP.taf_vis300 = {title:"VIS/RVR < 300 (TAF)", om:"OM-A 8.1.4", why:"Wo
 TILE_TOOLTIP.taf_ts = {title:"TS / CB (TAF)", om:"OM-A 8.3.8.1", why:"Forecast indicates TS.", triggers:["TAF: TS"]};
 TILE_TOOLTIP.taf_wind25 = {title:"WIND (TAF)", om:"Advisory", why:"Forecast gust threshold.", triggers:["TAF GUST ≥ 25 kt"]};
 TILE_TOOLTIP.taf_snow = {title:"SNOW (TAF)", om:"Advisory", why:"Forecast snow signals.", triggers:["TAF: SN"]};
-TILE_TOOLTIP.taf_min_best = {title:"MINIMA CRIT (TAF)", om:"Approach minima", why:"Airport-specific approach minima check based on forecast (worst-case) ceiling/visibility. Triggers when TAF ceiling or worst-case visibility (min of VIS and RVRmin) is below the configured BEST minima.", triggers:["TAF: ceiling < BEST.cig_ft (if provided)", "or TAF: min(worst VIS, RVRmin) < BEST.vis_m (if provided)", "Thresholds from airport minima settings (BEST)"]};
+TILE_TOOLTIP.taf_min_best = {
+  title:"MINIMA CRIT (TAF)",
+  om:"Approach minima",
+  why:"Airport-specific approach minima check based on the forecast (TAF). Uses the worst-case forecast ceiling and visibility anywhere in the TAF and compares them to the airport’s BEST minima.",
+  triggers:[
+    "Trigger if forecast ceiling (ft) < BEST ceiling minima (if defined)",
+    "or forecast effective visibility (m) < BEST visibility minima (if defined)",
+    "Forecast effective visibility = min(worst VIS in TAF, lowest RVR in TAF)",
+    "Where to verify: in the TAF segment with the lowest VIS (e.g. “1400”) and/or lowest BKN/OVC (e.g. “OVC001” = 100 ft); TEMPO/PROB groups count"
+  ]
+};
 TILE_TOOLTIP.taf_min_onlybest = {title:"MINIMA LIMIT (TAF)", om:"Approach minima", why:"Triggers when forecast (TAF) is below the configured 2nd-best (ALT) minima but still NOT below BEST. Operationally: only the BEST approach remains within minima.", triggers:["NOT below BEST minima", "BUT below ALT minima (ceiling or min(worst VIS, RVRmin))", "Thresholds from airport minima settings (ALT)"]};
 TILE_TOOLTIP.taf_toProhib = {title:"TO PROHIB (TAF)", om:"OM-A 8.3.8.1/8.3.8.7", why:"Forecast prohibitive WX flags.", triggers:["TS", "+SN", "FZRA/+FZRA", "GR", "PL/GS/SG"]};
 TILE_TOOLTIP.taf_lvto = {title:"LVTO (TAF)", om:"OM-A 8.1.4.4", why:"Forecast LVTO band.", triggers:["RVR/VIS < 550 m"]};
