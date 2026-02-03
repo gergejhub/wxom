@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Riasztási útmutató • WX Monitor</title>
+  <title>Alert Guide • WX Monitor</title>
 
-  <!-- Ugyanaz a stíluslap, mint a dashboardon -->
+  <!-- Same stylesheet as the dashboard -->
   <link rel="stylesheet" href="assets/styles.css?v=74.audit" />
 
   <style>
-    /* Page-specific layout (keeps the dashboard look & feel) */
+/* Page-specific layout (keeps the dashboard look & feel) */
     a{ color:inherit; }
     a:focus{ outline: 2px solid rgba(255,47,166,.55); outline-offset: 2px; border-radius: 12px; }
 
@@ -108,6 +108,13 @@
 
     .small{ font-size: 12px; color: var(--mut); }
     .hr{ height:1px; background: rgba(255,255,255,.08); margin: 12px 0; }
+
+    /* Language toggle */
+    .langToggle{ display:inline-flex; gap:8px; align-items:center; }
+    .langBtn{ cursor:pointer; padding: 10px 12px; border-radius: 14px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: rgba(255,255,255,.9); font-weight: 950; }
+    .langBtn:hover{ border-color: rgba(255,47,166,.35); box-shadow: 0 0 0 4px rgba(255,47,166,.08); }
+    .langBtn[aria-pressed="true"]{ border-color: rgba(255,47,166,.55); box-shadow: 0 0 0 4px rgba(255,47,166,.10); }
+
   </style>
 </head>
 <body>
@@ -121,20 +128,918 @@
           <a class="viewpill viewpill--link" href="stat/"><span class="viewpill__k">Stats</span></a>
           <a class="viewpill viewpill--link" href="map.html"><span class="viewpill__k">Map</span></a>
           <a class="viewpill viewpill--link" href="alerts.html" aria-current="page"><span class="viewpill__k">Guide</span></a>
+          <span class="langToggle" role="group" aria-label="Language">
+            <button class="langBtn" id="langEn" type="button" aria-pressed="true">EN</button>
+            <button class="langBtn" id="langHu" type="button" aria-pressed="false">HU</button>
+          </span>
         </div>
       </div>
-      <div class="brand__sub">Közérthető útmutató a riasztásokhoz, triggereikhez, színekhez, rövidítésekhez – és ahhoz, hogy a rendszer valójában mit számol.</div>
+      <div class="brand__sub">
+        <span data-ui-lang="en">Plain-English guide to alerts, triggers, colors and abbreviations — and what the system actually computes.</span>
+        <span data-ui-lang="hu" style="display:none;">Közérthető útmutató a riasztásokhoz, triggereikhez, színekhez, rövidítésekhez – és ahhoz, hogy a rendszer mit számol.</span>
+      </div>
     </div>
   </header>
 
-  <div class="guideWrap">
+  <div id="content"></div>
+
+  <template id="tpl-en">
+<div class="guideWrap">
+    <section class="hero" id="top">
+      <div class="hero__top">
+        <div>
+          <h1>Alert Guide</h1>
+          <p>
+            This page explains <strong>every tile</strong>, <strong>every trigger</strong>, and <strong>every indicator</strong>.
+            It is designed so you can quickly understand <em>why</em> something turns red, <em>where</em> that evidence appears in the METAR/TAF text,
+            and <em>what</em> to verify next.
+          </p>
+          <p class="small" style="margin-top:10px;">
+            Note: WX Monitor is an <strong>advisory / monitoring</strong> tool. It does not replace official SOP/OM documentation, the commander’s decision,
+            local procedures, or real-world runway conditions.
+          </p>
+        </div>
+        <div class="heroBadges" aria-label="Key indicators">
+          <span class="chip"><span>Alert</span> <span class="pill pill--ok">OK</span> <span class="pill pill--med">MED</span> <span class="pill pill--high">HIGH</span> <span class="pill pill--crit">CRIT</span></span>
+          <span class="chip"><span>Source</span> <span class="pill pill--ok">M</span> <span class="pill pill--med">T</span> <span class="muted">= METAR / TAF</span></span>
+          <span class="chip"><span>Base</span> <span class="iata-chip iata-chip--base">BUD</span></span>
+        </div>
+      </div>
+
+      <div class="jump" aria-label="Quick jump">
+        <a class="tile tile--ghost" href="#how-to-read">
+          <div class="tile__k">How to use</div>
+          <div class="tile__v">01</div>
+          <div class="tile__s">What the system computes, how it refreshes, and how to read a row.</div>
+        </a>
+        <a class="tile tile--ghost" href="#colors">
+          <div class="tile__k">Colors & indicators</div>
+          <div class="tile__v">02</div>
+          <div class="tile__s">OK/MED/HIGH/CRIT + tags (STOP/WARN/LVTO) and highlights.</div>
+        </a>
+        <a class="tile tile--ghost" href="#score">
+          <div class="tile__k">Score</div>
+          <div class="tile__v">03</div>
+          <div class="tile__s">How VIS/RVR/CIG/WX/GUST add up and what the number means.</div>
+        </a>
+        <a class="tile tile--ghost" href="#tiles">
+          <div class="tile__k">Tiles & triggers</div>
+          <div class="tile__v">04</div>
+          <div class="tile__s">Every alert in detail: METAR + TAF + MINIMA “evidence”.</div>
+        </a>
+        <a class="tile tile--ghost" href="#glossary">
+          <div class="tile__k">Abbreviations & FAQ</div>
+          <div class="tile__v">05</div>
+          <div class="tile__s">Glossary, WX codes, TAF groups + common questions.</div>
+        </a>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- TOC -->
+      <aside class="toc" aria-label="Table of contents">
+        <h3>On this page</h3>
+        <div class="sub">
+          <a href="#how-to-read">1) How to use & how it works</a>
+          <a href="#colors">2) Colors & indicators</a>
+          <a href="#score">3) Score and interpretation</a>
+          <a href="#tiles">4) Tiles, alerts, triggers</a>
+          <a href="#glossary">5) Abbreviations & FAQ</a>
+        </div>
+        <div class="note">
+          Tip: on the dashboard, <strong>click a tile</strong> to automatically filter the table to airports that actually trigger it.
+          For <strong>MINIMA</strong> alerts, each affected row also shows <strong>evidence</strong> (hover + highlighted tokens).
+        </div>
+      </aside>
+
+      <!-- CONTENT -->
+      <div>
+        <section class="section" id="how-to-read">
+          <div class="section__head">
+            <h2>1) How to use & how it works</h2>
+            <span class="pill pill--high">Basics</span>
+          </div>
+          <div class="section__body">
+            <p>
+              The dashboard is a <strong>network weather monitor</strong> based on METAR/TAF. Each row is an airport.
+              From the raw METAR/TAF text, the system derives consistent signals:
+              <strong>VIS</strong> (visibility), <strong>RVR</strong>, <strong>CIG</strong> (ceiling), <strong>WX</strong> (weather codes),
+              <strong>GUST</strong>, then computes a <strong>score</strong> and an overall <strong>Alert</strong> state.
+            </p>
+
+            <ul class="klist">
+              <li><strong>Top: tiles</strong> – fast overview: how many airports are affected and which ones (IATA/ICAO list).</li>
+              <li><strong>Bottom: table</strong> – operational view: Alert, concrete triggers, Worst VIS, RVR, Ceiling, raw METAR/TAF.</li>
+              <li><strong>Hover on tiles</strong> – shows the tile logic (what it means and what triggers it).</li>
+              <li><strong>Trigger tags in each row</strong> – shows the reason immediately (e.g. <code>VIS≤300</code>, <code>RVR≤200</code>, <code>CIG&lt;500</code>, <code>GUST≥30KT</code>).</li>
+              <li><strong>M / T marker</strong> – the small “M”/“T” next to tags indicates whether the signal comes from <strong>METAR</strong> (M) or <strong>TAF</strong> (T). If both, it shows “MT”.</li>
+              <li><strong>Ages</strong> – separate freshness for METAR (M) and TAF (T), in minutes. Older data = lower confidence.</li>
+              <li><strong>Base airports</strong> – operationally important airports that the system prioritizes in sorting.</li>
+            </ul>
+
+            <details style="margin-top:12px;">
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">Where does the data come from, and how often does it refresh?</span> <span class="tag tag--warn">Info</span></span>
+                <span class="sumRight">Non-technical, but important</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  WX Monitor processes METAR/TAF text from public aviation meteorological sources.
+                  The website refreshes <strong>automatically</strong> (typically every few minutes), and the dashboard shows the time of the last successful update.
+                </p>
+                <p class="muted">
+                  If the refresh temporarily fails (rate limits, network issues), the site usually does not “break” — it continues to show the last valid dataset.
+                  In that case, <strong>Ages</strong> are the best indicator.
+                </p>
+              </div>
+            </details>
+
+            <details style="margin-top:10px;">
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">Priority sort – “what should I look at first?”</span> <span class="tag tag--eng">Ops</span></span>
+                <span class="sumRight">Recommended for monitoring</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  With <strong>Priority sort</strong> enabled, the table is not alphabetical; it is ordered by operational relevance:
+                </p>
+                <ol class="klist" style="margin-top:8px;">
+                  <li>Airports flagged <strong>ENG ICE OPS</strong> first.</li>
+                  <li>Then by <strong>Alert</strong>: <strong>CRIT</strong> → HIGH → MED → OK.</li>
+                  <li>Within CRIT, the system shows the dominant source: <strong>METAR</strong> (M) → <strong>TAF</strong> (T) → <strong>ESC</strong> (policy escalation).</li>
+                  <li><strong>Base</strong> airports are promoted within the same level.</li>
+                </ol>
+                <p class="muted" style="margin-top:10px;">
+                  Tip: to find a specific airport, use search (ICAO/IATA/name).
+                </p>
+              </div>
+            </details>
+
+            <details style="margin-top:10px;">
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">How to read MINIMA alerts (METAR + TAF)</span> <span class="tag tag--stop">STOP</span></span>
+                <span class="sumRight">What is the exact trigger?</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  If an airport shows a MINIMA alert (<strong>MINIMA CRIT</strong> or <strong>MINIMA LIMIT</strong>), you get two things:
+                </p>
+                <ul class="klist">
+                  <li><strong>Evidence in the Triggers column</strong>: hover the MINIMA tag — it shows whether <em>VIS/RVR</em> or <em>Ceiling</em> is driving the alert, and the exact comparison (current &lt; threshold).</li>
+                  <li><strong>Highlighting in raw METAR/TAF</strong>: relevant tokens (e.g. <code>1400</code>, <code>Rxx/0300</code>, <code>OVC001</code>) are highlighted so you can immediately point to the evidence.</li>
+                </ul>
+                <p>
+                  <strong>For TAF</strong>, the system considers the <strong>worst-case</strong> visibility and ceiling across the entire forecast — including <code>TEMPO</code> / <code>PROB</code> groups.
+                  That’s why the Forecast tile can trigger even if “right now” is still OK.
+                </p>
+              </div>
+            </details>
+
+            <p class="muted">
+              Note: the system does not ingest SNOWTAM / RWYCC / runway-in-use. Some items are therefore “advisory” estimates (policy layer).
+              Always validate against SOP and real-world conditions.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="colors">
+          <div class="section__head">
+            <h2>2) Colors & indicators</h2>
+            <span class="pill pill--med">Visuals</span>
+          </div>
+          <div class="section__body">
+            <p>
+              Colors exist so you can spot the most urgent items <strong>at a glance</strong>.
+              They appear in two main places:
+              (a) the table’s <strong>Alert</strong> pill (OK/MED/HIGH/CRIT), and (b) tile <strong>border/halo</strong> emphasis.
+            </p>
+
+            <div class="legend" style="margin:12px 0 0;">
+              <div class="legend__tip">Alert levels (uniform logic)</div>
+              <div class="legend__row">
+                <span class="pill pill--ok">OK</span>
+                <span class="muted">score &lt; 20</span>
+              </div>
+              <div class="legend__row">
+                <span class="pill pill--med">MED</span>
+                <span class="muted">score 20–44</span>
+              </div>
+              <div class="legend__row">
+                <span class="pill pill--high">HIGH</span>
+                <span class="muted">score 45–69</span>
+              </div>
+              <div class="legend__row">
+                <span class="pill pill--crit">CRIT</span>
+                <span class="muted">score ≥ 70 or “pillar” escalation (e.g. strong wind / snow / ENG ICE OPS)</span>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <p><strong>Trigger tag colors (in the Triggers column)</strong>:</p>
+            <ul class="klist">
+              <li><span class="tag tag--stop">STOP</span> – strong “stop-and-review” policy alert (e.g. <code>TO PROHIB</code>, <code>RVR&lt;125</code>, <code>MINIMA CRIT</code>, <code>VA</code>).</li>
+              <li><span class="tag tag--warn">WARN</span> – warning that requires follow-up checks (e.g. <code>CIG&lt;500</code>, <code>MINIMA LIMIT</code>, <code>CAT2+</code>, <code>RWYCC&lt;3 likely</code>).</li>
+              <li><span class="tag tag--lvto">LVTO</span> – low-visibility take-off bands (<code>LVTO</code>, <code>LVP</code>).</li>
+              <li><span class="tag tag--vis">VIS</span> – visibility bands (e.g. <code>VIS≤300</code>).</li>
+              <li><span class="tag tag--rvr">RVR</span> – RVR bands (e.g. <code>RVR≤200</code>).</li>
+              <li><span class="tag tag--cig">CIG</span> – ceiling bands (e.g. <code>CIG&lt;500</code>).</li>
+              <li><span class="tag tag--gust">GUST</span> – gust bands (e.g. <code>GUST≥30KT</code>).</li>
+              <li><span class="tag tag--wx">WX</span> – weather phenomena (e.g. <code>TS/CB</code>, <code>SN</code>, <code>FG</code>).</li>
+              <li><span class="tag tag--eng">ENG ICE OPS</span> – special operational flag (icing + extremely low visibility).</li>
+            </ul>
+
+            <p><strong>Ages colors</strong> (M/T):</p>
+            <ul class="klist">
+              <li><span class="pill pill--ok">Fresh</span> – fresh (roughly ≤ 20 minutes)</li>
+              <li><span class="pill pill--med">Warn</span> – moderately old (roughly 20–60 minutes)</li>
+              <li><span class="pill pill--crit">Stale</span> – old (roughly &gt; 60 minutes) or incomplete</li>
+            </ul>
+
+            <p class="muted">
+              Base highlighting is not severity — it is priority only. The same “red” means the same thing on base and non-base airports.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="score">
+          <div class="section__head">
+            <h2>3) Score – how it is computed and how to interpret it</h2>
+            <span class="pill pill--high">Logic</span>
+          </div>
+          <div class="section__body">
+            <p>
+              The score is a deterministic 0–100 number (same input → same output).
+              Its purpose is not to “decide” operations; it is to <strong>rank risk consistently</strong> across the network.
+            </p>
+
+            <p>
+              The system computes two scores:
+            </p>
+            <ul class="klist">
+              <li><strong>METAR score</strong> = “NOW” (current observation).</li>
+              <li><strong>TAF score</strong> = “FORECAST” (the worst conditions across the TAF dominate).</li>
+            </ul>
+
+            <p>
+              Overall severity is <strong>METAR‑preferred</strong> (TAF is conservatively weighted).
+              Some “pillar” conditions (e.g. strong wind/snow/ENG ICE OPS) can <strong>escalate</strong> the final Alert level even if the score alone would not.
+            </p>
+
+            <p>
+              <strong>CIG (ceiling)</strong> is derived by finding the lowest <code>BKN</code>, <code>OVC</code>, or <code>VV</code> layer.
+              <code>FEW</code> and <code>SCT</code> are not ceiling and therefore do not count.
+              Example: <code>OVC001</code> → ~100 ft AGL ceiling.
+            </p>
+
+            <table class="miniTbl" aria-label="Score components">
+              <thead>
+                <tr>
+                  <th style="width: 220px;">Signal</th>
+                  <th>What it measures</th>
+                  <th style="width: 290px;">Points added (summary)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>VIS (visibility)</strong></td>
+                  <td>Meters (for TAF, the minimum VIS dominates)</td>
+                  <td>≤150:+35, ≤175:+30, ≤250:+26, ≤300:+24, ≤500:+18, ≤550:+16, ≤800:+12</td>
+                </tr>
+                <tr>
+                  <td><strong>RVR</strong></td>
+                  <td>Lowest RVR extracted from RVR groups (if present)</td>
+                  <td>≤75:+28, ≤200:+22, ≤300:+18, ≤500:+12</td>
+                </tr>
+                <tr>
+                  <td><strong>CIG (ceiling)</strong></td>
+                  <td>Lowest BKN/OVC/VV (ft)</td>
+                  <td>&lt;500ft:+22, &lt;800ft:+12</td>
+                </tr>
+                <tr>
+                  <td><strong>WX codes</strong></td>
+                  <td>Selected hazardous phenomena</td>
+                  <td>TS:+22, FZFG:+18, FG:+14, SN:+10, RA/DZ:+8, BR:+6</td>
+                </tr>
+                <tr>
+                  <td><strong>GUST</strong></td>
+                  <td>Maximum gust (kt)</td>
+                  <td>≥25:+4, ≥30:+6, ≥40:+10</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p class="muted" style="margin-top:10px;">
+              The score is useful for “how bad” ranking. For operational understanding, the concrete trigger tags and the highlighted METAR/TAF evidence matter most.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="tiles">
+          <div class="section__head">
+            <h2>4) Tiles, alerts and triggers – detailed reference</h2>
+            <span class="pill pill--crit">Details</span>
+          </div>
+          <div class="section__body">
+            <p>
+              Tiles aggregate the most important indicators. Each tile:
+              (1) counts affected airports, (2) lists codes, (3) filters the table on click.
+              The hover bubble describes the tile’s logic.
+            </p>
+
+            <details open>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">METAR / NOW tiles (current observation)</span> <span class="pill pill--med">M</span></span>
+                <span class="sumRight">“What is happening now?”</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <details open>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">METAR CRIT</span> <span class="pill pill--crit">CRIT</span></span>
+                    <span class="sumRight">METAR score ≥ 70</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: METAR-derived score ≥ 70.</p>
+                    <p><strong>Where to see it?</strong>: the row Alert may be CRIT, with multiple strong triggers (VIS/RVR/CIG/WX/GUST) combined.</p>
+                    <p class="muted">Tip: if METAR CRIT is 0 but you still see CRIT rows, the source is likely TAF or escalation (see “ALERT CRIT (overall)”).</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">MINIMA CRIT (METAR)</span> <span class="tag tag--stop">STOP</span></span>
+                    <span class="sumRight">Below BEST minima</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p>
+                      <strong>Trigger</strong>: Based on METAR, the <strong>effective visibility</strong> (min(VIS, RVRmin)) and/or the <strong>ceiling</strong>
+                      drops <strong>below the airport’s BEST minima threshold</strong>.
+                    </p>
+                    <p>
+                      <strong>Quick check</strong>:
+                      hover the <strong>MINIMA CRIT</strong> tag in the Triggers column — it shows which component triggered (VIS/RVR or CIG) and the exact comparison.
+                      In the METAR field, the relevant token (e.g. <code>Rxx/0300</code>, <code>0800</code>, <code>OVC001</code>) is highlighted.
+                    </p>
+                    <p class="muted">
+                      BEST = primary minima level (“best” in the config). If an airport has no minima configured, this alert will not appear.
+                    </p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">MINIMA LIMIT (METAR)</span> <span class="tag tag--warn">WARN</span></span>
+                    <span class="sumRight">Below ALT minima, but BEST still OK</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p>
+                      <strong>Trigger</strong>: Based on METAR, conditions are <strong>below ALT minima</strong> while <strong>BEST minima are not yet violated</strong>.
+                      Simply: “the secondary/alternate minima set would not be met, but the BEST set still is”.
+                    </p>
+                    <p><strong>Where to see it?</strong>: hover the <strong>MINIMA LIMIT</strong> tag for evidence; relevant METAR tokens are highlighted.</p>
+                    <p class="muted">ALT = secondary minima level (e.g. different approach type). The system ensures ALT is not “better” than BEST.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">VIS/RVR &lt; 300 (METAR)</span> <span class="tag tag--vis">VIS</span> <span class="tag tag--rvr">RVR</span></span>
+                    <span class="sumRight">Below CAT II band</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: METAR VIS &lt; 300 m or METAR RVRmin &lt; 300 m.</p>
+                    <p><strong>Where to see it?</strong>: VIS/RVR tags in the row + highlighted RVR tokens (<code>Rxx/xxxx</code>) or VIS numbers (e.g. 0250).</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">TS / CB (METAR)</span> <span class="tag tag--wx">WX</span></span>
+                    <span class="sumRight">Convective risk</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: <code>TS</code> in METAR (and/or CB indication if present).</p>
+                    <p><strong>Where to see it?</strong>: highlighted <code>TS</code> token in METAR + <code>TS/CB</code> in Triggers.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">WIND (METAR)</span> <span class="tag tag--gust">GUST</span></span>
+                    <span class="sumRight">GUST ≥ 25 kt</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: METAR gust (G) ≥ 25 kt.</p>
+                    <p><strong>Where to see it?</strong>: highlighted wind group (e.g. <code>27015G25KT</code>) + <code>GUST≥25KT</code>/<code>≥30</code>/<code>≥40</code> bands.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">SNOW (METAR)</span> <span class="tag tag--wx">WX</span></span>
+                    <span class="sumRight">Snow present</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: snow phenomena in METAR (<code>SN</code>, combinations, etc.).</p>
+                    <p><strong>Where to see it?</strong>: highlighted snow code(s) in METAR + <code>SN</code> tag in Triggers.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">TO PROHIB (METAR)</span> <span class="tag tag--stop">STOP</span></span>
+                    <span class="sumRight">Policy “prohibited” elements</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p>
+                      <strong>Trigger</strong>: METAR contains phenomena that may fall into a “TO prohibited” category per policy/OM (advisory).
+                    </p>
+                    <ul class="klist">
+                      <li><code>TS</code> (thunderstorm)</li>
+                      <li><code>+SN</code> (heavy snow)</li>
+                      <li><code>FZRA</code>/<code>+FZRA</code> (freezing rain)</li>
+                      <li><code>GR</code>/<code>+GR</code> (hail)</li>
+                      <li><code>PL</code>/<code>GS</code>/<code>SG</code> (ice pellets / small hail / snow grains)</li>
+                    </ul>
+                    <p class="muted">This is a “stop and review” signal. Final decisions follow SOP and actual conditions.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">LVTO (METAR)</span> <span class="tag tag--lvto">MINIMA</span></span>
+                    <span class="sumRight">RVR/VIS &lt; 550 m bands</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: based on METAR, RVR or VIS &lt; 550 m. Below 400 m, <strong>LVP</strong> is also flagged.</p>
+                    <p><strong>Where to see it?</strong>: <code>LVTO (&lt;550)</code>, <code>LVP (&lt;400)</code>, or <code>RVR&lt;125</code> tags in Triggers.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">XWIND (METAR)</span> <span class="tag tag--gust">WIND</span></span>
+                    <span class="sumRight">Estimated crosswind component</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p>
+                      <strong>Trigger</strong>: the estimated crosswind component may exceed a limit.
+                      Without runway-in-use and real RWYCC, this is <strong>advisory</strong>.
+                    </p>
+                    <p><strong>Where to see it?</strong>: e.g. <code>XWIND&gt;29KT</code> in Triggers (can exist for M and/or T sources).</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">VA (METAR)</span> <span class="tag tag--stop">STOP</span></span>
+                    <span class="sumRight">Volcanic ash</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: <code>VA</code> present in METAR.</p>
+                    <p class="muted">Any VA mention deserves immediate attention (engine/sensor risk).</p>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">TAF / FORECAST tiles</span> <span class="pill pill--med">T</span></span>
+                <span class="sumRight">“What is expected?”</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p class="muted">
+                  TAF tiles evaluate the entire forecast, with worst-case values dominating (TEMPO/PROB are included). Therefore, “NOW” can be OK while Forecast is already flagged.
+                </p>
+
+                <details open>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">CRITICAL (TAF)</span> <span class="pill pill--crit">CRIT</span></span>
+                    <span class="sumRight">TAF score ≥ 70</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: TAF-derived score ≥ 70.</p>
+                    <p><strong>Where to see it?</strong>: multiple strong forecast items combine (low VIS/RVR, low CIG, WX, gust).</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">MINIMA CRIT (TAF)</span> <span class="tag tag--stop">STOP</span></span>
+                    <span class="sumRight">Below BEST minima (forecast)</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p>
+                      <strong>Trigger</strong>: anywhere in the TAF (BECMG/TEMPO/PROB included), forecast VIS/RVR or CIG falls <strong>below the airport’s BEST minima</strong>.
+                    </p>
+                    <p>
+                      <strong>Where to find it in the TAF?</strong> Look for the lowest:
+                      (a) VIS number (e.g. <code>1400</code>), (b) RVR group (e.g. <code>Rxx/0300</code>), (c) BKN/OVC/VV layer (e.g. <code>OVC001</code> = 100 ft).
+                    </p>
+                    <p>
+                      <strong>Quick check</strong>: hover the <strong>MINIMA CRIT</strong> (T) tag in the row — it shows the exact comparison and a relevant TAF excerpt.
+                      Trigger token(s) are highlighted in the TAF field.
+                    </p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">MINIMA LIMIT (TAF)</span> <span class="tag tag--warn">WARN</span></span>
+                    <span class="sumRight">Below ALT minima, but BEST still OK (forecast)</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: forecast violates ALT minima while BEST is still met.</p>
+                    <p><strong>Where to see it?</strong>: hover evidence in Triggers + highlight in the TAF field.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">VIS/RVR &lt; 300 (TAF)</span> <span class="tag tag--vis">VIS</span> <span class="tag tag--rvr">RVR</span></span>
+                    <span class="sumRight">Forecast below 300 m</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: anywhere in the TAF, VIS or RVRmin &lt; 300 m.</p>
+                    <p><strong>Where to see it?</strong>: highlighted VIS values (4 digits) and/or RVR groups.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">TS / CB (TAF)</span> <span class="tag tag--wx">WX</span></span>
+                    <span class="sumRight">Thunderstorm expected</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: <code>TS</code> in TAF (and/or CB indication).</p>
+                    <p><strong>Where to see it?</strong>: highlighted <code>TS</code> token + <code>TS/CB</code> (T) in Triggers.</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">WIND (TAF)</span> <span class="tag tag--gust">GUST</span></span>
+                    <span class="sumRight">GUST ≥ 25 kt (forecast)</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <p><strong>Trigger</strong>: forecast gust ≥ 25 kt.</p>
+                    <p><strong>Where to see it?</strong>: highlighted wind group (e.g. <code>28012G28KT</code>).</p>
+                  </div>
+                </details>
+
+                <details>
+                  <summary>
+                    <span class="sumLeft"><span class="sumTitle">SNOW / PROHIB / LVTO / VA (TAF)</span> <span class="tag tag--warn">WARN</span></span>
+                    <span class="sumRight">Forecast policy flags</span>
+                  </summary>
+                  <div style="margin-top:10px;">
+                    <ul class="klist">
+                      <li><strong>SNOW (TAF)</strong>: snow codes appear in the forecast.</li>
+                      <li><strong>TO PROHIB (TAF)</strong>: policy/prohibited phenomena in the forecast (TS, +SN, FZRA, GR, PL/GS/SG).</li>
+                      <li><strong>LVTO (TAF)</strong>: forecast VIS/RVR bands (&lt;550, &lt;400, &lt;125).</li>
+                      <li><strong>VA (TAF)</strong>: VA mention in TAF.</li>
+                    </ul>
+                    <p class="muted">In each case, highlighted tokens help you locate the evidence quickly in the TAF.</p>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <div class="hr"></div>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">Table: Triggers column – full list of possible tags</span> <span class="tag tag--warn">Detailed</span></span>
+                <span class="sumRight">“What does this tag mean?”</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  The Triggers column shows short, standardized tags. They tell you <em>why</em> the row is flagged.
+                  To the right of tags, the source marker means:
+                  <strong>M</strong> = METAR, <strong>T</strong> = TAF, <strong>MT</strong> = both.
+                </p>
+
+                <table class="miniTbl" aria-label="Trigger tag glossary">
+                  <thead>
+                    <tr>
+                      <th style="width: 210px;">Tag</th>
+                      <th>Meaning / trigger</th>
+                      <th style="width: 330px;">Where to find it in METAR/TAF?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>MINIMA CRIT</strong></td>
+                      <td>Below BEST minima (VIS/RVR and/or CIG).</td>
+                      <td>VIS numbers / RVR groups / BKN-OVC-VV tokens + hover evidence.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>MINIMA LIMIT</strong></td>
+                      <td>Below ALT minima, BEST still OK.</td>
+                      <td>Same as above + hover evidence.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>TO PROHIB</strong></td>
+                      <td>Policy “prohibited” phenomena: TS, +SN, FZRA/+FZRA, GR/+GR, PL/GS/SG.</td>
+                      <td>WX tokens (highlighted).</td>
+                    </tr>
+                    <tr>
+                      <td><strong>RVR&lt;125</strong></td>
+                      <td>RVR below 125 m band (strong stop-like flag).</td>
+                      <td>RVR group: <code>Rxx/0125</code> or lower.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>LVTO (&lt;550)</strong></td>
+                      <td>Low-visibility take-off band: RVR/VIS &lt; 550 m.</td>
+                      <td>RVR group or VIS number (if no RVR).</td>
+                    </tr>
+                    <tr>
+                      <td><strong>LVP (&lt;400)</strong></td>
+                      <td>LVP required: RVR &lt; 400 m band.</td>
+                      <td>RVR group.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>LVTO&lt;150 QUAL</strong></td>
+                      <td>Extreme LVTO band; additional conditions required (advisory policy flag).</td>
+                      <td>Very low RVR/VIS values.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>VIS≤…</strong></td>
+                      <td>Visibility bands (≤150/175/250/300/500/550/800).</td>
+                      <td>VIS 4 digits: e.g. <code>0250</code>, <code>0800</code>.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>RVR≤…</strong></td>
+                      <td>RVR bands (≤75/200/300/500).</td>
+                      <td>RVR: <code>Rxx/0200</code>, etc.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>CIG&lt;500</strong></td>
+                      <td>Ceiling below 500 ft.</td>
+                      <td><code>BKN004</code>, <code>OVC001</code>, <code>VV002</code>, etc.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>GUST≥25/30/40KT</strong></td>
+                      <td>Gust bands.</td>
+                      <td><code>…G25KT</code>, <code>…G35KT</code>, etc.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>TS/CB</strong></td>
+                      <td>Thunderstorm / CB indication.</td>
+                      <td><code>TS</code> (and CB if present).</td>
+                    </tr>
+                    <tr>
+                      <td><strong>FZFG / FG / BR</strong></td>
+                      <td>Freezing fog / fog / mist.</td>
+                      <td><code>FZFG</code>, <code>FG</code>, <code>BR</code>.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>SN / RA</strong></td>
+                      <td>Snow / rain signals.</td>
+                      <td><code>SN</code>, <code>SHSN</code>, <code>-RASN</code>, <code>RA</code>, <code>DZ</code>, etc.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>XWIND&gt;…KT</strong></td>
+                      <td>Estimated crosswind above limit (advisory).</td>
+                      <td>Not a token — computed from wind + runway headings. Verify against runway-in-use.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>RWYCC&lt;3 likely</strong></td>
+                      <td>Estimated low braking / “no-ops likely” risk (advisory).</td>
+                      <td>Not a direct RWYCC: inferred from snow/ice signals without SNOWTAM.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>VA</strong></td>
+                      <td>Volcanic ash mention.</td>
+                      <td><code>VA</code> token.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>COLD CORR</strong></td>
+                      <td>Cold temperature correction reminder (advisory).</td>
+                      <td>Contextual: low temperature; verify per procedure.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>ENG ICE OPS</strong></td>
+                      <td>FZFG + extremely low VIS (operational flag).</td>
+                      <td>METAR: <code>FZFG</code> + VIS ≤ 150.</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <p class="muted" style="margin-top:10px;">
+                  Note: many tags above are not separate tiles — they exist to explain the cause directly on each row.
+                </p>
+              </div>
+            </details>
+
+            <details style="margin-top:10px;">
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">ALERT CRIT (overall) – why can it be CRIT if METAR CRIT is not?</span> <span class="pill pill--crit">CRIT</span></span>
+                <span class="sumRight">NOW + FORECAST + ESC</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  The table’s <strong>ALERT</strong> is an overall state:
+                  it considers METAR (now), TAF (forecast), and some “pillar” escalations (e.g. strong wind/snow/ENG ICE OPS).
+                </p>
+                <ul class="klist">
+                  <li><strong>M</strong> source: METAR score is in the CRIT band.</li>
+                  <li><strong>T</strong> source: TAF score is in the CRIT band (forecast-driven).</li>
+                  <li><strong>ESC</strong>: score is not CRIT, but policy/pillar flags escalate to CRIT (advisory escalation).</li>
+                </ul>
+                <p class="muted">The CRIT source helps you decide quickly whether “now”, “forecast”, or “policy escalation” is dominant.</p>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section class="section" id="glossary">
+          <div class="section__head">
+            <h2>5) Abbreviations & FAQ</h2>
+            <span class="pill pill--ok">Help</span>
+          </div>
+          <div class="section__body">
+            <details open>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">Glossary – the most important abbreviations</span></span>
+                <span class="sumRight">“What does it mean?”</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <table class="miniTbl" aria-label="Abbreviations">
+                  <thead>
+                    <tr>
+                      <th style="width: 180px;">Abbrev</th>
+                      <th>Meaning</th>
+                      <th style="width: 420px;">Where does it appear?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>METAR</strong></td>
+                      <td>Current observation (NOW).</td>
+                      <td>METAR column, Ages: M.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>TAF</strong></td>
+                      <td>Forecast (FORECAST).</td>
+                      <td>TAF column, Ages: T.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>VIS</strong></td>
+                      <td>Visibility in meters.</td>
+                      <td>4 digits (e.g. 1400), or CAVOK/9999 (10 km+).</td>
+                    </tr>
+                    <tr>
+                      <td><strong>RVR</strong></td>
+                      <td>Runway Visual Range (m).</td>
+                      <td><code>Rxx/</code> groups (e.g. R27/0300).</td>
+                    </tr>
+                    <tr>
+                      <td><strong>CIG</strong></td>
+                      <td>Ceiling: lowest BKN/OVC/VV (ft).</td>
+                      <td><code>BKN008</code>, <code>OVC001</code>, <code>VV002</code>.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>GUST</strong></td>
+                      <td>Wind gust (kt).</td>
+                      <td><code>27015G25KT</code> – the number after “G”.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>LVTO</strong></td>
+                      <td>Low Visibility Take-Off band (policy flag).</td>
+                      <td>Triggers: LVTO/LVP/RVR&lt;125.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>LVP</strong></td>
+                      <td>Low Visibility Procedures required (policy flag).</td>
+                      <td>Triggers: LVP (&lt;400).</td>
+                    </tr>
+                    <tr>
+                      <td><strong>TS</strong></td>
+                      <td>Thunderstorm.</td>
+                      <td>METAR/TAF token: TS.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>CB</strong></td>
+                      <td>Cumulonimbus (convective cloud).</td>
+                      <td>Sometimes explicit; grouped under TS/CB tag.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>FG / FZFG / BR</strong></td>
+                      <td>Fog / freezing fog / mist.</td>
+                      <td>METAR/TAF tokens; WX highlights.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>SN / RA / DZ</strong></td>
+                      <td>Snow / rain / drizzle.</td>
+                      <td>METAR/TAF WX codes.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>FZRA / FZDZ</strong></td>
+                      <td>Freezing rain / freezing drizzle.</td>
+                      <td>TO PROHIB / ENG ICE OPS area; should be treated as high priority.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>BECMG</strong></td>
+                      <td>TAF: becoming (gradual change).</td>
+                      <td>Start of a TAF group.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>TEMPO</strong></td>
+                      <td>TAF: temporary fluctuation (time window).</td>
+                      <td>In TAF; included in MINIMA/score logic.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>PROB30/40</strong></td>
+                      <td>TAF: probability group.</td>
+                      <td>In TAF; included for conservative monitoring.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>RWYCC</strong></td>
+                      <td>Runway Condition Code (from SNOWTAM).</td>
+                      <td>Not directly available here; only “likely” estimates may appear.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </details>
+
+            <details style="margin-top:10px;">
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">FAQ 1: “Why does MINIMA CRIT (TAF) trigger — where is it in the TAF?”</span></span>
+                <span class="sumRight">Concrete evidence</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  MINIMA CRIT (TAF) means that somewhere in the forecast (BECMG/TEMPO/PROB included) there is a VIS/RVR or CIG
+                  <strong>below BEST minima</strong>.
+                </p>
+                <ul class="klist">
+                  <li>In Triggers, hover <strong>MINIMA CRIT (T)</strong> — the hover shows the exact comparison.</li>
+                  <li>In the TAF field, look for the lowest VIS number (e.g. 1400) and/or the lowest OVC/BKN (e.g. OVC001).</li>
+                  <li>The relevant token(s) are highlighted, so you can point to the exact reason.</li>
+                </ul>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">FAQ 2: “Why LVTO if there is no RVR?”</span></span>
+                <span class="sumRight">VIS fallback</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  If no RVR groups are present, the system falls back to VIS (conservative). LVTO/LVP bands can still be relevant when visibility is very low.
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">FAQ 3: “XWIND is flagged, but runway-in-use is different.”</span></span>
+                <span class="sumRight">Advisory estimate</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  XWIND is an estimate. Without runway-in-use, the system selects a “best” runway direction from available runways and computes against that.
+                  In operations, runway-in-use + real RWYCC + actual limits are decisive.
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>
+                <span class="sumLeft"><span class="sumTitle">FAQ 4: “The dataset time is old — is something broken?”</span></span>
+                <span class="sumRight">Refresh</span>
+              </summary>
+              <div style="margin-top:10px;">
+                <p>
+                  Not necessarily. The website is static and a background automation refreshes the dataset.
+                  If the refresh temporarily fails, the site shows the last valid dataset. In that situation, <strong>Ages</strong> are the best indicator.
+                </p>
+              </div>
+            </details>
+
+            <div class="backRow">
+              <a href="#top" aria-label="Back to top">Back to top</a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <template id="tpl-hu">
+<div class="guideWrap">
     <section class="hero" id="top">
       <div class="hero__top">
         <div>
           <h1>Riasztási útmutató (Guide)</h1>
           <p>
             Ez az oldal <strong>minden csempét</strong>, <strong>minden triggert</strong> és <strong>minden jelzést</strong> elmagyaráz.
-            Úgy készült, hogy egy „mezei” felhasználó is azonnal megértse, <em>miért</em> piros valami, <em>hol</em> látszik ez a METAR/TAF-ban,
+            Úgy készült, hogy egy általános felhasználó is azonnal megértse, <em>miért</em> piros valami, <em>hol</em> látszik ez a METAR/TAF-ban,
             és <em>mit</em> érdemes ellenőrizni.
           </p>
           <p class="small" style="margin-top:10px;">
@@ -257,7 +1162,7 @@
 
             <details style="margin-top:10px;">
               <summary>
-                <span class="sumLeft"><span class="sumTitle">MINIMA riasztás „hülyebiztos” olvasása (METAR + TAF)</span> <span class="tag tag--stop">STOP</span></span>
+                <span class="sumLeft"><span class="sumTitle">MINIMA riasztás lépésről lépésre olvasása (METAR + TAF)</span> <span class="tag tag--stop">STOP</span></span>
                 <span class="sumRight">Mi a konkrét trigger?</span>
               </summary>
               <div style="margin-top:10px;">
@@ -454,7 +1359,7 @@
                       <strong>a reptér BEST minima küszöbe alá esik</strong>.
                     </p>
                     <p>
-                      <strong>Hülyebiztos ellenőrzés</strong>:
+                      <strong>Gyors ellenőrzés</strong>:
                       a Triggers-ben a <strong>MINIMA CRIT</strong> tag-re hover → kiírja: mi lett kisebb (VIS/RVR vagy CIG) és mennyivel.
                       A METAR mezőben a konkrét token (pl. <code>Rxx/0300</code>, <code>0800</code>, <code>OVC001</code>) kiemelve.
                     </p>
@@ -616,7 +1521,7 @@
                       (a) VIS számot (pl. <code>1400</code>), (b) RVR-t (pl. <code>Rxx/0300</code>), (c) BKN/OVC/VV réteget (pl. <code>OVC001</code> = 100 ft).
                     </p>
                     <p>
-                      <strong>Hülyebiztos</strong>: a sorban a <strong>MINIMA CRIT</strong> (T) tag-re hover → megmutatja a konkrét összehasonlítást és a releváns TAF részletet.
+                      <strong>Gyors ellenőrzés</strong>: a sorban a <strong>MINIMA CRIT</strong> (T) tag-re hover → megmutatja a konkrét összehasonlítást és a releváns TAF részletet.
                       A TAF mezőben a kiváltó token(ek) kiemelve.
                     </p>
                   </div>
@@ -1006,6 +1911,78 @@
         </section>
       </div>
     </div>
-  </div>
+  </template>
+
+  <script>
+  (function() {
+    function normalizeLang(v) {
+      v = (v || '').toLowerCase();
+      return (v === 'hu' || v === 'en') ? v : 'en';
+    }
+
+    const btnEn = document.getElementById('langEn');
+    const btnHu = document.getElementById('langHu');
+    const content = document.getElementById('content');
+
+    function setHeaderLang(lang) {
+      document.querySelectorAll('[data-ui-lang]').forEach(el => {
+        el.style.display = (el.getAttribute('data-ui-lang') === lang) ? '' : 'none';
+      });
+      btnEn.setAttribute('aria-pressed', String(lang === 'en'));
+      btnHu.setAttribute('aria-pressed', String(lang === 'hu'));
+      document.documentElement.setAttribute('lang', lang);
+
+      if (lang === 'hu') {
+        document.title = 'Riasztási útmutató • WX Monitor';
+      } else {
+        document.title = 'Alert Guide • WX Monitor';
+      }
+    }
+
+    function render(lang) {
+      const y = window.scrollY;
+      const hash = window.location.hash;
+
+      const tpl = document.getElementById(lang === 'hu' ? 'tpl-hu' : 'tpl-en');
+      content.innerHTML = '';
+      content.appendChild(tpl.content.cloneNode(true));
+
+      setHeaderLang(lang);
+
+      // Persist selection
+      try {
+        localStorage.setItem('wx_lang', lang);
+      } catch(e) {}
+
+      // Keep URL param in sync (but preserve hash)
+      try {
+        const params = new URLSearchParams(window.location.search);
+        params.set('lang', lang);
+        const newUrl = window.location.pathname + '?' + params.toString() + (hash || '');
+        window.history.replaceState({}, '', newUrl);
+      } catch(e) {}
+
+      // Restore scroll position
+      requestAnimationFrame(() => {
+        window.scrollTo(0, y);
+      });
+    }
+
+    function getInitialLang() {
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get('lang');
+      let fromStorage = null;
+      try {
+        fromStorage = localStorage.getItem('wx_lang');
+      } catch(e) {}
+      return normalizeLang(fromUrl || fromStorage || 'en');
+    }
+
+    btnEn.addEventListener('click', () => render('en'));
+    btnHu.addEventListener('click', () => render('hu'));
+
+    render(getInitialLang());
+  })();
+  </script>
 </body>
 </html>
