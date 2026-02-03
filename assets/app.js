@@ -583,6 +583,180 @@ function ceilingFt(raw){
   return min;
 }
 
+function escapeRegExp(s){
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// RVR token objects with original token + numeric values, so we can point to the concrete trigger in raw text.
+function extractRvrTokenObjs(raw){
+  if (!raw) return [];
+  const re = /\bR\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?(FT)?\b/g;
+  const out = [];
+  let m;
+  while ((m = re.exec(String(raw).toUpperCase())) !== null){
+    const token = m[0];
+    const isFt = !!m[6];
+    const toMeters = (x)=> isFt ? Math.round(x * 0.3048) : x;
+
+    const vals = [];
+    const v1 = parseInt(m[2],10);
+    if (!Number.isNaN(v1)) vals.push(toMeters(v1));
+    if (m[4]){
+      const v2 = parseInt(m[4],10);
+      if (!Number.isNaN(v2)) vals.push(toMeters(v2));
+    }
+    if (!vals.length) continue;
+    const min = Math.min(...vals);
+    out.push({token, values: vals, min});
+  }
+  return out;
+}
+
+function minRvrTokenObj(raw){
+  const objs = extractRvrTokenObjs(raw);
+  if (!objs.length) return null;
+  let best = objs[0];
+  for (const o of objs){
+    if (o.min < best.min) best = o;
+  }
+  return best;
+}
+
+function ceilingTokenObj(raw){
+  if (!raw) return null;
+  const re = /\b(BKN|OVC|VV)(\d{3})\b/g;
+  let best = null;
+  let m;
+  const up = String(raw).toUpperCase();
+  while ((m = re.exec(up)) !== null){
+    const ft = parseInt(m[2],10)*100;
+    if (!Number.isNaN(ft)){
+      if (!best || ft < best.ft) best = {token: m[0], ft};
+    }
+  }
+  return best;
+}
+
+// Returns a token representing a given visibility value in meters (best effort).
+function visTokenForMeters(raw, meters){
+  if (!raw || meters == null) return null;
+  const up = String(raw).toUpperCase();
+
+  if (meters >= 10000){
+    if (/\bCAVOK\b/.test(up)) return "CAVOK";
+    // In METAR/TAF, 9999 typically means >=10km.
+    const m9999 = up.match(/\b9999(?:[A-Z]{1,4})?\b/);
+    if (m9999) return m9999[0];
+    return null;
+  }
+
+  const tok4 = String(meters).padStart(4, "0");
+  const re = new RegExp(`\\b${escapeRegExp(tok4)}(?:[A-Z]{1,4})?\\b`);
+  const m = up.match(re);
+  return m ? m[0] : tok4;
+}
+
+function snippetAround(raw, token, radius=70){
+  if (!raw || !token) return null;
+  const norm = String(raw).replace(/\s+/g, " ").trim();
+  const idx = norm.toUpperCase().indexOf(String(token).toUpperCase());
+  if (idx < 0) return null;
+  const start = Math.max(0, idx - radius);
+  const end = Math.min(norm.length, idx + String(token).length + radius);
+  let snip = norm.slice(start, end);
+  if (start > 0) snip = "…" + snip;
+  if (end < norm.length) snip = snip + "…";
+  return snip;
+}
+
+// Build a user-friendly, concrete "why minima triggered" explanation + evidence tokens for highlighting.
+function buildMinimaExplain({kind, raw, minima, state, visVal, rvrMin, isTaf}){
+  if (!state || !minima || !minima.best || !minima.alt) return null;
+  const triggered = !!(state.belowBest || state.onlyBest);
+  if (!triggered) return null;
+
+  const mode = state.belowBest ? "CRIT" : "LIMIT";      // CRIT = below BEST, LIMIT = below ALT but not below BEST
+  const basis = state.belowBest ? "BEST" : "ALT";
+  const thr = state.belowBest ? minima.best : minima.alt;
+
+  const effVis = (state.effVis != null) ? state.effVis : null;
+  const cig = (state.cig != null) ? state.cig : null;
+
+  const reasons = [];
+  const tokens = [];
+
+  // Identify which token drove the effective visibility: VIS or RVR.
+  const rvrObj = minRvrTokenObj(raw);
+  const useRvr = (rvrMin != null) && (visVal == null || rvrMin <= visVal);
+  const effToken = useRvr
+    ? (rvrObj ? rvrObj.token : null)
+    : visTokenForMeters(raw, visVal);
+
+  // Visibility reason
+  if (effVis != null && thr.vis_m != null && effVis < thr.vis_m){
+    const metric = useRvr ? "RVRmin" : "VIS";
+    const token = effToken || null;
+    const snip = isTaf ? snippetAround(raw, token) : null;
+    reasons.push({metric, actual: effVis, threshold: thr.vis_m, basis, token, snippet: snip});
+    if (token) tokens.push(token);
+  }
+
+  // Ceiling reason
+  if (cig != null && thr.cig_ft != null && cig < thr.cig_ft){
+    const cObj = ceilingTokenObj(raw);
+    const token = cObj ? cObj.token : null;
+    const snip = isTaf ? snippetAround(raw, token) : null;
+    reasons.push({metric:"CEILING", actual: cig, threshold: thr.cig_ft, basis, token, snippet: snip});
+    if (token) tokens.push(token);
+  }
+
+  // Build a plain-text tooltip string (native tooltip supports newlines).
+  const lines = [];
+  lines.push(`${kind} MINIMA ${mode} (${basis})`);
+  if (!reasons.length){
+    lines.push("Triggered, but concrete evidence could not be derived from raw text.");
+  }else{
+    for (const r of reasons){
+      const tokTxt = r.token ? ` (token: ${r.token})` : "";
+      lines.push(`• ${r.metric}: ${r.actual} < ${basis} ${r.threshold}${tokTxt}`);
+      if (r.snippet) lines.push(`  in TAF: ${r.snippet}`);
+    }
+  }
+  lines.push(`Effective VIS = min(VIS, RVRmin)`);
+
+  if (mode === "LIMIT"){
+    const b = minima.best || {};
+    const parts = [];
+    if (b.vis_m != null) parts.push(`BEST VIS ≥ ${b.vis_m}m`);
+    if (b.cig_ft != null) parts.push(`BEST CEIL ≥ ${b.cig_ft}ft`);
+    if (parts.length) lines.push(`BEST still OK: ${parts.join(", ")}`);
+  }
+
+  return {kind, mode, basis, reasons, tokens, tip: lines.join("\n")};
+}
+
+// Highlight raw with concrete evidence tokens (minima) without changing the base highlight rules.
+function highlightRawWithTokens(raw, tokens){
+  if (!raw) return "";
+  let html = highlightRaw(raw);
+
+  const toks = Array.isArray(tokens) ? tokens.filter(Boolean) : [];
+  if (!toks.length) return html;
+
+  const parts = html.split(/(<[^>]+>)/g);
+  for (let i=0; i<parts.length; i++){
+    // only text segments (not tags)
+    if (parts[i].startsWith("<")) continue;
+    let seg = parts[i];
+    for (const tok of toks.slice(0, 3)){ // keep it tight
+      const re = new RegExp(escapeRegExp(tok), "gi");
+      seg = seg.replace(re, (m)=>`<span class="hl" data-cat="min">${m}</span>`);
+    }
+    parts[i] = seg;
+  }
+  return parts.join("");
+}
+
 function hasAny(raw, tokens){
   if (!raw) return false;
   return tokens.some(t => new RegExp(`\\b${t}\\b`).test(raw));
@@ -841,6 +1015,30 @@ function deriveStation(st){
   st.minimaTaf = minimaTaf;
 
 
+// Concrete approach minima evidence (human-friendly "why it triggered") for both METAR and TAF.
+// Used for trigger tooltips + optional raw highlighting.
+st.minExplainMet = buildMinimaExplain({
+  kind: "METAR",
+  raw: st.metarRaw || "",
+  minima: st.minima || null,
+  state: minimaNow,
+  visVal: met.vis,
+  rvrMin: metRvrMin,
+  isTaf: false
+});
+st.minExplainTaf = buildMinimaExplain({
+  kind: "TAF",
+  raw: st.tafRaw || "",
+  minima: st.minima || null,
+  state: minimaTaf,
+  visVal: tafWorstVis,
+  rvrMin: tafRvrMin,
+  isTaf: true
+});
+st._minTokensM = st.minExplainMet ? (st.minExplainMet.tokens || []) : [];
+st._minTokensT = st.minExplainTaf ? (st.minExplainTaf.tokens || []) : [];
+
+
   // OM policy layer (derived from METAR/TAF only; no manual runway heading/condition)
   st.om = computeOmPolicy(st, met, taf, worstVis, rvrMinAll);
 
@@ -882,7 +1080,7 @@ function deriveStation(st){
 
   // Determine triggers & source (M/T)
   const triggers = [];
-  const push = (label, cls, src) => triggers.push({label, cls, src}); // src: "M","T","MT"
+  const push = (label, cls, src, tip) => triggers.push({label, cls, src, tip}); // src: "M","T","MT"
   const addBy = (label, cls, m, t) => {
     if (!m && !t) return;
     const src = m && t ? "MT" : (m ? "M" : "T");
@@ -932,6 +1130,19 @@ function deriveStation(st){
   addBy("CAT3<75", "tag--stop", mCat==="cat3min", tCat==="cat3min");
   addBy("CAT3 ONLY <200", "tag--warn", mCat==="cat3only", tCat==="cat3only");
   addBy("CAT2+ <450", "tag--warn", mCat==="cat2plus", tCat==="cat2plus");
+
+
+// Approach minima (per-airport thresholds) — explicit tags with concrete trigger evidence.
+if (st.minExplainMet){
+  const lbl = (st.minExplainMet.mode === "CRIT") ? "MINIMA CRIT" : "MINIMA LIMIT";
+  const cls = (st.minExplainMet.mode === "CRIT") ? "tag--stop" : "tag--warn";
+  push(lbl, cls, "M", st.minExplainMet.tip || "");
+}
+if (st.minExplainTaf){
+  const lbl = (st.minExplainTaf.mode === "CRIT") ? "MINIMA CRIT" : "MINIMA LIMIT";
+  const cls = (st.minExplainTaf.mode === "CRIT") ? "tag--stop" : "tag--warn";
+  push(lbl, cls, "T", st.minExplainTaf.tip || "");
+}
 
   // Crosswind exceed (label includes limit; METAR and TAF may differ)
   if (omM && omM.xwindExceed && omM.xwindLimitKt){
@@ -1311,10 +1522,12 @@ function rowHtml(st){
   const lowVis = buildLowVisTag(st);
   const lowVisTagHtml = lowVis ? `<span class="tag tag--vis" data-icao="${st.icao}" data-open="1">${escapeHtml(lowVis)}</span>` : "";
 
-  const trigHtml = st.triggers.map(t=>{
-    const srcBadge = t.src ? `<span class="tag tag--src">${t.src === "MT" ? "M+T" : t.src}</span>` : "";
-    return `<span class="tag ${t.cls || ""}" data-icao="${st.icao}" data-open="1">${escapeHtml(t.label)} ${srcBadge}</span>`;
-  }).join("");
+  
+const trigHtml = st.triggers.map(t=>{
+  const srcBadge = t.src ? `<span class="tag tag--src">${t.src === "MT" ? "M+T" : t.src}</span>` : "";
+  const tipAttr = t.tip ? ` title="${escapeHtml(t.tip)}"` : "";
+  return `<span class="tag ${t.cls || ""}" data-icao="${st.icao}" data-open="1"${tipAttr}>${escapeHtml(t.label)} ${srcBadge}</span>`;
+}).join("");
 
   // Age is re-computed on EVERY render (per-minute UI refresh), so it "ticks" without manual reload.
   const metAgeNow = computeAgeMinutesFromRawZ(st.metarRaw || "");
@@ -1324,8 +1537,8 @@ function rowHtml(st){
   const metAge = `<span class="age ${ageClass(metAgeUse)}" data-age="metar" data-icao="${escapeHtml(st.icao)}">${escapeHtml(formatAge(metAgeUse))}</span>`;
   const tafAge = `<span class="age ${ageClass(tafAgeUse)}" data-age="taf" data-icao="${escapeHtml(st.icao)}">${escapeHtml(formatAge(tafAgeUse))}</span>`;
 
-  const metRaw = st.metarRaw ? highlightRaw(st.metarRaw) : "<span class='muted'>—</span>";
-  const tafRaw = st.tafRaw ? highlightRaw(st.tafRaw) : "<span class='muted'>—</span>";
+  const metRaw = st.metarRaw ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "<span class='muted'>—</span>";
+  const tafRaw = st.tafRaw ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "<span class='muted'>—</span>";
 
   const critDriverBadge = (()=>{
     if (String(st.alert || "").toUpperCase() !== "CRIT") return "";
@@ -1900,6 +2113,35 @@ function renderOmExplainHtml(st){
     addItem("CAT BAND", lines);
   }
 
+
+// Approach minima (per-airport) — show concrete trigger evidence for MINIMA CRIT/LIMIT.
+{
+  const lines = [];
+  const em = st && st.minExplainMet ? st.minExplainMet : null;
+  const et = st && st.minExplainTaf ? st.minExplainTaf : null;
+
+  function addExplain(src, ex){
+    if (!ex) return;
+    const modeTxt = ex.mode === "CRIT" ? "MINIMA CRIT (below BEST)" : "MINIMA LIMIT (below ALT, BEST still OK)";
+    if (!ex.reasons || !ex.reasons.length){
+      lines.push(line(src, `${escapeHtml(modeTxt)} — could not derive evidence from raw.`));
+      return;
+    }
+    for (const r of ex.reasons){
+      const tok = r.token ? ` token ${code(r.token)}` : "";
+      lines.push(line(src, `${escapeHtml(modeTxt)} — ${escapeHtml(r.metric)} ${code(r.actual)} < ${code(ex.basis+" "+r.threshold)}.${tok}`));
+      if (r.snippet){
+        lines.push(line(src, `Where in ${code("TAF")}: ${code(r.snippet)}`));
+      }
+    }
+  }
+
+  addExplain("M", em);
+  addExplain("T", et);
+
+  addItem("APPR MINIMA", lines);
+}
+
   // RWYCC estimate
   {
     const lines = [];
@@ -1986,17 +2228,19 @@ function openDrawer(icao){
   $("dTafAge").textContent = formatAge(tafAgeNow !== null ? tafAgeNow : (st.tafAgeMin ?? null));
 
   // triggers in drawer — fixed: always flex-wrap container; no overlapping
-  $("dTriggers").innerHTML = st.triggers.map(t=>{
-    const src = t.src ? `<span class="tag tag--src">${t.src==="MT"?"M+T":t.src}</span>` : "";
-    return `<span class="tag ${t.cls||""}">${escapeHtml(t.label)} ${src}</span>`;
-  }).join("");
+  
+$("dTriggers").innerHTML = st.triggers.map(t=>{
+  const src = t.src ? `<span class="tag tag--src">${t.src==="MT"?"M+T":t.src}</span>` : "";
+  const tipAttr = t.tip ? ` title="${escapeHtml(t.tip)}"` : "";
+  return `<span class="tag ${t.cls||""}"${tipAttr}>${escapeHtml(t.label)} ${src}</span>`;
+}).join("");
 
   // OM tag explanations (audit)
   const omEl = $("dOmExplain");
   if (omEl) omEl.innerHTML = renderOmExplainHtml(st);
 
-  $("dMetRaw").innerHTML = st.metarRaw ? highlightRaw(st.metarRaw) : "—";
-  $("dTafRaw").innerHTML = st.tafRaw ? highlightRaw(st.tafRaw) : "—";
+  $("dMetRaw").innerHTML = st.metarRaw ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "—";
+  $("dTafRaw").innerHTML = st.tafRaw ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "—";
 
   $("dMetDec").innerHTML = decodeMetar(st.metarRaw || "");
   $("dTafDec").innerHTML = decodeTaf(st.tafRaw || "");
