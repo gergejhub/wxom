@@ -48,7 +48,6 @@ jobs:
           # Optional top-level pages
           if [ -f "alerts.html" ]; then cp -f alerts.html dist/; fi
           if [ -f "map.html" ]; then cp -f map.html dist/; fi
-          if [ -f "settings.html" ]; then cp -f settings.html dist/; fi
 
           # Static folders (copy only if they exist)
           if [ -d "assets" ]; then cp -R assets dist/assets; fi
@@ -69,7 +68,6 @@ jobs:
           test -f dist/index.html
           if [ -d "dist/1030" ]; then test -f dist/1030/index.html; fi
           if [ -f "alerts.html" ]; then test -f dist/alerts.html; fi
-          if [ -f "settings.html" ]; then test -f dist/settings.html; fi
 
           if [ -d "dist/stat" ]; then
             test -f dist/stat/index.html
