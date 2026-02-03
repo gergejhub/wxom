@@ -198,6 +198,171 @@ function ceilingFt(raw){
   return min;
 }
 
+/* --- Approach minima helpers (BEST/ALT) ---------------------------------- */
+function effectiveVis(visM, rvrMin){
+  const vals = [];
+  if (typeof visM === "number") vals.push(visM);
+  if (typeof rvrMin === "number") vals.push(rvrMin);
+  return vals.length ? Math.min(...vals) : null;
+}
+function fmtM(v){
+  if (typeof v !== "number") return "N/A";
+  return v >= 10000 ? "10 km+" : `${Math.round(v)} m`;
+}
+function fmtFt(v){
+  if (typeof v !== "number") return "N/A";
+  return `${Math.round(v)} ft`;
+}
+
+function snippetAround(raw, token, maxLen=92){
+  if (!raw || !token) return null;
+  const up = String(raw).toUpperCase();
+  const t = String(token).toUpperCase();
+  const idx = up.indexOf(t);
+  if (idx < 0) return null;
+  const half = Math.floor(maxLen/2);
+  const s = Math.max(0, idx - half);
+  const e = Math.min(raw.length, idx + token.length + half);
+  let sn = raw.slice(s, e).replace(/\s+/g, " ").trim();
+  if (s > 0) sn = "..." + sn;
+  if (e < raw.length) sn = sn + "...";
+  return sn;
+}
+
+function findRvrToken(raw, target){
+  if (!raw || typeof target !== "number") return null;
+  const re = /\bR\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?\b/g;
+  let m;
+  while ((m = re.exec(raw)) !== null){
+    const v1 = parseInt(m[2],10);
+    const v2 = m[4] ? parseInt(m[4],10) : null;
+    const vals = [v1, v2].filter(x=>Number.isFinite(x));
+    if (!vals.length) continue;
+    const vmin = Math.min(...vals);
+    if (vmin === target) return m[0];
+  }
+  return null;
+}
+
+function findVisToken(raw, target){
+  if (!raw || typeof target !== "number") return null;
+  const up = String(raw).toUpperCase();
+  if (target >= 10000){
+    if (/\bCAVOK\b/.test(up)) return "CAVOK";
+    if (/\b9999\b/.test(up)) return "9999";
+  }
+  // ICAO meters token
+  const reM = /\b(\d{4})(?:NDV|[A-Z]{1,4})?\b/g;
+  let m;
+  while ((m = reM.exec(up)) !== null){
+    const v = parseInt(m[1],10);
+    if (!Number.isNaN(v)){
+      const vv = (v === 9999) ? 10000 : v;
+      if (vv === target) return m[0];
+    }
+  }
+  return null;
+}
+
+function findCeilToken(raw, targetFt){
+  if (!raw || typeof targetFt !== "number") return null;
+  const up = String(raw).toUpperCase();
+  const re = /\b(BKN|OVC|VV)(\d{3})\b/g;
+  let bestTok = null;
+  let bestFt = null;
+  let m;
+  while ((m = re.exec(up)) !== null){
+    const ft = parseInt(m[2],10) * 100;
+    if (!Number.isNaN(ft)){
+      if (bestFt === null || ft < bestFt){
+        bestFt = ft;
+        bestTok = m[0];
+      }
+    }
+  }
+  if (bestFt === null) return null;
+  if (Math.round(bestFt) === Math.round(targetFt)) return bestTok;
+  return bestTok;
+}
+
+function buildMinimaTriggers(sourceLabel, minima, visM, rvrMin, cigFt, raw){
+  // Returns: { alert: "OK"|"MED"|"CRIT", items:[{label, cls, why:[]}] }
+  const items = [];
+  if (!minima || (!minima.best && !minima.alt)) return {alert:"OK", items};
+
+  const eff = effectiveVis(visM, rvrMin);
+
+  const bestVis = (minima.best && Number.isFinite(minima.best.vis_m) && minima.best.vis_m > 0) ? minima.best.vis_m : null;
+  const bestCig = (minima.best && Number.isFinite(minima.best.cig_ft) && minima.best.cig_ft > 0) ? minima.best.cig_ft : null;
+
+  const altVis  = (minima.alt  && Number.isFinite(minima.alt.vis_m)  && minima.alt.vis_m  > 0) ? minima.alt.vis_m  : null;
+  const altCig  = (minima.alt  && Number.isFinite(minima.alt.cig_ft) && minima.alt.cig_ft > 0) ? minima.alt.cig_ft : null;
+
+  const belowBestVis = (eff != null && bestVis != null && eff < bestVis);
+  const belowBestCig = (typeof cigFt === "number" && bestCig != null && cigFt < bestCig);
+  const belowBest = belowBestVis || belowBestCig;
+
+  const belowAltVis = (eff != null && altVis != null && eff < altVis);
+  const belowAltCig = (typeof cigFt === "number" && altCig != null && cigFt < altCig);
+  const belowAlt = belowAltVis || belowAltCig;
+
+  const effDetail = (()=>{
+    const parts = [];
+    if (typeof visM === "number") parts.push(`VIS ${fmtM(visM)}`);
+    if (typeof rvrMin === "number") parts.push(`RVR(min) ${fmtM(rvrMin)}`);
+    if (parts.length >= 2) return `${fmtM(eff)} (min of ${parts.join(" and ")})`;
+    if (parts.length === 1) return `${fmtM(eff)} (${parts[0]})`;
+    return fmtM(eff);
+  })();
+
+  const addEvidence = (whyArr, token)=>{
+    const sn = snippetAround(raw, token);
+    if (sn) whyArr.push(`Evidence in ${sourceLabel}: ${sn}`);
+    else if (token) whyArr.push(`Evidence in ${sourceLabel}: ${token}`);
+  };
+
+  const visToken = (()=>{
+    if (typeof rvrMin === "number" && eff === rvrMin){
+      return findRvrToken(raw, rvrMin) || findVisToken(raw, visM);
+    }
+    return findVisToken(raw, visM) || findRvrToken(raw, rvrMin);
+  })();
+  const cigToken = (typeof cigFt === "number") ? findCeilToken(raw, cigFt) : null;
+
+  if (belowBest){
+    const why = [];
+    why.push("Approach minima (BEST): below the airport's best configured minima.");
+    if (belowBestVis){
+      why.push(`Effective visibility = ${effDetail} < BEST visibility minima ${fmtM(bestVis)}.`);
+      addEvidence(why, visToken);
+    }
+    if (belowBestCig){
+      why.push(`Ceiling = ${fmtFt(cigFt)} < BEST ceiling minima ${fmtFt(bestCig)}.`);
+      addEvidence(why, cigToken);
+    }
+    items.push({label:"MINIMA CRIT", cls:"tag--bad", why});
+    return {alert:"CRIT", items};
+  }
+
+  if (belowAlt){
+    const why = [];
+    why.push("Approach minima (ALT): below the second-best minima while the BEST minima is still met.");
+    if (belowAltVis){
+      why.push(`Effective visibility = ${effDetail} < ALT visibility minima ${fmtM(altVis)} (BEST vis minima: ${fmtM(bestVis)}).`);
+      addEvidence(why, visToken);
+    }
+    if (belowAltCig){
+      why.push(`Ceiling = ${fmtFt(cigFt)} < ALT ceiling minima ${fmtFt(altCig)} (BEST ceiling minima: ${fmtFt(bestCig)}).`);
+      addEvidence(why, cigToken);
+    }
+    why.push("Operational interpretation: only the BEST approach remains within minima.");
+    items.push({label:"MINIMA LIMIT", cls:"tag--warn", why});
+    return {alert:"MED", items};
+  }
+
+  return {alert:"OK", items};
+}
+
 function hazardFlags(raw){
   // Lightweight hazards for map view.
   // Strip report header + ICAO to avoid false positives (e.g. LGTS/GCTS => 'TS').
@@ -435,8 +600,8 @@ function deriveStation(st, runwaysMap){
     return rv.length ? Math.min(...rv) : null;
   })();
 
-  const nowAlert = alertFromScore(met.score || 0);
-  const fcstAlert = alertFromScore(taf.score || 0);
+  let nowAlert = alertFromScore(met.score || 0);
+  let fcstAlert = alertFromScore(taf.score || 0);
 
   const engIceOpsMet = !!(met.hz.fzra || met.hz.pl || met.hz.gr || met.hz.gs || met.hz.sg || met.hz.heavyFzra || met.hz.heavyHail);
   const engIceOpsTaf = !!(taf.hz.fzra || taf.hz.pl || taf.hz.gr || taf.hz.gs || taf.hz.sg || taf.hz.heavyFzra || taf.hz.heavyHail);
@@ -454,6 +619,14 @@ function deriveStation(st, runwaysMap){
   // Trigger lists, aligned with dashboard semantics
   const now = buildWxTriggers("NOW (METAR)", met, met.vis, rvrMinMet, engIceOpsMet);
   const fcst = buildWxTriggers("FORECAST (TAF)", taf, tafVisMin, rvrMinTaf, engIceOpsTaf);
+// Approach minima (airport-specific BEST/ALT) – align map behavior with the dashboard MINIMA tiles.
+const minNow = buildMinimaTriggers("METAR", st.minima, met.vis, rvrMinMet, met.cig, st.metarRaw || "");
+if (minNow.items.length) now.items = [...minNow.items, ...now.items];
+nowAlert = maxAlert(nowAlert, minNow.alert);
+
+const minFcst = buildMinimaTriggers("TAF", st.minima, tafVisMin, rvrMinTaf, taf.cig, st.tafRaw || "");
+if (minFcst.items.length) fcst.items = [...minFcst.items, ...fcst.items];
+fcstAlert = maxAlert(fcstAlert, minFcst.alert);
 
   const omTags = buildOmTags(omMet, omTaf);
 
