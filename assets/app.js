@@ -8,19 +8,55 @@
 
 const $ = (id) => document.getElementById(id);
 
+// Coerce raw METAR/TAF values safely to a string (or empty string).
+// Prevents crashes when upstream JSON/schema changes (e.g., raw becomes an object).
+function asRawStr(raw){
+  if (raw == null) return "";
+  if (typeof raw === "string") return raw;
+  // Common shape: { raw: "..." } or { text: "..." }
+  if (typeof raw === "object"){
+    if (typeof raw.raw === "string") return raw.raw;
+    if (typeof raw.text === "string") return raw.text;
+  }
+  // Anything else is considered invalid as a raw report.
+  return "";
+}
+
+
+// Safe storage wrapper (prevents hard crashes in privacy modes / blocked storage)
+const __storage = (()=>{
+  try{
+    if (typeof window === "undefined" || !window.localStorage) return null;
+    const k = "__wxm_probe__";
+    window.localStorage.setItem(k, "1");
+    window.localStorage.removeItem(k);
+    return window.localStorage;
+  }catch(e){
+    return null;
+  }
+})();
+function lsGet(key, fallback=null){
+  try{ return __storage ? (__storage.getItem(key) ?? fallback) : fallback; }
+  catch(e){ return fallback; }
+}
+function lsSet(key, value){
+  try{ if (__storage) __storage.setItem(key, value); }
+  catch(e){}
+}
+
 
 // View mode (Auto / TV) ----------------------------------------------------
 const VIEW_MODE_KEY = "wizz_viewMode"; // "auto" | "tv"
-let viewMode = (localStorage.getItem(VIEW_MODE_KEY) || "auto");
+let viewMode = (lsGet(VIEW_MODE_KEY, "auto") || "auto");
 
 
 // Notifications (AUTO view): browser notifications when a NEW BASE becomes impacted by a NEW METAR
 const NOTIF_KEY = "wxm_notifEnabled"; // "1"|"0"
-let notifEnabled = (localStorage.getItem(NOTIF_KEY) === "1");
+let notifEnabled = (lsGet(NOTIF_KEY, "0") === "1");
 
 // Collapsible TAF tiles panel
 const TAF_PANEL_KEY = "wxm_tafPanelOpen"; // "1"|"0"
-let tafPanelOpen = (localStorage.getItem(TAF_PANEL_KEY) === "1"); // default collapsed
+let tafPanelOpen = (lsGet(TAF_PANEL_KEY, "0") === "1"); // default collapsed
 
 // For change detection (new METAR / new alerts)
 let prevMetarObsByIcao = new Map(); // ICAO -> "DDHHMMZ"
@@ -41,7 +77,7 @@ function applyDeviceClass(){
 }
 function applyViewMode(mode){
   viewMode = mode;
-  localStorage.setItem(VIEW_MODE_KEY, viewMode);
+  lsSet(VIEW_MODE_KEY, viewMode);
 
   document.body.classList.toggle("view-tv", viewMode === "tv");
   document.body.classList.toggle("view-auto", viewMode === "auto");
@@ -111,12 +147,12 @@ async function toggleNotifications(){
     const ok = await requestNotifPermission();
     if (!ok){
       notifEnabled = false;
-      localStorage.setItem(NOTIF_KEY, "0");
+      lsSet(NOTIF_KEY, "0");
       updateNotifBtn();
       return;
     }
     notifEnabled = true;
-    localStorage.setItem(NOTIF_KEY, "1");
+    lsSet(NOTIF_KEY, "1");
     updateNotifBtn();
     try{
       new Notification("Notifications enabled", {body:"You will be notified when a NEW BASE becomes impacted by a NEW METAR (AUTO view).", silent:true});
@@ -124,7 +160,7 @@ async function toggleNotifications(){
     return;
   }
   notifEnabled = false;
-  localStorage.setItem(NOTIF_KEY, "0");
+  lsSet(NOTIF_KEY, "0");
   updateNotifBtn();
 }
 
@@ -144,7 +180,7 @@ function applyTafPanelState(){
 
 function toggleTafPanel(){
   tafPanelOpen = !tafPanelOpen;
-  localStorage.setItem(TAF_PANEL_KEY, tafPanelOpen ? "1" : "0");
+  lsSet(TAF_PANEL_KEY, tafPanelOpen ? "1" : "0");
   applyTafPanelState();
 }
 
@@ -339,7 +375,7 @@ let view = {
 let drawerIcao = null;
 
 function escapeHtml(s){
-  return (s ?? "").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  return String(s ?? "").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 }
 
 
@@ -393,6 +429,7 @@ function parseTempC(raw){
 }
 
 function parseVisibilityMeters(raw){
+  raw = asRawStr(raw);
   if (!raw) return null;
 
   // CAVOK is effectively >= 10km
@@ -737,8 +774,9 @@ function buildMinimaExplain({kind, raw, minima, state, visVal, rvrMin, isTaf}){
 
 // Highlight raw with concrete evidence tokens (minima) without changing the base highlight rules.
 function highlightRawWithTokens(raw, tokens){
-  if (!raw) return "";
-  let html = highlightRaw(raw);
+  const s = asRawStr(raw);
+  if (!s) return "<span class='muted'>—</span>";
+  let html = highlightRaw(s);
 
   const toks = Array.isArray(tokens) ? tokens.filter(Boolean) : [];
   if (!toks.length) return html;
@@ -928,6 +966,18 @@ function deriveStation(st){
   const tafAgeComputed = computeAgeMinutesFromRawZ(st.tafRaw || "");
   st.metarAgeMin = (metAgeComputed !== null) ? metAgeComputed : (st.metarAgeMin ?? st.metarAge ?? null);
   st.tafAgeMin   = (tafAgeComputed !== null) ? tafAgeComputed : (st.tafAgeMin ?? st.tafAge ?? null);
+
+  // Thin-client mode: if the backend already computed all derived fields, keep the UI logic light.
+  // We still recompute ages so they "tick" each minute.
+  if (st && st._thinComputed && st.met && st.taf && Array.isArray(st.triggers)){
+    st._minTokensM = Array.isArray(st._minTokensM)
+      ? st._minTokensM
+      : (st.minExplainMet ? (st.minExplainMet.tokens || []) : []);
+    st._minTokensT = Array.isArray(st._minTokensT)
+      ? st._minTokensT
+      : (st.minExplainTaf ? (st.minExplainTaf.tokens || []) : []);
+    return st;
+  }
   const met = computeScores(st.metarRaw || "");
   const taf = computeScores(st.tafRaw || "");
 
@@ -1253,6 +1303,7 @@ function formatAge(mins){
 
 
 function computeAgeMinutesFromRawZ(raw, nowUtc=new Date()){
+  raw = asRawStr(raw);
   if (!raw) return null;
   // Match DDHHMMZ
   const m = raw.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
@@ -1362,6 +1413,7 @@ s = s.replace(/\b(?:\d{3}|VRB)\d{2,3}G(\d{2,3})KT\b/g, (m, g) => {
 }
 
 function decodeMetar(raw){
+  raw = asRawStr(raw);
   if (!raw) return "";
   const out = [];
   // wind
@@ -1405,6 +1457,7 @@ function decodeMetar(raw){
 }
 
 function decodeTaf(raw){
+  raw = asRawStr(raw);
   if (!raw) return "";
   const out = [];
   // valid period
@@ -1463,15 +1516,15 @@ function trendPill(icao, currentMetarVis, metarObsKey){
   const obs = metarObsKey || "";
   if (!obs) return {text:"—", cls:"trend--flat"};
 
-  const prevObs = localStorage.getItem(kObs);
-  const prevVisRaw = localStorage.getItem(kVis);
-  const prevTrend = localStorage.getItem(kTrend);
+  const prevObs = lsGet(kObs, null);
+  const prevVisRaw = lsGet(kVis, null);
+  const prevTrend = lsGet(kTrend, null);
 
   // First time seeing this station
   if (!prevObs){
-    localStorage.setItem(kObs, obs);
-    localStorage.setItem(kVis, currentMetarVis === null ? "" : String(currentMetarVis));
-    localStorage.setItem(kTrend, "trend--new|NEW");
+    lsSet(kObs, obs);
+    lsSet(kVis, currentMetarVis === null ? "" : String(currentMetarVis));
+    lsSet(kTrend, "trend--new|NEW");
     return {text:"NEW", cls:"trend--new"};
   }
 
@@ -1493,9 +1546,9 @@ function trendPill(icao, currentMetarVis, metarObsKey){
     else out = {text:"•0", cls:"trend--flat"};
   }
 
-  localStorage.setItem(kObs, obs);
-  localStorage.setItem(kVis, currentMetarVis === null ? "" : String(currentMetarVis));
-  localStorage.setItem(kTrend, `${out.cls}|${out.text}`);
+  lsSet(kObs, obs);
+  lsSet(kVis, currentMetarVis === null ? "" : String(currentMetarVis));
+  lsSet(kTrend, `${out.cls}|${out.text}`);
   return out;
 }
 
@@ -1537,8 +1590,8 @@ const trigHtml = st.triggers.map(t=>{
   const metAge = `<span class="age ${ageClass(metAgeUse)}" data-age="metar" data-icao="${escapeHtml(st.icao)}">${escapeHtml(formatAge(metAgeUse))}</span>`;
   const tafAge = `<span class="age ${ageClass(tafAgeUse)}" data-age="taf" data-icao="${escapeHtml(st.icao)}">${escapeHtml(formatAge(tafAgeUse))}</span>`;
 
-  const metRaw = st.metarRaw ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "<span class='muted'>—</span>";
-  const tafRaw = st.tafRaw ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "<span class='muted'>—</span>";
+  const metRaw = asRawStr(st.metarRaw) ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "<span class='muted'>—</span>";
+  const tafRaw = asRawStr(st.tafRaw) ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "<span class='muted'>—</span>";
 
   const critDriverBadge = (()=>{
     if (String(st.alert || "").toUpperCase() !== "CRIT") return "";
@@ -1553,7 +1606,7 @@ const trigHtml = st.triggers.map(t=>{
     return `<span class="pill pillsub ${cls}" title="${escapeHtml(tip)}">${txt}</span>`;
   })();
 
-  return `<tr class="row" data-icao="${escapeHtml(st.icao)}">
+  return `<tr class="row" role="button" tabindex="0" data-icao="${escapeHtml(st.icao)}">
     <td>
       <div class="airport">
         <div class="airport__codes">
@@ -1942,27 +1995,54 @@ function render(){
   updateTiles(sorted);
 
   if (!sorted.length){
-    tbody.innerHTML = `<tr><td colspan="9" class="muted">No matching rows.</td></tr>`;
+    // Keep a stable empty row element (avoid full tbody churn)
+    tbody.replaceChildren();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="9" class="muted">No matching rows.</td>`;
+    tbody.appendChild(tr);
     return;
   }
 
-  tbody.innerHTML = sorted.map(rowHtml).join("");
+  // Incremental keyed render to reduce DOM churn (prevents TV "blinking").
+  const existing = new Map();
+  tbody.querySelectorAll("tr.row[data-icao]").forEach(tr=>{
+    const icao = tr.getAttribute("data-icao");
+    if (icao) existing.set(icao, tr);
+  });
 
-  // row click and tag click opens drawer
-  tbody.querySelectorAll("tr.row").forEach(tr=>{
-    tr.addEventListener("click", (ev)=>{
-      // if clicked on a link-like element, still open
-      const icao = tr.getAttribute("data-icao");
-      openDrawer(icao);
-    });
-  });
-  tbody.querySelectorAll("[data-open='1']").forEach(el=>{
-    el.addEventListener("click", (ev)=>{
-      ev.stopPropagation();
-      const icao = el.getAttribute("data-icao");
-      openDrawer(icao);
-    });
-  });
+  const frag = document.createDocumentFragment();
+  for (const st of sorted){
+    const html = rowHtml(st);
+    const h = fnv1a32(html);
+    let tr = existing.get(st.icao);
+
+    if (tr){
+      const prevH = tr.getAttribute("data-h");
+      if (String(prevH || "") !== String(h)){
+        const tmp = document.createElement("tbody");
+        tmp.innerHTML = html;
+        const fresh = tmp.firstElementChild;
+        fresh.setAttribute("data-h", String(h));
+        tr.replaceWith(fresh);
+        tr = fresh;
+      }else{
+        tr.setAttribute("data-h", String(h));
+      }
+      existing.delete(st.icao);
+      frag.appendChild(tr);
+    }else{
+      const tmp = document.createElement("tbody");
+      tmp.innerHTML = html;
+      const fresh = tmp.firstElementChild;
+      fresh.setAttribute("data-h", String(h));
+      frag.appendChild(fresh);
+    }
+  }
+
+  // Remove stale rows
+  for (const [,tr] of existing) tr.remove();
+
+  tbody.replaceChildren(frag);
 }
 
 
@@ -2239,11 +2319,13 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
   const omEl = $("dOmExplain");
   if (omEl) omEl.innerHTML = renderOmExplainHtml(st);
 
-  $("dMetRaw").innerHTML = st.metarRaw ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "—";
-  $("dTafRaw").innerHTML = st.tafRaw ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "—";
+  const metRawStr = asRawStr(st.metarRaw);
+  const tafRawStr = asRawStr(st.tafRaw);
+  $("dMetRaw").innerHTML = metRawStr ? highlightRawWithTokens(metRawStr, st._minTokensM) : "—";
+  $("dTafRaw").innerHTML = tafRawStr ? highlightRawWithTokens(tafRawStr, st._minTokensT) : "—";
 
-  $("dMetDec").innerHTML = decodeMetar(st.metarRaw || "");
-  $("dTafDec").innerHTML = decodeTaf(st.tafRaw || "");
+  $("dMetDec").innerHTML = decodeMetar(metRawStr);
+  $("dTafDec").innerHTML = decodeTaf(tafRawStr);
 
   $("copyBrief").onclick = async () => {
     const line = buildBriefingLine(st);
@@ -2262,20 +2344,55 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
       $("copyBrief").textContent = "Copied";
       setTimeout(()=> $("copyBrief").textContent = "Copy briefing line", 900);
     }
-  };  // open (class-based visibility; markup uses .hidden)
-  const dEl = $("drawer");
-  const sEl = $("scrim");
-  if (dEl){
-    dEl.classList.remove("hidden");
-    dEl.classList.add("is-open");
-    dEl.setAttribute("aria-hidden","false");
+  };
+
+
+
+  const mgmtBtn = $("copyMgmtBrief");
+  if (mgmtBtn){
+    mgmtBtn.onclick = async () => {
+      const url = "data/management_brief.json?ts=" + Date.now();
+      try{
+        const res = await fetch(url, {cache:"no-store"});
+        const j = await res.json();
+        const text = (j && (j.management45 || j.headline20 || j.detail90)) ? String(j.management45 || j.headline20 || j.detail90) : "—";
+        await navigator.clipboard.writeText(text);
+        mgmtBtn.textContent = "Copied";
+        setTimeout(()=> mgmtBtn.textContent = "Copy mgmt brief", 900);
+      }catch{
+        // fallback: derive from current station as last resort
+        const text = "WX brief: " + buildBriefingLine(st);
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        mgmtBtn.textContent = "Copied";
+        setTimeout(()=> mgmtBtn.textContent = "Copy mgmt brief", 900);
+      }
+    };
   }
-  if (sEl){
-    sEl.classList.remove("hidden");
-    sEl.hidden = false;
+
+  // open
+  const dr = $("drawer");
+  const sc = $("scrim");
+  // The markup uses the CSS helper class `.hidden` (display:none), not the HTML `[hidden]` attribute.
+  // Therefore we must remove/add that class to show/hide the drawer + scrim.
+  if (dr){
+    dr.classList.remove("hidden");
+    dr.classList.add("is-open");
+    dr.setAttribute("aria-hidden","false");
   }
-  document.body.classList.add("drawer-open");
+  if (sc){
+    sc.classList.remove("hidden");
+  }
+  try{ document.body.classList.add("drawer-open"); }catch(e){}
 }
+
+// Expose drawer opener for quick debugging in DevTools.
+// (Safe: read-only helper, no sensitive operations.)
+try{ window.__wx_openDrawer = openDrawer; }catch(e){}
 
 function refreshDrawerAges(){
   if (!drawerIcao) return;
@@ -2288,18 +2405,18 @@ function refreshDrawerAges(){
 }
 
 function closeDrawer(){
-  const dEl = $("drawer");
-  const sEl = $("scrim");
-  if (dEl){
-    dEl.classList.remove("is-open");
-    dEl.classList.add("hidden");
-    dEl.setAttribute("aria-hidden","true");
+  const dr = $("drawer");
+  const sc = $("scrim");
+  if (dr){
+    dr.classList.remove("is-open");
+    dr.setAttribute("aria-hidden","true");
+    // Match openDrawer(...): hide via `.hidden`.
+    dr.classList.add("hidden");
   }
-  if (sEl){
-    sEl.classList.add("hidden");
-    sEl.hidden = true;
+  if (sc){
+    sc.classList.add("hidden");
   }
-  document.body.classList.remove("drawer-open");
+  try{ document.body.classList.remove("drawer-open"); }catch(e){}
   drawerIcao = null;
 }
 
@@ -2540,6 +2657,31 @@ function applyDataFromLatest(data){
     minima: (s.minima !== undefined) ? s.minima : null,
     lat: (s.lat !== undefined) ? s.lat : null,
     lon: (s.lon !== undefined) ? s.lon : null,
+
+    // Thin-client precomputed fields (preferred)
+    _thinComputed: !!(s._thinComputed || (s.met && s.taf && s.triggers && s.alert)),
+    met: s.met || null,
+    taf: s.taf || null,
+    worstVis: (s.worstVis !== undefined) ? s.worstVis : undefined,
+    tafWorstVis: (s.tafWorstVis !== undefined) ? s.tafWorstVis : undefined,
+    rvrMinAll: (s.rvrMinAll !== undefined) ? s.rvrMinAll : undefined,
+    cigAll: (s.cigAll !== undefined) ? s.cigAll : undefined,
+    engIceOps: !!s.engIceOps,
+    severityScore: (s.severityScore !== undefined) ? s.severityScore : undefined,
+    alert: (s.alert !== undefined) ? s.alert : undefined,
+    metCrit: !!s.metCrit,
+    tafCrit: !!s.tafCrit,
+    critSrc: s.critSrc || null,
+    triggers: Array.isArray(s.triggers) ? s.triggers : [],
+    om: s.om || null,
+    omMet: s.omMet || null,
+    omTaf: s.omTaf || null,
+    minimaNow: s.minimaNow || null,
+    minimaTaf: s.minimaTaf || null,
+    minExplainMet: s.minExplainMet || null,
+    minExplainTaf: s.minExplainTaf || null,
+    _minTokensM: Array.isArray(s._minTokensM) ? s._minTokensM : null,
+    _minTokensT: Array.isArray(s._minTokensT) ? s._minTokensT : null,
   })).filter(s=>s.icao && s.icao.length===4)
     .map(deriveStation)
     .map(st=>{
@@ -2878,6 +3020,45 @@ function bind(){
 
 initNotifUI();
 initTafPanelUI();
+
+  // Row + tag click delegation (prevents per-row listener churn on refresh)
+  const rowsRoot = $("rows");
+  if (rowsRoot){
+    const openFromEvent = (ev)=>{
+      const tag = ev.target.closest("[data-open='1'][data-icao]");
+      if (tag){
+        ev.stopPropagation();
+        const icao = tag.getAttribute("data-icao");
+        if (icao) openDrawer(icao);
+        return;
+      }
+      // Robust fallback: anything inside a row with data-icao opens the drawer.
+      const tr = ev.target.closest("tr.row[data-icao]");
+      if (tr){
+        const icao = tr.getAttribute("data-icao");
+        if (icao) openDrawer(icao);
+        return;
+      }
+      const any = ev.target.closest("[data-icao]");
+      if (any){
+        const icao = any.getAttribute("data-icao");
+        if (icao) openDrawer(icao);
+      }
+    };
+    // Use capture to bypass accidental stopPropagation from nested elements.
+    rowsRoot.addEventListener("click", openFromEvent, true);
+    // Touch/pointer environments sometimes feel more responsive on pointerup.
+    rowsRoot.addEventListener("pointerup", openFromEvent, true);
+    // Keyboard accessibility
+    rowsRoot.addEventListener("keydown", (ev)=>{
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      const tr = ev.target.closest("tr.row[data-icao]");
+      if (!tr) return;
+      ev.preventDefault();
+      const icao = tr.getAttribute("data-icao");
+      if (icao) openDrawer(icao);
+    });
+  }
 
 // tile filters (NOW + TAF panel)
 function handleTileClick(e){
