@@ -8,6 +8,20 @@
 
 const $ = (id) => document.getElementById(id);
 
+// Coerce raw METAR/TAF values safely to a string (or empty string).
+// Prevents crashes when upstream JSON/schema changes (e.g., raw becomes an object).
+function asRawStr(raw){
+  if (raw == null) return "";
+  if (typeof raw === "string") return raw;
+  // Common shape: { raw: "..." } or { text: "..." }
+  if (typeof raw === "object"){
+    if (typeof raw.raw === "string") return raw.raw;
+    if (typeof raw.text === "string") return raw.text;
+  }
+  return "";
+}
+
+
 // Safe storage wrapper (prevents hard crashes in privacy modes / blocked storage)
 const __storage = (()=>{
   try{
@@ -414,6 +428,7 @@ function parseTempC(raw){
 }
 
 function parseVisibilityMeters(raw){
+  raw = asRawStr(raw);
   if (!raw) return null;
 
   // CAVOK is effectively >= 10km
@@ -1286,6 +1301,7 @@ function formatAge(mins){
 
 
 function computeAgeMinutesFromRawZ(raw, nowUtc=new Date()){
+  raw = asRawStr(raw);
   if (!raw) return null;
   // Match DDHHMMZ
   const m = raw.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
@@ -1395,6 +1411,7 @@ s = s.replace(/\b(?:\d{3}|VRB)\d{2,3}G(\d{2,3})KT\b/g, (m, g) => {
 }
 
 function decodeMetar(raw){
+  raw = asRawStr(raw);
   if (!raw) return "";
   const out = [];
   // wind
@@ -1438,6 +1455,7 @@ function decodeMetar(raw){
 }
 
 function decodeTaf(raw){
+  raw = asRawStr(raw);
   if (!raw) return "";
   const out = [];
   // valid period
