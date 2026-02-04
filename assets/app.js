@@ -18,6 +18,7 @@ function asRawStr(raw){
     if (typeof raw.raw === "string") return raw.raw;
     if (typeof raw.text === "string") return raw.text;
   }
+  // Anything else is considered invalid as a raw report.
   return "";
 }
 
@@ -773,8 +774,9 @@ function buildMinimaExplain({kind, raw, minima, state, visVal, rvrMin, isTaf}){
 
 // Highlight raw with concrete evidence tokens (minima) without changing the base highlight rules.
 function highlightRawWithTokens(raw, tokens){
-  if (!raw) return "";
-  let html = highlightRaw(raw);
+  const s = asRawStr(raw);
+  if (!s) return "<span class='muted'>—</span>";
+  let html = highlightRaw(s);
 
   const toks = Array.isArray(tokens) ? tokens.filter(Boolean) : [];
   if (!toks.length) return html;
@@ -1588,8 +1590,8 @@ const trigHtml = st.triggers.map(t=>{
   const metAge = `<span class="age ${ageClass(metAgeUse)}" data-age="metar" data-icao="${escapeHtml(st.icao)}">${escapeHtml(formatAge(metAgeUse))}</span>`;
   const tafAge = `<span class="age ${ageClass(tafAgeUse)}" data-age="taf" data-icao="${escapeHtml(st.icao)}">${escapeHtml(formatAge(tafAgeUse))}</span>`;
 
-  const metRaw = st.metarRaw ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "<span class='muted'>—</span>";
-  const tafRaw = st.tafRaw ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "<span class='muted'>—</span>";
+  const metRaw = asRawStr(st.metarRaw) ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "<span class='muted'>—</span>";
+  const tafRaw = asRawStr(st.tafRaw) ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "<span class='muted'>—</span>";
 
   const critDriverBadge = (()=>{
     if (String(st.alert || "").toUpperCase() !== "CRIT") return "";
@@ -1604,7 +1606,7 @@ const trigHtml = st.triggers.map(t=>{
     return `<span class="pill pillsub ${cls}" title="${escapeHtml(tip)}">${txt}</span>`;
   })();
 
-  return `<tr class="row" data-icao="${escapeHtml(st.icao)}">
+  return `<tr class="row" role="button" tabindex="0" data-icao="${escapeHtml(st.icao)}">
     <td>
       <div class="airport">
         <div class="airport__codes">
@@ -2317,11 +2319,13 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
   const omEl = $("dOmExplain");
   if (omEl) omEl.innerHTML = renderOmExplainHtml(st);
 
-  $("dMetRaw").innerHTML = st.metarRaw ? highlightRawWithTokens(st.metarRaw, st._minTokensM) : "—";
-  $("dTafRaw").innerHTML = st.tafRaw ? highlightRawWithTokens(st.tafRaw, st._minTokensT) : "—";
+  const metRawStr = asRawStr(st.metarRaw);
+  const tafRawStr = asRawStr(st.tafRaw);
+  $("dMetRaw").innerHTML = metRawStr ? highlightRawWithTokens(metRawStr, st._minTokensM) : "—";
+  $("dTafRaw").innerHTML = tafRawStr ? highlightRawWithTokens(tafRawStr, st._minTokensT) : "—";
 
-  $("dMetDec").innerHTML = decodeMetar(st.metarRaw || "");
-  $("dTafDec").innerHTML = decodeTaf(st.tafRaw || "");
+  $("dMetDec").innerHTML = decodeMetar(metRawStr);
+  $("dTafDec").innerHTML = decodeTaf(tafRawStr);
 
   $("copyBrief").onclick = async () => {
     const line = buildBriefingLine(st);
@@ -2375,6 +2379,10 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
   $("drawer").setAttribute("aria-hidden","false");
   $("scrim").hidden = false;
 }
+
+// Expose drawer opener for quick debugging in DevTools.
+// (Safe: read-only helper, no sensitive operations.)
+try{ window.__wx_openDrawer = openDrawer; }catch(e){}
 
 function refreshDrawerAges(){
   if (!drawerIcao) return;
@@ -2997,7 +3005,7 @@ initTafPanelUI();
   // Row + tag click delegation (prevents per-row listener churn on refresh)
   const rowsRoot = $("rows");
   if (rowsRoot){
-    rowsRoot.addEventListener("click", (ev)=>{
+    const openFromEvent = (ev)=>{
       const tag = ev.target.closest("[data-open='1'][data-icao]");
       if (tag){
         ev.stopPropagation();
@@ -3005,11 +3013,31 @@ initTafPanelUI();
         if (icao) openDrawer(icao);
         return;
       }
+      // Robust fallback: anything inside a row with data-icao opens the drawer.
       const tr = ev.target.closest("tr.row[data-icao]");
       if (tr){
         const icao = tr.getAttribute("data-icao");
         if (icao) openDrawer(icao);
+        return;
       }
+      const any = ev.target.closest("[data-icao]");
+      if (any){
+        const icao = any.getAttribute("data-icao");
+        if (icao) openDrawer(icao);
+      }
+    };
+    // Use capture to bypass accidental stopPropagation from nested elements.
+    rowsRoot.addEventListener("click", openFromEvent, true);
+    // Touch/pointer environments sometimes feel more responsive on pointerup.
+    rowsRoot.addEventListener("pointerup", openFromEvent, true);
+    // Keyboard accessibility
+    rowsRoot.addEventListener("keydown", (ev)=>{
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      const tr = ev.target.closest("tr.row[data-icao]");
+      if (!tr) return;
+      ev.preventDefault();
+      const icao = tr.getAttribute("data-icao");
+      if (icao) openDrawer(icao);
     });
   }
 

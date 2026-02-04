@@ -73,7 +73,10 @@ function rawToString(v){
       const x = v?.[k];
       if (typeof x === "string") return x;
     }
-    try { return JSON.stringify(v); } catch { return String(v); }
+    // If we can't confidently extract an actual raw report string,
+    // prefer an empty string ("missing") over serializing objects.
+    // This keeps latest.json clean and prevents ugly [object Object] renders.
+    return "";
   }
   return String(v);
 }
