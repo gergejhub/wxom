@@ -936,76 +936,88 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
     const parts = [];
     parts.push(headline20);
 
-    // Base airports always visible
+    // Base airports: always included and phrased for read-out-loud delivery.
     if (bases.length){
-      const baseStatus = [];
-      if (baseCounts.CRIT) baseStatus.push(`${baseCounts.CRIT} critical`);
-      if (baseCounts.HIGH) baseStatus.push(`${baseCounts.HIGH} high`);
-      if (baseCounts.MED)  baseStatus.push(`${baseCounts.MED} medium`);
+      const baseStatusBits = [];
+      if (baseCounts.CRIT) baseStatusBits.push(`${baseCounts.CRIT} critical`);
+      if (baseCounts.HIGH) baseStatusBits.push(`${baseCounts.HIGH} high`);
+      if (baseCounts.MED)  baseStatusBits.push(`${baseCounts.MED} medium`);
       const okCount = bases.length - (baseCounts.CRIT + baseCounts.HIGH + baseCounts.MED);
-      if (okCount) baseStatus.push(`${okCount} normal`);
-      parts.push(`Base airports status: ${baseStatus.join(", ")}.`);
+      if (okCount) baseStatusBits.push(`${okCount} normal`);
+      parts.push(`Across base airports: ${baseStatusBits.join(", ")}.`);
 
-      if (baseImpactedAny.length){
-        if (baseFocus.length){
-          const shown = baseFocus.slice(0,6).map(s=>`${airportLabel(s)} — ${humanSummary(s)}`);
-          const extra = baseFocus.length - shown.length;
-          let line = `Base airports requiring attention: ${shown.join(" | ")}${extra>0 ? ` and ${extra} others` : ""}.`;
-          if (baseMonitorCount>0) line += ` (${baseMonitorCount} additional base airports are flagged as medium and should be monitored.)`;
-          parts.push(line);
-        } else {
-          // No critical/high at bases, but we may still have medium-level monitoring.
-          const shown = bases.filter(s=>s.alert==="MED").slice(0,4).map(s=>`${airportLabel(s)} — ${humanSummary(s)}`);
-          const extra = Math.max(0, baseMonitorCount - shown.length);
-          parts.push(`Base airports: no critical/high constraints; ${baseMonitorCount} medium airports to monitor${shown.length ? ` (e.g., ${shown.join(" | ")}${extra>0 ? ` and ${extra} others` : ""})` : ""}.`);
+      const basePool = baseFocus.length ? baseFocus : baseImpactedAny;
+      if (basePool.length){
+        // Build a short, spoken-friendly base summary (top 5 with causes).
+        const shown = basePool.slice(0,5).map(s => `${airportLabel(s)} — ${humanSummary(s)}`).filter(Boolean);
+        const extra = basePool.length - shown.length;
+
+        // Drivers at bases (top 2–3)
+        const baseDriverCounts = new Map();
+        for (const s of basePool){
+          const seen = new Set();
+          for (const lab of trigLabels(s)){
+            const cat = categorize(lab);
+            if (!cat || seen.has(cat)) continue;
+            seen.add(cat);
+            baseDriverCounts.set(cat, (baseDriverCounts.get(cat)||0) + 1);
+          }
         }
+        const baseDrivers = [...baseDriverCounts.entries()]
+          .sort((a,b)=>b[1]-a[1])
+          .slice(0,3)
+          .map(([cat])=>cat);
+
+        const driverPhrase = baseDrivers.length ? `Main base drivers are ${baseDrivers.join(", ").replace(/,([^,]*)$/, " and$1")}.` : "";
+
+        let line = `Base airports needing attention include ${shown.join("; ")}${extra>0 ? `; and ${extra} others` : ""}.`;
+        if (baseMonitorCount>0) line += ` The remaining ${baseMonitorCount} base airports are flagged medium and should be monitored.`;
+        if (driverPhrase) line += ` ${driverPhrase}`;
+        parts.push(line);
       } else {
-        parts.push(`No base airports are currently showing significant constraints.`);
+        parts.push(`No base airports are currently showing material operational constraints.`);
       }
+
       if (Array.isArray(baseMissing) && baseMissing.length){
         const bmShown = baseMissing.slice(0,6);
         const bmExtra = baseMissing.length - bmShown.length;
-        parts.push(`Note: ${baseMissing.length} base codes are not present in the monitored ICAO list (${bmShown.join(", ")}${bmExtra>0 ? ` and ${bmExtra} others` : ""}).`);
+        parts.push(`Note: ${baseMissing.length} base codes are not present in the monitored airport list (${bmShown.join(", ")}${bmExtra>0 ? ` and ${bmExtra} others` : ""}).`);
       }
     }
 
     if (pool.length){
-      parts.push(`Most affected locations: ${listAirports(pool, 6)}.`);
+      parts.push(`Across the network, the worst‑affected airports include ${listAirports(pool, 6)}.`);
       if (topDrivers.length){
-        const prettyDriver = (d)=>({
+        // Slightly shorten a few driver labels for spoken delivery
+        const pretty = (d)=>({
           "approach minima limitations":"approach minima limits",
-          "low-visibility operations (reduced capacity)":"low-visibility procedures (reduced capacity)",
-          "low-visibility takeoff restrictions":"low-visibility takeoff restrictions",
-          "runway visual range limitations":"runway visual range (RVR) constraints",
+          "low-visibility operations (reduced capacity)":"low‑visibility procedures (reduced capacity)",
+          "low-visibility takeoff restrictions":"low‑visibility takeoff restrictions",
+          "runway visual range limitations":"RVR limitations",
           "very low visibility":"very low visibility",
-          "low cloud base":"low ceilings",
-          "fog / freezing fog":"fog/freezing fog",
-          "mist":"mist",
-          "snow / blowing snow":"snow/blowing snow",
-          "freezing precipitation / icing risk":"freezing precipitation/icing risk",
-          "thunderstorm / convective risk":"thunderstorm/convective risk",
-          "crosswind limitations":"crosswind limitations",
-          "runway contamination / braking action risk":"runway contamination / reduced braking",
-          "cold-temperature performance corrections":"cold-temperature performance penalties",
-          "volcanic ash risk":"volcanic ash risk"
+          "low cloud base":"low cloud base",
+          "fog / freezing fog":"fog / freezing fog",
+          "snow / blowing snow":"snow / blowing snow",
+          "freezing precipitation / icing risk":"freezing precipitation / icing risk",
+          "thunderstorm / convective risk":"convective activity",
+          "crosswind limitations":"crosswind constraints",
+          "runway contamination / braking action risk":"runway contamination / braking action risk",
+          "cold-temperature performance corrections":"cold‑temperature performance penalties",
+          "volcanic ash risk":"volcanic ash"
         }[d] || d);
-        const dlist = topDrivers.map(prettyDriver);
-        if (dlist.length===1) parts.push(`Main driver: ${dlist[0]}.`);
-        else if (dlist.length===2) parts.push(`Main drivers: ${dlist[0]} and ${dlist[1]}.`);
-        else parts.push(`Main drivers: ${dlist[0]}, ${dlist[1]}, and ${dlist[2]}.`);
+        const d = topDrivers.map(pretty);
+        parts.push(`Primary drivers are ${d.join(", ").replace(/,([^,]*)$/, " and$1")}.`);
       }
-      parts.push(`Expected impact: reduced runway capacity and higher delay/diversion risk at the worst-affected airports, especially where visibility/RVR and cloud base are very low.`);
+      parts.push(`Expected impact: reduced runway capacity and higher delay/diversion risk at the worst‑affected airports, especially where visibility/RVR and cloud base are very low.`);
     }
 
     if (changed.length){
-      const changedNames = changed.map(e=>{
-        const s = all.find(x=>x.icao===e.icao);
-        return s ? airportLabel(s) : e.icao;
-      });
-      const chShown = changedNames.slice(0,8);
-      const chExtra = changedNames.length - chShown.length;
-      parts.push(`Since the last update, status changed at ${changedNames.length} airports: ${chShown.join(", ")}${chExtra>0 ? ` and ${chExtra} others` : ""}.`);
+      const changedStations = changed.map(e => all.find(x=>x.icao===e.icao)).filter(Boolean);
+      const shown = changedStations.slice(0,6).map(airportLabel);
+      const extra = changedStations.length - shown.length;
+      parts.push(`Since the last update, ${changedStations.length} airports changed status, led by ${shown.join(", ")}${extra>0 ? ` and ${extra} others` : ""}.`);
     }
+
     return parts.join(" ");
   })();
 
