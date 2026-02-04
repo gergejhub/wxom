@@ -733,8 +733,9 @@ function diffStations(prevStations, nextStations){
       const nv = n[key] ?? null;
       if (pv !== nv) changes[key] = {from: pv, to: nv};
     }
-    const pTrig = Array.isArray(p.triggers) ? p.triggers.join("|") : "";
-    const nTrig = Array.isArray(n.triggers) ? n.triggers.join("|") : "";
+    const trigKey = (arr)=> (Array.isArray(arr)?arr:[]).map(t=> (typeof t==="string")?t:(t?.label||"")).filter(Boolean).join("|");
+    const pTrig = trigKey(p.triggers);
+    const nTrig = trigKey(n.triggers);
     if (pTrig !== nTrig) changes.triggers = {from: p.triggers||[], to: n.triggers||[]};
 
     if (Object.keys(changes).length){
@@ -751,38 +752,119 @@ function diffStations(prevStations, nextStations){
 }
 
 function buildManagementBrief({generatedAt, stations, events}){
-  const top = (stations||[]).slice(0, 12);
+  const top = (stations||[]).slice(0, 20);
   const crit = top.filter(s=>s.alert==="CRIT");
   const high = top.filter(s=>s.alert==="HIGH");
-  const med = top.filter(s=>s.alert==="MED");
+  const med  = top.filter(s=>s.alert==="MED");
 
   const changed = (events||[]).filter(e=>e.type==="CHANGE").slice(0, 10);
 
-  const listICAO = (arr)=>arr.map(s=>s.icao).filter(Boolean).slice(0, 12).join(", ") || "—";
+  const shortName = (name)=>{
+    const s = String(name||"").trim();
+    if (!s) return null;
+    return s.replace(/\s+Airport$/i,"").replace(/\s+International$/i,"").trim();
+  };
+  const airportLabel = (s)=>{
+    const n = shortName(s.name) || s.iata || s.icao;
+    const code = s.iata ? `${s.iata}/${s.icao}` : s.icao;
+    return `${n} (${code})`;
+  };
+  const listAirports = (arr, n=6)=>{
+    const a = (arr||[]).slice(0,n).map(airportLabel);
+    if (!a.length) return "—";
+    const extra = (arr||[]).length - a.length;
+    return extra>0 ? `${a.join(", ")} (+${extra} more)` : a.join(", ");
+  };
+
+  const trigLabels = (s)=> (Array.isArray(s?.triggers)?s.triggers:[])
+      .map(t=> (typeof t==="string")?t:(t?.label||""))
+      .filter(Boolean);
+
+  const categorize = (label)=>{
+    const L = String(label||"").toUpperCase();
+    if (L.includes("MINIMA")) return "approach minima limitations";
+    if (L.includes("LVP")) return "low-visibility procedures";
+    if (L.includes("LVTO")) return "low-visibility takeoff restrictions";
+    if (L.includes("RVR")) return "runway visual range limitations";
+    if (L.includes("VIS")) return "very low visibility / fog risk";
+    if (L.includes("CIG")) return "low cloud ceiling";
+    if (L.includes("FG") || L.includes("FZFG")) return "fog/freezing fog";
+    if (L.includes("BR")) return "mist";
+    if (L.includes("SN") || L.includes("BLSN")) return "snow / blowing snow";
+    if (L.includes("FZRA") || L.includes("FZDZ") || L.includes("ICE")) return "freezing precipitation / icing risk";
+    if (L.includes("TS") || L.includes("CB")) return "thunderstorm / convective risk";
+    if (L.includes("XWIND") || L.includes("CROSSWIND")) return "crosswind limitations";
+    if (L.includes("RWYCC") || L.includes("RWY")) return "runway contamination / braking action risk";
+    if (L.includes("COLD CORR")) return "cold-temperature corrections";
+    if (L.includes("VA")) return "volcanic ash risk";
+    return null;
+  };
+
+  const driverCounts = new Map();
+  const driverExamples = new Map();
+  const pool = crit.length ? crit : (high.length ? high : med);
+
+  for (const s of pool){
+    const seen = new Set();
+    for (const lab of trigLabels(s)){
+      const cat = categorize(lab);
+      if (!cat || seen.has(cat)) continue;
+      seen.add(cat);
+      driverCounts.set(cat, (driverCounts.get(cat)||0) + 1);
+      if (!driverExamples.has(cat)) driverExamples.set(cat, airportLabel(s));
+    }
+  }
+
+  const topDrivers = [...driverCounts.entries()]
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,3)
+    .map(([cat])=>{
+      const ex = driverExamples.get(cat);
+      return ex ? `${cat} (e.g., ${ex})` : cat;
+    });
 
   const headline20 =
-    crit.length ? `Critical WX: ${listICAO(crit)}.` :
-    high.length ? `High WX: ${listICAO(high)}.` :
-    med.length ? `Medium WX: ${listICAO(med)}.` : "No significant WX alerts.";
+    crit.length ? `Critical operational weather affecting ${crit.length} airports (e.g., ${listAirports(crit, 3)}).` :
+    high.length ? `High-impact weather affecting ${high.length} airports (e.g., ${listAirports(high, 3)}).` :
+    med.length ? `Weather watch: ${med.length} airports at medium risk (e.g., ${listAirports(med, 3)}).` :
+    "No significant weather alerts in the monitored airport set.";
 
   const management45 = (() => {
     const parts = [];
     parts.push(headline20);
-    if (crit.length) parts.push(`Primary drivers: ${(crit[0]?.triggers||[]).slice(0,4).join(", ") || "—"}.`);
-    if (changed.length) parts.push(`Changes since last run: ${changed.map(e=>e.icao).join(", ")}.`);
+
+    if (pool.length){
+      parts.push(`Most affected airports right now: ${listAirports(pool, 6)}.`);
+      if (topDrivers.length){
+        parts.push(`Main issues: ${topDrivers.join("; ")}.`);
+      } else {
+        parts.push(`Main issues: low visibility and/or low ceilings are the most common constraints.`);
+      }
+      if (driverCounts.get("low-visibility procedures") || driverCounts.get("runway visual range limitations") || driverCounts.get("very low visibility / fog risk")){
+        parts.push(`Operational impact: LVP/RVR constraints can reduce runway capacity, increase holding and taxi times, and drive diversion risk at the worst locations.`);
+      }
+    }
+
+    if (changed.length){
+      const changedStr = changed.map(e=>e.icao).join(", ");
+      parts.push(`Notable changes since last run (ICAO): ${changedStr}.`);
+    }
     return parts.join(" ");
   })();
 
   const detail90 = (() => {
     const lines = [];
     lines.push(headline20);
-    const show = top.slice(0, 8);
+
+    const show = pool.slice(0, 6);
     for (const s of show){
-      const trig = (s.triggers||[]).slice(0,6).join(", ") || "—";
-      lines.push(`${s.icao}: ${s.alert||"OK"} (${trig})`);
+      const labs = trigLabels(s).slice(0,5);
+      const plain = labs.length ? labs.join(", ") : "—";
+      lines.push(`${airportLabel(s)}: ${s.alert||"OK"} — ${plain}.`);
     }
+
     if (changed.length){
-      lines.push(`Changed: ${changed.map(e=>e.icao).join(", ")}`);
+      lines.push(`Changed airports (ICAO): ${changed.map(e=>e.icao).join(", ")}.`);
     }
     return lines.join(" ");
   })();
@@ -792,8 +874,11 @@ function buildManagementBrief({generatedAt, stations, events}){
     headline20,
     management45,
     detail90,
-    top: top.map(s=>({icao:s.icao, alert:s.alert||"OK", triggers:s.triggers||[], critSrc:s.critSrc||null})),
-    changed: changed
+    top: top.slice(0,12).map(s=>({
+      icao:s.icao, iata:s.iata||null, name:s.name||null,
+      alert:s.alert||"OK", triggers:s.triggers||[], critSrc:s.critSrc||null
+    })),
+    changed
   };
 }
 
