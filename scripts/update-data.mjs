@@ -792,7 +792,7 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
     const a = (arr||[]).slice(0,n).map(airportLabel);
     if (!a.length) return "—";
     const extra = (arr||[]).length - a.length;
-    return extra>0 ? `${a.join(", ")} (+${extra} more)` : a.join(", ");
+    return extra>0 ? `${a.join(", ")} and ${extra} others` : a.join(", ");
   };
 
   const trigLabels = (s)=> (Array.isArray(s?.triggers)?s.triggers:[])
@@ -842,41 +842,56 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
   };
 
   const humanSummary = (s)=>{
-    // Short, management-readable cause line (no ICAO-only language).
+    // Short, management-readable cause line.
+    // Avoid pure codes/tags; prefer plain-language drivers + only material metrics.
     const parts = [];
     const haz = new Set(Array.isArray(s?.hazards) ? s.hazards : []);
     const labs = trigLabels(s);
 
-    // Weather cause words
+    // Weather descriptors (plain language)
     if (haz.has("fzfg")) parts.push("freezing fog");
     else if (haz.has("fg")) parts.push("fog");
     if (haz.has("br") && !parts.includes("fog") && !parts.includes("freezing fog")) parts.push("mist");
     if (haz.has("sn") || haz.has("blsn")) parts.push("snow");
     if (labs.some(x=>/FZRA|FZDZ|ICE/i.test(x))) parts.push("freezing precipitation / icing risk");
-    if (labs.some(x=>/RWYCC|RWYCC<|RWYCC/i.test(x))) parts.push("runway contamination risk");
+    if (labs.some(x=>/RWYCC|BRAKING|CONTAM/i.test(x))) parts.push("runway contamination risk");
+    if (labs.some(x=>/COLD CORR/i.test(x))) parts.push("cold-temperature performance penalties");
+    if (labs.some(x=>/XWIND|CROSSWIND/i.test(x))) parts.push("crosswind limitation risk");
+    if (labs.some(x=>/GUST/i.test(x))) parts.push("strong gusts risk");
 
-    // Measurable constraints
-    const v = fmtVis(s?.worstVis ?? s?.worst_visibility_m ?? s?.visibility_m);
-    const r = fmtRvr(s?.rvrMinAll);
-    const c = fmtCeil(s?.cigAll ?? s?.ceiling_ft);
+    // Measurable constraints (only if operationally material)
+    const visVal = Number(s?.worstVis ?? s?.worst_visibility_m ?? s?.visibility_m);
+    const v = fmtVis(visVal);
+    const rvrVal = Number(s?.rvrMinAll);
+    const r = fmtRvr(rvrVal);
+    const ceilVal = Number(s?.cigAll ?? s?.ceiling_ft);
+    const c = fmtCeil(ceilVal);
+
     const meas = [];
-    if (v && (s?.worstVis ?? 9999) < 9999) meas.push(`visibility down to ${v}`);
-    if (r && Number(s?.rvrMinAll) < 800) meas.push(`RVR down to ${r}`);
-    if (c && Number(s?.cigAll ?? 99999) < 1000) meas.push(`cloud base around ${c}`);
+    if (v && Number.isFinite(visVal) && visVal > 0 && visVal < 3000) meas.push(`visibility down to ${v}`);
+    if (r && Number.isFinite(rvrVal) && rvrVal > 0 && rvrVal < 800) meas.push(`RVR down to ${r}`);
+    if (c && Number.isFinite(ceilVal) && ceilVal >= 0 && ceilVal < 1000) meas.push(`cloud base around ${c}`);
     if (meas.length) parts.push(meas.join(", "));
 
-    // Minima
-    if (s?.minimaNow?.belowBest) parts.push("below approach minima in current METAR");
-    else if (s?.minimaNow?.belowAlt) parts.push("below alternate minima in current METAR");
+    // Minima (only if actually below)
+    if (s?.minimaNow?.belowBest) parts.push("below approach minima (current METAR)");
+    else if (s?.minimaNow?.belowAlt) parts.push("below alternate minima (current METAR)");
     if (s?.minimaTaf?.belowBest) parts.push("forecast below approach minima at times");
 
     if (!parts.length){
-      // fallback to top 2 trigger labels
-      const t2 = labs.slice(0,2);
-      if (t2.length) return t2.join("; ");
+      // Fallback: convert top trigger labels to plain categories
+      const cats = [];
+      const seen = new Set();
+      for (const lab of labs){
+        const cat = categorize(lab);
+        if (!cat || seen.has(cat)) continue;
+        seen.add(cat);
+        cats.push(cat);
+        if (cats.length >= 2) break;
+      }
+      if (cats.length) return cats.join("; ");
       return "operational constraints flagged";
     }
-    // Keep it compact
     return parts.slice(0,3).join("; ");
   };
 
@@ -893,7 +908,9 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
     const a = s.alert || "OK";
     baseCounts[a] = (baseCounts[a] ?? 0) + 1;
   }
-  const baseImpacted = bases.filter(s=> (s.alert==="CRIT" || s.alert==="HIGH" || s.alert==="MED"));
+  const baseImpactedAny = bases.filter(s=> (s.alert==="CRIT" || s.alert==="HIGH" || s.alert==="MED"));
+  const baseFocus = bases.filter(s=> (s.alert==="CRIT" || s.alert==="HIGH"));
+  const baseMonitorCount = Math.max(0, baseImpactedAny.length - baseFocus.length);
 
   // Build driver stats from the worst tier present (crit > high > med)
   const pool = crit.length ? crit : (high.length ? high : med);
@@ -929,22 +946,53 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
       if (okCount) baseStatus.push(`${okCount} normal`);
       parts.push(`Base airports status: ${baseStatus.join(", ")}.`);
 
-      if (baseImpacted.length){
-        const ex = baseImpacted.slice(0,4).map(s=>`${airportLabel(s)} — ${humanSummary(s)}`);
-        const extra = baseImpacted.length - ex.length;
-        parts.push(`Base airports with constraints: ${ex.join(" | ")}${extra>0 ? ` (+${extra} more)` : ""}.`);
+      if (baseImpactedAny.length){
+        if (baseFocus.length){
+          const shown = baseFocus.slice(0,6).map(s=>`${airportLabel(s)} — ${humanSummary(s)}`);
+          const extra = baseFocus.length - shown.length;
+          let line = `Base airports requiring attention: ${shown.join(" | ")}${extra>0 ? ` and ${extra} others` : ""}.`;
+          if (baseMonitorCount>0) line += ` (${baseMonitorCount} additional base airports are flagged as medium and should be monitored.)`;
+          parts.push(line);
+        } else {
+          // No critical/high at bases, but we may still have medium-level monitoring.
+          const shown = bases.filter(s=>s.alert==="MED").slice(0,4).map(s=>`${airportLabel(s)} — ${humanSummary(s)}`);
+          const extra = Math.max(0, baseMonitorCount - shown.length);
+          parts.push(`Base airports: no critical/high constraints; ${baseMonitorCount} medium airports to monitor${shown.length ? ` (e.g., ${shown.join(" | ")}${extra>0 ? ` and ${extra} others` : ""})` : ""}.`);
+        }
       } else {
         parts.push(`No base airports are currently showing significant constraints.`);
       }
       if (Array.isArray(baseMissing) && baseMissing.length){
-        parts.push(`Note: ${baseMissing.length} base codes are not present in the monitored ICAO list (${baseMissing.slice(0,6).join(", ")}${baseMissing.length>6 ? ", …" : ""}).`);
+        const bmShown = baseMissing.slice(0,6);
+        const bmExtra = baseMissing.length - bmShown.length;
+        parts.push(`Note: ${baseMissing.length} base codes are not present in the monitored ICAO list (${bmShown.join(", ")}${bmExtra>0 ? ` and ${bmExtra} others` : ""}).`);
       }
     }
 
     if (pool.length){
       parts.push(`Most affected locations: ${listAirports(pool, 6)}.`);
       if (topDrivers.length){
-        parts.push(`Main drivers: ${topDrivers.join("; ")}.`);
+        const prettyDriver = (d)=>({
+          "approach minima limitations":"approach minima limits",
+          "low-visibility operations (reduced capacity)":"low-visibility procedures (reduced capacity)",
+          "low-visibility takeoff restrictions":"low-visibility takeoff restrictions",
+          "runway visual range limitations":"runway visual range (RVR) constraints",
+          "very low visibility":"very low visibility",
+          "low cloud base":"low ceilings",
+          "fog / freezing fog":"fog/freezing fog",
+          "mist":"mist",
+          "snow / blowing snow":"snow/blowing snow",
+          "freezing precipitation / icing risk":"freezing precipitation/icing risk",
+          "thunderstorm / convective risk":"thunderstorm/convective risk",
+          "crosswind limitations":"crosswind limitations",
+          "runway contamination / braking action risk":"runway contamination / reduced braking",
+          "cold-temperature performance corrections":"cold-temperature performance penalties",
+          "volcanic ash risk":"volcanic ash risk"
+        }[d] || d);
+        const dlist = topDrivers.map(prettyDriver);
+        if (dlist.length===1) parts.push(`Main driver: ${dlist[0]}.`);
+        else if (dlist.length===2) parts.push(`Main drivers: ${dlist[0]} and ${dlist[1]}.`);
+        else parts.push(`Main drivers: ${dlist[0]}, ${dlist[1]}, and ${dlist[2]}.`);
       }
       parts.push(`Expected impact: reduced runway capacity and higher delay/diversion risk at the worst-affected airports, especially where visibility/RVR and cloud base are very low.`);
     }
@@ -954,7 +1002,9 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
         const s = all.find(x=>x.icao===e.icao);
         return s ? airportLabel(s) : e.icao;
       });
-      parts.push(`Notable changes since the last update: ${changedNames.slice(0,8).join(", ")}${changedNames.length>8 ? ", …" : ""}.`);
+      const chShown = changedNames.slice(0,8);
+      const chExtra = changedNames.length - chShown.length;
+      parts.push(`Since the last update, status changed at ${changedNames.length} airports: ${chShown.join(", ")}${chExtra>0 ? ` and ${chExtra} others` : ""}.`);
     }
     return parts.join(" ");
   })();
@@ -963,20 +1013,78 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
     const lines = [];
     lines.push(headline20);
 
+    const prettyDriver = (d)=>({
+      "approach minima limitations":"approach minima limits",
+      "low-visibility operations (reduced capacity)":"low-visibility procedures (reduced capacity)",
+      "low-visibility takeoff restrictions":"low-visibility takeoff restrictions",
+      "runway visual range limitations":"runway visual range (RVR) constraints",
+      "very low visibility":"very low visibility",
+      "low cloud base":"low ceilings",
+      "fog / freezing fog":"fog/freezing fog",
+      "mist":"mist",
+      "snow / blowing snow":"snow/blowing snow",
+      "freezing precipitation / icing risk":"freezing precipitation/icing risk",
+      "thunderstorm / convective risk":"thunderstorm/convective risk",
+      "crosswind limitations":"crosswind limitations",
+      "runway contamination / braking action risk":"runway contamination / reduced braking",
+      "cold-temperature performance corrections":"cold-temperature performance penalties",
+      "volcanic ash risk":"volcanic ash risk"
+    }[d] || d);
+
+    const driverPhrases = (s, max=3)=>{
+      const out = [];
+      const seen = new Set();
+      for (const lab of trigLabels(s)){
+        const cat = categorize(lab);
+        if (!cat) continue;
+        const p = prettyDriver(cat);
+        if (seen.has(p)) continue;
+        seen.add(p);
+        out.push(p);
+        if (out.length >= max) break;
+      }
+      // Add obvious hazards if not already captured
+      const haz = new Set(Array.isArray(s?.hazards) ? s.hazards : []);
+      const pushIf = (phrase)=>{
+        if (out.length>=max) return;
+        if (!seen.has(phrase)) { out.push(phrase); seen.add(phrase); }
+      };
+      if (haz.has("fzfg")) pushIf("freezing fog");
+      else if (haz.has("fg")) pushIf("fog");
+      if (haz.has("sn") || haz.has("blsn")) pushIf("snow/blowing snow");
+      return out.slice(0,max);
+    };
+
     if (bases.length){
-      const showB = baseImpacted.length ? baseImpacted.slice(0,6) : bases.slice(0,6);
-      lines.push(`Base airports (detail): ${showB.map(s=>`${airportLabel(s)} — ${s.alert||"OK"} — ${humanSummary(s)}`).join(" | ")}.`);
+      const focus = baseFocus.length ? baseFocus : bases.filter(s=>s.alert==="MED");
+      const shown = focus.slice(0,6).map(s=>`${airportLabel(s)} — ${s.alert||"OK"}: ${humanSummary(s)}`);
+      const extra = focus.length - shown.length;
+      let line = `Base airports (focus): ${shown.join(" | ")}${extra>0 ? ` and ${extra} others` : ""}.`;
+      if (!baseFocus.length && baseMonitorCount>0) line = `Base airports (monitor): ${shown.join(" | ")}${extra>0 ? ` and ${extra} others` : ""}.`;
+      lines.push(line);
     }
 
-    const show = pool.slice(0, 6);
-    for (const s of show){
-      const labs = trigLabels(s).slice(0,4);
-      const plain = labs.length ? labs.join(", ") : "—";
-      lines.push(`${airportLabel(s)}: ${s.alert||"OK"} — ${humanSummary(s)}. Key tags: ${plain}.`);
+    // Critical / worst affected airports: explain in plain drivers (no raw tags)
+    const worst = crit.length ? crit : pool;
+    const show = worst.slice(0, 6);
+    if (show.length){
+      const items = show.map(s=>{
+        const drivers = driverPhrases(s, 3);
+        const d = drivers.length ? drivers.join(", ") : "operational constraints";
+        return `${airportLabel(s)} — ${s.alert||"OK"}: ${humanSummary(s)} (drivers: ${d})`;
+      });
+      const extra = worst.length - items.length;
+      lines.push(`Worst affected now: ${items.join(" | ")}${extra>0 ? ` and ${extra} others` : ""}.`);
     }
 
     if (changed.length){
-      lines.push(`Changed since last run: ${changed.map(e=>e.icao).join(", ")}.`);
+      const changedNames = changed.map(e=>{
+        const s = all.find(x=>x.icao===e.icao);
+        return s ? airportLabel(s) : e.icao;
+      });
+      const shown = changedNames.slice(0,10);
+      const extra = changedNames.length - shown.length;
+      lines.push(`Changed since last run: ${shown.join(", ")}${extra>0 ? ` and ${extra} others` : ""}.`);
     }
     return lines.join(" ");
   })();
@@ -995,7 +1103,7 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
     });
   };
   for (const s of top.slice(0,12)) pushUnique(s);
-  for (const s of baseImpacted.slice(0,12)) pushUnique(s);
+  for (const s of baseImpactedAny.slice(0,12)) pushUnique(s);
 
   return {
     generatedAt,
