@@ -823,6 +823,7 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
 
   const categorize = (label)=>{
     const L = String(label||"").toUpperCase();
+    if (L.includes("ENG ICE")) return "engine anti-ice operations";
     if (L.includes("MINIMA")) return "approach minima limitations";
     if (L.includes("LVP")) return "low-visibility operations (reduced capacity)";
     if (L.includes("LVTO")) return "low-visibility takeoff restrictions";
@@ -936,6 +937,15 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
     const parts = [];
     parts.push(headline20);
 
+
+    // Engine anti-ice ops must be explicitly called out (base or non-base).
+    const engIceStations = all.filter(s =>
+      !!s?.engIceOps || trigLabels(s).some(l => /ENG\s*ICE/i.test(l))
+    ).sort((a,b)=> (b.severityScore||0) - (a.severityScore||0));
+    if (engIceStations.length){
+      parts.push(`Engine anti-ice operations are flagged at ${listAirports(engIceStations, 6)}.`);
+    }
+
     // Base airports: always included and phrased for read-out-loud delivery.
     if (bases.length){
       const baseStatusBits = [];
@@ -1017,6 +1027,7 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
             case "very low visibility": return "very low visibility";
             case "runway visual range limitations": return "RVR limitations";
             case "low-visibility operations (reduced capacity)": return "low‑visibility procedures";
+            case "engine anti-ice operations": return "engine anti-ice operations";
             case "approach minima limitations": return "approach minima limits";
             case "crosswind limitations": return "crosswind constraints";
             case "snow / blowing snow": return "snow / blowing snow";
@@ -1078,7 +1089,9 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
       if (topDrivers.length){
         // Slightly shorten a few driver labels for spoken delivery
         const pretty = (d)=>({
-          "approach minima limitations":"approach minima limits",
+          "engine anti-ice operations":"engine anti-ice operations",
+          "engine anti-ice operations":"engine anti-ice operations",
+      "approach minima limitations":"approach minima limits",
           "low-visibility operations (reduced capacity)":"low‑visibility procedures (reduced capacity)",
           "low-visibility takeoff restrictions":"low‑visibility takeoff restrictions",
           "runway visual range limitations":"RVR limitations",
@@ -1114,6 +1127,8 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
     lines.push(headline20);
 
     const prettyDriver = (d)=>({
+      "engine anti-ice operations":"engine anti-ice operations",
+          "engine anti-ice operations":"engine anti-ice operations",
       "approach minima limitations":"approach minima limits",
       "low-visibility operations (reduced capacity)":"low-visibility procedures (reduced capacity)",
       "low-visibility takeoff restrictions":"low-visibility takeoff restrictions",
