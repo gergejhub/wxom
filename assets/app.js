@@ -2388,8 +2388,8 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
     dr.setAttribute("aria-hidden","false");
     // Ultra-safe fallback: inline styles win even if CSS gets out of sync.
     dr.style.display = "block";
-    dr.style.transform = "translateX(0)";
-    dr.style.zIndex = "9999";
+    dr.style.removeProperty("transform");
+    dr.style.zIndex = "230";
   }
   if (sc){
     sc.classList.remove("hidden");
