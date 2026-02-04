@@ -656,6 +656,11 @@ tbody tr:hover{ background:rgba(255,255,255,.02); }
 body.drawer-open .drawer{ transform:translateX(0); }
 body.drawer-open .scrim{ display:block; }
 
+/* Ultra-safe override: if any build fails to remove `.hidden` (display:none !important),
+   still force the drawer + scrim visible when the page is in `drawer-open` state. */
+body.drawer-open .drawer.hidden{ display:block !important; transform:translateX(0) !important; }
+body.drawer-open .scrim.hidden{ display:block !important; }
+
 .drawer__close{
   position:sticky;
   top:0;

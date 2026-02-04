@@ -2375,17 +2375,25 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
   }
 
   // open
-  const dr = $("drawer");
-  const sc = $("scrim");
-  // The markup uses the CSS helper class `.hidden` (display:none), not the HTML `[hidden]` attribute.
+  // Be resilient to markup/CSS drift: prefer ids, but if a future edit changes ids,
+  // fall back to class selectors.
+  const dr = $("drawer") || document.querySelector("aside.drawer") || document.querySelector(".drawer");
+  const sc = $("scrim") || document.querySelector("div.scrim") || document.querySelector(".scrim");
+
+  // The markup uses the CSS helper class `.hidden` (display:none !important), not the HTML `[hidden]` attribute.
   // Therefore we must remove/add that class to show/hide the drawer + scrim.
   if (dr){
     dr.classList.remove("hidden");
     dr.classList.add("is-open");
     dr.setAttribute("aria-hidden","false");
+    // Ultra-safe fallback: inline styles win even if CSS gets out of sync.
+    dr.style.display = "block";
+    dr.style.transform = "translateX(0)";
+    dr.style.zIndex = "9999";
   }
   if (sc){
     sc.classList.remove("hidden");
+    sc.style.display = "block";
   }
   try{ document.body.classList.add("drawer-open"); }catch(e){}
 }
@@ -2405,16 +2413,21 @@ function refreshDrawerAges(){
 }
 
 function closeDrawer(){
-  const dr = $("drawer");
-  const sc = $("scrim");
+  const dr = $("drawer") || document.querySelector("aside.drawer") || document.querySelector(".drawer");
+  const sc = $("scrim") || document.querySelector("div.scrim") || document.querySelector(".scrim");
   if (dr){
     dr.classList.remove("is-open");
     dr.setAttribute("aria-hidden","true");
     // Match openDrawer(...): hide via `.hidden`.
     dr.classList.add("hidden");
+    // Clear inline fallbacks set in openDrawer.
+    dr.style.removeProperty("display");
+    dr.style.removeProperty("transform");
+    dr.style.removeProperty("z-index");
   }
   if (sc){
     sc.classList.add("hidden");
+    sc.style.removeProperty("display");
   }
   try{ document.body.classList.remove("drawer-open"); }catch(e){}
   drawerIcao = null;
