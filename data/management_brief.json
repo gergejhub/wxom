@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-04T11:09:52.880Z",
+  "generatedAt": "2026-02-04T11:23:24.554Z",
   "headline20": "Critical WX: EPLB, UBBB, EPSC, EPWA, LIBD, LIBG.",
   "management45": "Critical WX: EPLB, UBBB, EPSC, EPWA, LIBD, LIBG. Primary drivers: [object Object], [object Object], [object Object], [object Object]. Changes since last run: EPLB, UBBB, EPSC, EPWA, LIBD, LRSV, EDFH, EGNM, EDDS, EDSB.",
   "detail90": "Critical WX: EPLB, UBBB, EPSC, EPWA, LIBD, LIBG. EPLB: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object]) UBBB: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EPSC: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EPWA: CRIT ([object Object], [object Object], [object Object], [object Object]) LIBD: CRIT ([object Object], [object Object], [object Object]) LIBG: CRIT ([object Object], [object Object]) LRSV: HIGH ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EDFH: HIGH ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) Changed: EPLB, UBBB, EPSC, EPWA, LIBD, LRSV, EDFH, EGNM, EDDS, EDSB",
@@ -446,8 +446,8 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 9999,
-            "cig": 1100
+            "effVis": 8000,
+            "cig": 900
           },
           "to": {
             "belowBest": false,
@@ -538,67 +538,6 @@
             "effVis": 1100,
             "cig": 300
           }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "XWIND>15KT",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "GUST≥40KT",
-              "cls": "tag--gust",
-              "src": "M"
-            },
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "SN",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ],
-          "to": [
-            {
-              "label": "XWIND>15KT",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "COLD CORR",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "GUST≥40KT",
-              "cls": "tag--gust",
-              "src": "M"
-            },
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "SN",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ]
         }
       },
       "alert": "CRIT",
@@ -645,7 +584,7 @@
             "belowAlt": false,
             "onlyBest": false,
             "effVis": 9999,
-            "cig": null
+            "cig": 2400
           },
           "to": {
             "belowBest": false,
@@ -799,8 +738,8 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 10000,
-            "cig": 5000
+            "effVis": 8000,
+            "cig": 3000
           }
         }
       },
@@ -827,21 +766,13 @@
       "icao": "LRSV",
       "type": "CHANGE",
       "changes": {
-        "alert": {
-          "from": "CRIT",
-          "to": "HIGH"
-        },
-        "critSrc": {
-          "from": "M",
-          "to": null
-        },
         "minimaNow": {
           "from": {
             "belowBest": false,
-            "belowAlt": true,
-            "onlyBest": true,
-            "effVis": 1100,
-            "cig": 100
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 800,
+            "cig": 200
           },
           "to": {
             "belowBest": false,
@@ -866,68 +797,6 @@
             "effVis": null,
             "cig": null
           }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "TO PROHIB",
-              "cls": "tag--stop",
-              "src": "M"
-            },
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "M",
-              "tip": "METAR minima LIMIT (ALT) · CIG 100<200"
-            },
-            {
-              "label": "RWYCC<3 likely",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "COLD CORR",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "M"
-            }
-          ],
-          "to": [
-            {
-              "label": "TO PROHIB",
-              "cls": "tag--stop",
-              "src": "M"
-            },
-            {
-              "label": "RWYCC<3 likely",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "COLD CORR",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "M"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "M"
-            },
-            {
-              "label": "FZFG",
-              "cls": "tag--wx",
-              "src": "M"
-            }
-          ]
         }
       },
       "alert": "HIGH",
@@ -973,7 +842,7 @@
             "belowBest": false,
             "belowAlt": true,
             "onlyBest": true,
-            "effVis": 200,
+            "effVis": 250,
             "cig": null
           },
           "to": {
@@ -1065,21 +934,13 @@
       "icao": "EGNM",
       "type": "CHANGE",
       "changes": {
-        "alert": {
-          "from": "CRIT",
-          "to": "HIGH"
-        },
-        "critSrc": {
-          "from": "M",
-          "to": null
-        },
         "minimaNow": {
           "from": {
             "belowBest": false,
-            "belowAlt": true,
-            "onlyBest": true,
-            "effVis": 100,
-            "cig": null
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 300,
+            "cig": 200
           },
           "to": {
             "belowBest": false,
@@ -1095,7 +956,7 @@
             "belowAlt": false,
             "onlyBest": false,
             "effVis": 300,
-            "cig": 200
+            "cig": 100
           },
           "to": {
             "belowBest": false,
@@ -1104,103 +965,6 @@
             "effVis": 300,
             "cig": 100
           }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "LVP (<400)",
-              "cls": "tag--warn",
-              "src": "MT"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "CAT2+ <450",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "M",
-              "tip": "METAR minima LIMIT (ALT) · VIS/RVR 100<300"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "MT"
-            },
-            {
-              "label": "RVR≤500",
-              "cls": "tag--rvr",
-              "src": "M"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "MT"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ],
-          "to": [
-            {
-              "label": "LVP (<400)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "MT"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "MT"
-            },
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "MT"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ]
         }
       },
       "alert": "HIGH",
@@ -1327,8 +1091,8 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 3500,
-            "cig": 200
+            "effVis": 4500,
+            "cig": 400
           },
           "to": {
             "belowBest": false,
