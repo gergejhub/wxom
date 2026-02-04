@@ -651,6 +651,11 @@ tbody tr:hover{ background:rgba(255,255,255,.02); }
   height:48px;
 }
 .drawer.is-open{ transform:translateX(0); }
+
+/* Fallback: if JS only toggles body class (or cached CSS misses .is-open), still show the drawer. */
+body.drawer-open .drawer{ transform:translateX(0); }
+body.drawer-open .scrim{ display:block; }
+
 .drawer__close{
   position:sticky;
   top:0;
