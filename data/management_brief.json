@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-04T10:48:03.626Z",
+  "generatedAt": "2026-02-04T10:52:43.388Z",
   "headline20": "Critical WX: EGNM, EPLB, UBBB, EPSC, EPWA, LHDC, LIBD, LIBG, LRSV.",
   "management45": "Critical WX: EGNM, EPLB, UBBB, EPSC, EPWA, LHDC, LIBD, LIBG, LRSV. Primary drivers: [object Object], [object Object], [object Object], [object Object]. Changes since last run: EGNM, EPLB, UBBB, EPSC, EPWA, LHDC, LIBD, LRSV, EDFH, EDSB.",
   "detail90": "Critical WX: EGNM, EPLB, UBBB, EPSC, EPWA, LHDC, LIBD, LIBG, LRSV. EGNM: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EPLB: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object]) UBBB: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object]) EPSC: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EPWA: CRIT ([object Object], [object Object], [object Object], [object Object]) LHDC: CRIT ([object Object], [object Object], [object Object], [object Object]) LIBD: CRIT ([object Object], [object Object], [object Object]) LIBG: CRIT ([object Object], [object Object]) Changed: EGNM, EPLB, UBBB, EPSC, EPWA, LHDC, LIBD, LRSV, EDFH, EDSB",
@@ -542,7 +542,7 @@
             "belowAlt": false,
             "onlyBest": false,
             "effVis": 9999,
-            "cig": 1300
+            "cig": 1100
           },
           "to": {
             "belowBest": false,
@@ -607,7 +607,7 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 2000,
+            "effVis": 1500,
             "cig": 700
           },
           "to": {
@@ -623,8 +623,8 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": null,
-            "cig": null
+            "effVis": 1100,
+            "cig": 300
           },
           "to": {
             "belowBest": false,
@@ -633,52 +633,6 @@
             "effVis": 1100,
             "cig": 300
           }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "XWIND>15KT",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "GUST≥40KT",
-              "cls": "tag--gust",
-              "src": "M"
-            },
-            {
-              "label": "SN",
-              "cls": "tag--wx",
-              "src": "M"
-            }
-          ],
-          "to": [
-            {
-              "label": "XWIND>15KT",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "GUST≥40KT",
-              "cls": "tag--gust",
-              "src": "M"
-            },
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "SN",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ]
         }
       },
       "alert": "CRIT",
@@ -851,7 +805,7 @@
             "belowBest": true,
             "belowAlt": true,
             "onlyBest": false,
-            "effVis": 3700,
+            "effVis": 4400,
             "cig": 100
           },
           "to": {
@@ -867,8 +821,8 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 2000,
-            "cig": 400
+            "effVis": null,
+            "cig": null
           },
           "to": {
             "belowBest": false,
@@ -964,21 +918,13 @@
       "icao": "LRSV",
       "type": "CHANGE",
       "changes": {
-        "alert": {
-          "from": "HIGH",
-          "to": "CRIT"
-        },
-        "critSrc": {
-          "from": null,
-          "to": "M"
-        },
         "minimaNow": {
           "from": {
             "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 3000,
-            "cig": 300
+            "belowAlt": true,
+            "onlyBest": true,
+            "effVis": 1100,
+            "cig": 100
           },
           "to": {
             "belowBest": false,
@@ -993,8 +939,8 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 1500,
-            "cig": 500
+            "effVis": null,
+            "cig": null
           },
           "to": {
             "belowBest": false,
@@ -1136,21 +1082,13 @@
       "icao": "EDSB",
       "type": "CHANGE",
       "changes": {
-        "alert": {
-          "from": "CRIT",
-          "to": "HIGH"
-        },
-        "critSrc": {
-          "from": "M",
-          "to": null
-        },
         "minimaNow": {
           "from": {
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 1200,
-            "cig": 100
+            "effVis": 3500,
+            "cig": 200
           },
           "to": {
             "belowBest": false,
@@ -1175,99 +1113,6 @@
             "effVis": 300,
             "cig": 0
           }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "LVP (<400)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "T",
-              "tip": "TAF minima LIMIT (ALT) · CIG 0<100"
-            },
-            {
-              "label": "COLD CORR",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "MT"
-            },
-            {
-              "label": "FZFG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ],
-          "to": [
-            {
-              "label": "LVP (<400)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "T",
-              "tip": "TAF minima LIMIT (ALT) · CIG 0<100"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "MT"
-            },
-            {
-              "label": "FZFG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ]
         }
       },
       "alert": "HIGH",
