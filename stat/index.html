@@ -136,6 +136,40 @@
       </div>
     </section>
 
+    <!-- Change Atlas (cross-airport change history) -->
+    <section class="card atlasCard">
+      <div class="airportHead">
+        <div>
+          <div class="airportHead__title">Change Atlas</div>
+          <div class="airportHead__sub muted">Cross-airport change history built from local browser snapshots. Use it as an OCC "what changed" heatmap.</div>
+        </div>
+        <div class="airportControls">
+          <select id="atlasMetric" class="select" title="Metric category">
+            <option value="ALL" selected>All metrics</option>
+            <option value="VIS">Visibility</option>
+            <option value="RVR">RVR</option>
+            <option value="CIG">Ceiling</option>
+            <option value="GUST">Wind / gust</option>
+            <option value="SN">Snow</option>
+            <option value="WX">Weather (TS/FG/…)</option>
+          </select>
+          <select id="atlasRole" class="select" title="Role filter">
+            <option value="ALL" selected>All roles</option>
+            <option value="BASE">Bases</option>
+            <option value="DEST">Destinations</option>
+            <option value="ALT">Alternates</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <input id="atlasSearch" class="input" type="text" placeholder="Filter ICAO/IATA…" autocomplete="off"/>
+        </div>
+      </div>
+
+      <div id="atlasEmpty" class="muted" style="display:none; margin-top:10px;"></div>
+      <div id="atlasKpis" class="atlasKpis"></div>
+      <div id="atlasTable" class="atlasTable"></div>
+      <div id="atlasTooltip" class="atlasTooltip" style="display:none;"></div>
+    </section>
+
     <!-- Refresh log -->
     <section class="card logCard">
       <div class="logHead">

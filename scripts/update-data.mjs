@@ -11,6 +11,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 
 const ROOT = process.cwd();
 const AIRPORTS_TXT = path.join(ROOT, 'airports.txt');
@@ -18,6 +19,548 @@ const OUT_LATEST = path.join(ROOT, 'data', 'latest.json');
 const OUT_IATA_MAP = path.join(ROOT, 'data', 'iata_map.json');
 const OUT_STATUS = path.join(ROOT, 'data', 'status.json');
 const OUT_RUNWAYS = path.join(ROOT, 'data', 'runways.json');
+
+// --- Thin-client precompute -------------------------------------------------
+// Precompute parsing + trigger logic server-side so the browser client can render
+// with minimal computation (stable TV view, less CPU, fewer reflows).
+
+const VIS_THRESHOLDS = [800, 550, 500, 300, 250, 175, 150];
+const RVR_THRESHOLDS = [500, 300, 200, 75];
+const ALERT_LEVEL = { OK:0, MED:1, HIGH:2, CRIT:3 };
+
+function alertFromScore(score){
+  return score >= 70 ? "CRIT" :
+         score >= 45 ? "HIGH" :
+         score >= 20 ? "MED" : "OK";
+}
+function minScoreForAlert(alert){
+  return alert === "CRIT" ? 70 :
+         alert === "HIGH" ? 45 :
+         alert === "MED" ? 20 : 0;
+}
+function maxAlert(...alerts){
+  let best = "OK";
+  for (const a of alerts){
+    if (!a) continue;
+    if ((ALERT_LEVEL[a]||0) > (ALERT_LEVEL[best]||0)) best = a;
+  }
+  return best;
+}
+
+function escapeHtmlThin(s){
+  return String(s||"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/\"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function parseTempC(raw){
+  const m = String(raw||"").match(/\b(M?\d{1,2})\/(M?\d{1,2})\b/);
+  if (!m) return null;
+  const v = m[1];
+  const n = parseInt(v.replace(/^M/,""),10);
+  if (Number.isNaN(n)) return null;
+  return v.startsWith("M") ? -n : n;
+}
+
+function _parseVisibilityMeters(tok){
+  const t = String(tok||"").trim();
+  if (!t) return null;
+  if (t === "CAVOK") return 10000;
+  if (/^\d{4}$/.test(t)) return parseInt(t,10);
+  const frac = t.match(/^([0-9]+)\s*\/?\s*([0-9]+)?SM$/i);
+  if (frac){
+    // XSM or X/YSM
+    let mi = parseFloat(frac[1]);
+    if (frac[2]) mi = parseInt(frac[1],10)/parseInt(frac[2],10);
+    if (!Number.isFinite(mi)) return null;
+    return Math.round(mi * 1609.34);
+  }
+  const m = t.match(/^([0-9]+(?:\.[0-9]+)?)SM$/i);
+  if (m){
+    const mi = parseFloat(m[1]);
+    if (!Number.isFinite(mi)) return null;
+    return Math.round(mi*1609.34);
+  }
+  if (/^\d+\/\d+SM$/i.test(t)){
+    const [a,b] = t.replace(/SM/i,"").split("/").map(x=>parseFloat(x));
+    if (Number.isFinite(a) && Number.isFinite(b) && b){
+      return Math.round((a/b)*1609.34);
+    }
+  }
+  return null;
+}
+
+function extractRvrMeters(raw){
+  const s = String(raw||"");
+  const out = [];
+  const re = /\bR(\d{2}[A-Z]?)\/(P|M)?(\d{4})(?:V(P|M)?(\d{4}))?([UDN])?\b/g;
+  let m;
+  while ((m = re.exec(s)) !== null){
+    const v1 = parseInt(m[3],10);
+    if (!Number.isNaN(v1)) out.push(v1);
+    const v2 = m[5] ? parseInt(m[5],10) : NaN;
+    if (!Number.isNaN(v2)) out.push(v2);
+  }
+  return out;
+}
+
+function hazardFlags(raw){
+  const s = String(raw||"").toUpperCase();
+  const wx = (p)=> new RegExp(`(?:^|[^A-Z])${p}(?:[^A-Z]|$)`).test(s);
+  const hasCB = /\bCB\b/.test(s);
+  return {
+    ts: wx("TS"),
+    cb: hasCB,
+    fg: wx("FG"),
+    fzfg: /FZFG/.test(s),
+    br: wx("BR"),
+    sn: wx("SN"),
+    blsn: /BLSN/.test(s),
+    ra: wx("RA") || wx("DZ") || wx("SHRA") || wx("SHDZ"),
+    va: wx("VA"),
+  };
+}
+
+function gustMaxKt(raw){
+  const s = String(raw||"");
+  // METAR: 18015G25KT, TAF similar
+  const m = s.match(/\b\d{3}\d{2,3}G(\d{2,3})KT\b/);
+  if (m){
+    const g = parseInt(m[1],10);
+    return Number.isNaN(g) ? null : g;
+  }
+  return null;
+}
+
+function ceilingFt(raw){
+  const s = String(raw||"").toUpperCase();
+  if (/\bCAVOK\b/.test(s)) return 5000;
+  // Find lowest BKN/OVC/VV layer
+  const re = /\b(BKN|OVC|VV)(\d{3})\b/g;
+  let m, best = null;
+  while ((m = re.exec(s)) !== null){
+    const ft = parseInt(m[2],10) * 100;
+    if (Number.isNaN(ft)) continue;
+    if (best===null || ft < best) best = ft;
+  }
+  return best;
+}
+
+function parseVisibilityMeters(tok){ return _parseVisibilityMeters(tok); }
+
+function extractAllVisibilityMetersFromTAF(raw){
+  const s = String(raw||"");
+  const out = [];
+  if (/\bCAVOK\b/.test(s)) out.push(10000);
+  // 4-digit meters (0000..9999) + SM forms
+  const toks = s.split(/\s+/).filter(Boolean);
+  for (const t of toks){
+    if (/^\d{4}$/.test(t)) out.push(parseInt(t,10));
+    const v = parseVisibilityMeters(t);
+    if (v !== null) out.push(v);
+  }
+  return out.filter(n=>Number.isFinite(n));
+}
+
+function scoreFromVis(vis){
+  if (vis===null || vis===undefined) return 0;
+  if (vis <= 150) return 80;
+  if (vis <= 175) return 72;
+  if (vis <= 250) return 60;
+  if (vis <= 300) return 52;
+  if (vis <= 500) return 40;
+  if (vis <= 550) return 32;
+  if (vis <= 800) return 20;
+  return 0;
+}
+function scoreFromCig(cig){
+  if (cig===null || cig===undefined) return 0;
+  if (cig < 200) return 70;
+  if (cig < 300) return 60;
+  if (cig < 500) return 45;
+  if (cig < 800) return 28;
+  if (cig < 1000) return 18;
+  return 0;
+}
+function scoreFromGust(g){
+  if (!g) return 0;
+  if (g >= 40) return 75;
+  if (g >= 30) return 55;
+  if (g >= 25) return 35;
+  return 0;
+}
+function scoreFromHazards(hz){
+  if (!hz) return 0;
+  if (hz.va) return 90;
+  if (hz.ts || hz.cb) return 55;
+  if (hz.fzfg) return 65;
+  if (hz.fg) return 35;
+  if (hz.sn || hz.blsn) return hz.blsn ? 90 : 40;
+  if (hz.ra) return 20;
+  if (hz.br) return 18;
+  return 0;
+}
+
+function computeScores(raw){
+  const s = String(raw||"").trim();
+  const hz = hazardFlags(s);
+  const tempC = parseTempC(s);
+  const gustMax = gustMaxKt(s);
+  const cig = ceilingFt(s);
+
+  // Visibility: METAR uses 4-digit, TAF can include SM forms too
+  let vis = null;
+  const vMatch = s.match(/\b(\d{4}|CAVOK)\b/);
+  if (vMatch) vis = parseVisibilityMeters(vMatch[1]);
+  if (vis === null){
+    // try SM token
+    const sm = s.match(/\b(P?\d+(?:\.\d+)?SM|\d+\/\d+SM)\b/i);
+    if (sm) vis = parseVisibilityMeters(sm[1]);
+  }
+
+  const rvr = extractRvrMeters(s);
+  const rvrMin = rvr.length ? Math.min(...rvr) : null;
+
+  const score = Math.max(
+    scoreFromVis(vis),
+    scoreFromCig(cig),
+    scoreFromGust(gustMax),
+    scoreFromHazards(hz)
+  );
+
+  return { raw:s, hz, tempC, gustMax, vis, cig, rvrMin, score };
+}
+
+function windPillarAlert(met, taf){
+  const g = Math.max(met.gustMax ?? 0, taf.gustMax ?? 0);
+  if (!g) return "OK";
+  if (g >= 40) return "CRIT";
+  if (g >= 30) return "HIGH";
+  if (g >= 25) return "MED";
+  return "OK";
+}
+function snowPillarAlert(st, met, taf, worstVis, rvrMinAll, cigAll){
+  const hasSnow = !!(met.hz.sn || taf.hz.sn);
+  const hasBlSn = !!(met.hz.blsn || taf.hz.blsn);
+  if (!hasSnow && !hasBlSn) return "OK";
+  if (hasBlSn) return "CRIT";
+  const vis = worstVis;
+  const rvr = rvrMinAll;
+  const cig = cigAll;
+  if ((vis !== null && vis <= 500) || (rvr !== null && rvr <= 300) || (cig !== null && cig < 500)) return "CRIT";
+  if ((vis !== null && vis <= 800) || (rvr !== null && rvr <= 500) || (cig !== null && cig < 1000)) return "HIGH";
+  return "MED";
+}
+
+function snippetAround(raw, token, radius=28){
+  const s = String(raw||"");
+  const i = s.toUpperCase().indexOf(String(token||"").toUpperCase());
+  if (i < 0) return "";
+  const a = Math.max(0, i-radius);
+  const b = Math.min(s.length, i+String(token).length+radius);
+  const pref = a>0 ? "…" : "";
+  const suf = b<s.length ? "…" : "";
+  return pref + s.slice(a,b).trim() + suf;
+}
+
+function visTokenForMeters(raw){
+  const s = String(raw||"");
+  const m = s.match(/\b(\d{4}|CAVOK)\b/);
+  if (m) return m[1];
+  const sm = s.match(/\b(P?\d+(?:\.\d+)?SM|\d+\/\d+SM)\b/i);
+  if (sm) return sm[1];
+  return null;
+}
+
+function buildMinimaExplain({kind, raw, minima, state, visVal, rvrMin, isTaf}){
+  if (!minima || !minima.best || !minima.alt || !state) return null;
+  const triggered = !!(state.belowBest || state.onlyBest);
+  if (!triggered) return null;
+  const mode = state.belowBest ? "CRIT" : "LIMIT";
+  const basis = state.belowBest ? "BEST" : "ALT";
+  const thr = state.belowBest ? minima.best : minima.alt;
+  const effVis = (state.effVis != null) ? state.effVis : null;
+  const cig = (state.cig != null) ? state.cig : null;
+
+  const reasons = [];
+  const tokens = [];
+
+  if (cig != null && thr.cig_ft != null && cig < thr.cig_ft){
+    const token = (()=>{
+      const s = String(raw||"").toUpperCase();
+      const re = /\b(BKN|OVC|VV)(\d{3})\b/g;
+      let m;
+      while ((m = re.exec(s)) !== null){
+        const ft = parseInt(m[2],10)*100;
+        if (ft === cig) return `${m[1]}${m[2]}`;
+      }
+      return null;
+    })();
+    if (token){
+      tokens.push({token, cls: mode==="CRIT"?"hlStop":"hlWarn"});
+    }
+    reasons.push({metric:"CIG", actual:cig, threshold:thr.cig_ft, basis, token, snippet: token?snippetAround(raw, token):""});
+  }
+  if (effVis != null && thr.vis_m != null && effVis < thr.vis_m){
+    const token = (rvrMin != null && rvrMin <= effVis) ? null : visTokenForMeters(raw);
+    if (token){
+      tokens.push({token, cls: mode==="CRIT"?"hlStop":"hlWarn"});
+    }
+    reasons.push({metric:"VIS/RVR", actual:effVis, threshold:thr.vis_m, basis, token, snippet: token?snippetAround(raw, token):""});
+  }
+  const tip = `${kind} minima ${mode} (${basis}) · ` + reasons.map(r=>`${r.metric} ${r.actual}<${r.threshold}`).join("; ");
+  return { mode, basis, tip, reasons, tokens };
+}
+
+function loadOmApi(runwaysMap){
+  try{
+    const code = fs.readFileSync(path.join(ROOT, "assets", "om_policy.js"), "utf8");
+    const sandbox = { window: {}, console };
+    vm.createContext(sandbox);
+    vm.runInContext(code, sandbox, {timeout: 500});
+    const api = sandbox.window && sandbox.window.WXM_OM;
+    if (api && typeof api.computeOmFlags === "function"){
+      return (st, met, taf, worstVis, rvrMinAll)=> api.computeOmFlags(st, met, taf, worstVis, rvrMinAll, runwaysMap || null);
+    }
+  }catch(e){
+    // ignore
+  }
+  return null;
+}
+
+function computeDerivedStation(st, omFn){
+  const met = computeScores(st.metarRaw || "");
+  const taf = computeScores(st.tafRaw || "");
+
+  const worstVis = (() => {
+    const vals = [];
+    if (met.vis !== null) vals.push(met.vis);
+    const tafVals = extractAllVisibilityMetersFromTAF(st.tafRaw || "");
+    if (tafVals.length) vals.push(Math.min(...tafVals));
+    return vals.length ? Math.min(...vals) : null;
+  })();
+
+  const tafWorstVis = (() => {
+    const vals = extractAllVisibilityMetersFromTAF(st.tafRaw || "");
+    if (vals.length) return Math.min(...vals);
+    return (taf.vis !== null) ? taf.vis : null;
+  })();
+
+  const metRvrMin = met.rvrMin ?? null;
+  const tafRvrMin = taf.rvrMin ?? null;
+
+  const allRvr = [...extractRvrMeters(st.metarRaw || ""), ...extractRvrMeters(st.tafRaw || "")];
+  const rvrMinAll = allRvr.length ? Math.min(...allRvr) : null;
+
+  const cigAll = (() => {
+    const a = ceilingFt(st.metarRaw || "");
+    const b = ceilingFt(st.tafRaw || "");
+    if (a === null) return b;
+    if (b === null) return a;
+    return Math.min(a,b);
+  })();
+
+  const minimaNow = (() => {
+    const m = st.minima || null;
+    if (!m || !m.best || !m.alt) return null;
+    const effVis = (()=>{
+      const a = (met.vis===null||met.vis===undefined)?Infinity:met.vis;
+      const b = (metRvrMin===null||metRvrMin===undefined)?Infinity:metRvrMin;
+      const v = Math.min(a,b);
+      return (v===Infinity)?null:v;
+    })();
+    const cig = (met.cig===undefined)?null:met.cig;
+    const belowBest = ((cig!==null && m.best.cig_ft!=null && cig < m.best.cig_ft) ||
+      (effVis!==null && m.best.vis_m!=null && effVis < m.best.vis_m));
+    const belowAlt = ((cig!==null && m.alt.cig_ft!=null && cig < m.alt.cig_ft) ||
+      (effVis!==null && m.alt.vis_m!=null && effVis < m.alt.vis_m));
+    return { belowBest, belowAlt, onlyBest: (!belowBest && belowAlt), effVis, cig };
+  })();
+
+  const minimaTaf = (() => {
+    const m = st.minima || null;
+    if (!m || !m.best || !m.alt) return null;
+    const effVis = (()=>{
+      const a = (tafWorstVis===null||tafWorstVis===undefined)?Infinity:tafWorstVis;
+      const b = (tafRvrMin===null||tafRvrMin===undefined)?Infinity:tafRvrMin;
+      const v = Math.min(a,b);
+      return (v===Infinity)?null:v;
+    })();
+    const cig = (taf.cig===undefined)?null:taf.cig;
+    const belowBest = ((cig!==null && m.best.cig_ft!=null && cig < m.best.cig_ft) ||
+      (effVis!==null && m.best.vis_m!=null && effVis < m.best.vis_m));
+    const belowAlt = ((cig!==null && m.alt.cig_ft!=null && cig < m.alt.cig_ft) ||
+      (effVis!==null && m.alt.vis_m!=null && effVis < m.alt.vis_m));
+    return { belowBest, belowAlt, onlyBest: (!belowBest && belowAlt), effVis, cig };
+  })();
+
+  const minExplainMet = buildMinimaExplain({kind:"METAR", raw:st.metarRaw||"", minima:st.minima||null, state:minimaNow, visVal:met.vis, rvrMin:metRvrMin, isTaf:false});
+  const minExplainTaf = buildMinimaExplain({kind:"TAF", raw:st.tafRaw||"", minima:st.minima||null, state:minimaTaf, visVal:tafWorstVis, rvrMin:tafRvrMin, isTaf:true});
+  const _minTokensM = minExplainMet ? (minExplainMet.tokens || []) : [];
+  const _minTokensT = minExplainTaf ? (minExplainTaf.tokens || []) : [];
+
+  const om = omFn ? omFn(st, met, taf, worstVis, rvrMinAll) : null;
+  const empty = computeScores("");
+  const omMet = omFn ? omFn({...st, tafRaw:""}, met, empty, met.vis, metRvrMin) : null;
+  const omTaf = omFn ? omFn({...st, metarRaw:""}, empty, taf, tafWorstVis, tafRvrMin) : null;
+
+  const engIceOps = (met.vis !== null && met.vis <= 150 && met.hz.fzfg);
+
+  let severityScore = Math.max(met.score, Math.floor(taf.score*0.85));
+  if (engIceOps) severityScore = 100;
+  const baseAlert = alertFromScore(severityScore);
+  const windAlert = windPillarAlert(met, taf);
+  const snowAlert = snowPillarAlert(st, met, taf, worstVis, rvrMinAll, cigAll);
+  const alert = maxAlert(baseAlert, windAlert, snowAlert);
+  severityScore = Math.max(severityScore, minScoreForAlert(alert));
+
+  const metPri = engIceOps ? 1000 : met.score;
+  const tafPri = taf.score;
+
+  const metCrit = (typeof met.score === "number" && met.score >= 70);
+  const tafCrit = (typeof taf.score === "number" && taf.score >= 70);
+  const critSrc = (alert === "CRIT") ? (metCrit ? "M" : (tafCrit ? "T" : "E")) : null;
+
+  const triggers = [];
+  const push = (label, cls, src, tip) => triggers.push({label, cls, src, tip});
+  const addBy = (label, cls, m, t) => {
+    if (!m && !t) return;
+    const src = m && t ? "MT" : (m ? "M" : "T");
+    push(label, cls, src);
+  };
+
+  const minimaState = (om0)=>{
+    if (om0 && om0.rvr125) return "rvr125";
+    if (om0 && om0.lvtoQualReq) return "lvto150";
+    if (om0 && om0.lvp) return "lvp";
+    if (om0 && om0.lvto) return "lvto";
+    return null;
+  };
+  const catState = (om0)=>{
+    if (om0 && om0.cat3BelowMin) return "cat3min";
+    if (om0 && om0.cat3Only) return "cat3only";
+    if (om0 && om0.cat2Plus) return "cat2plus";
+    return null;
+  };
+  const omM = omMet || {};
+  const omT = omTaf || {};
+  const mMin = minimaState(omM);
+  const tMin = minimaState(omT);
+  const mCat = catState(omM);
+  const tCat = catState(omT);
+
+  addBy("TO PROHIB", "tag--stop", !!omM.toProhib, !!omT.toProhib);
+  addBy("RVR<125", "tag--stop", mMin==="rvr125", tMin==="rvr125");
+  addBy("LVTO<150 QUAL", "tag--warn", mMin==="lvto150", tMin==="lvto150");
+  addBy("LVP (<400)", "tag--warn", mMin==="lvp", tMin==="lvp");
+  addBy("LVTO (<550)", "tag--lvto", mMin==="lvto", tMin==="lvto");
+  addBy("RVR REQ (<800)", "tag--warn", !!omM.rvrRequired, !!omT.rvrRequired);
+  addBy("CAT3<75", "tag--stop", mCat==="cat3min", tCat==="cat3min");
+  addBy("CAT3 ONLY <200", "tag--warn", mCat==="cat3only", tCat==="cat3only");
+  addBy("CAT2+ <450", "tag--warn", mCat==="cat2plus", tCat==="cat2plus");
+
+  if (minExplainMet){
+    const lbl = (minExplainMet.mode === "CRIT") ? "MINIMA CRIT" : "MINIMA LIMIT";
+    const cls = (minExplainMet.mode === "CRIT") ? "tag--stop" : "tag--warn";
+    push(lbl, cls, "M", minExplainMet.tip || "");
+  }
+  if (minExplainTaf){
+    const lbl = (minExplainTaf.mode === "CRIT") ? "MINIMA CRIT" : "MINIMA LIMIT";
+    const cls = (minExplainTaf.mode === "CRIT") ? "tag--stop" : "tag--warn";
+    push(lbl, cls, "T", minExplainTaf.tip || "");
+  }
+
+  if (omM && omM.xwindExceed && omM.xwindLimitKt){
+    push(`XWIND>${omM.xwindLimitKt}KT`, "tag--warn", "M");
+  }
+  if (omT && omT.xwindExceed && omT.xwindLimitKt){
+    if (!(omM && omM.xwindExceed && omM.xwindLimitKt === omT.xwindLimitKt)){
+      push(`XWIND>${omT.xwindLimitKt}KT`, "tag--warn", "T");
+    }
+  }
+
+  addBy("RWYCC<3 likely", "tag--warn", !!omM.noOpsLikely, !!omT.noOpsLikely);
+  addBy("VA", "tag--stop", !!omM.va, !!omT.va);
+  if (omM && omM.coldcorr) push("COLD CORR", "tag--warn", "M");
+
+  for (const th of VIS_THRESHOLDS){
+    const m = (met.vis !== null && met.vis <= th);
+    const t = (()=>{
+      const vals = extractAllVisibilityMetersFromTAF(st.tafRaw || "");
+      return vals.length ? Math.min(...vals) <= th : false;
+    })();
+    if (m || t){
+      addBy(`VIS≤${th}`, "tag--vis", m, t);
+      break;
+    }
+  }
+
+  if (rvrMinAll !== null){
+    for (const th of RVR_THRESHOLDS){
+      const m = extractRvrMeters(st.metarRaw || "").some(v => v <= th);
+      const t = extractRvrMeters(st.tafRaw || "").some(v => v <= th);
+      if (m || t){
+        addBy(`RVR≤${th}`, "tag--rvr", m, t);
+        break;
+      }
+    }
+  }
+
+  addBy("CIG<500", "tag--cig",
+    (ceilingFt(st.metarRaw||"") !== null && ceilingFt(st.metarRaw||"") < 500),
+    (ceilingFt(st.tafRaw||"") !== null && ceilingFt(st.tafRaw||"") < 500));
+
+  const mg25 = (met.gustMax !== null && met.gustMax >= 25);
+  const tg25 = (taf.gustMax !== null && taf.gustMax >= 25);
+  const mg30 = (met.gustMax !== null && met.gustMax >= 30);
+  const tg30 = (taf.gustMax !== null && taf.gustMax >= 30);
+  const mg40 = (met.gustMax !== null && met.gustMax >= 40);
+  const tg40 = (taf.gustMax !== null && taf.gustMax >= 40);
+  addBy("GUST≥40KT", "tag--gust", mg40, tg40);
+  addBy("GUST≥30KT", "tag--gust", mg30 && !mg40, tg30 && !tg40);
+  addBy("GUST≥25KT", "tag--gust", mg25 && !mg30 && !mg40, tg25 && !tg30 && !tg40);
+
+  const mhz = met.hz, thz = taf.hz;
+  addBy("TS/CB", "tag--wx", (mhz.ts || mhz.cb), (thz.ts || thz.cb));
+  addBy("FZFG", "tag--wx", mhz.fzfg, thz.fzfg);
+  addBy("FG", "tag--wx", mhz.fg, thz.fg);
+  addBy("BR", "tag--wx", mhz.br, thz.br);
+  addBy("SN", "tag--wx", mhz.sn, thz.sn);
+  addBy("RA", "tag--wx", mhz.ra, thz.ra);
+
+  if (engIceOps) triggers.unshift({label:"ENG ICE OPS", cls:"tag--eng", src:"M"});
+
+  return {
+    ...st,
+    _thinComputed: true,
+    met, taf,
+    worstVis,
+    tafWorstVis,
+    rvrMinAll,
+    cigAll,
+    minimaNow,
+    minimaTaf,
+    minExplainMet,
+    minExplainTaf,
+    _minTokensM,
+    _minTokensT,
+    om,
+    omMet,
+    omTaf,
+    engIceOps,
+    severityScore,
+    alert,
+    metCrit,
+    tafCrit,
+    critSrc,
+    metPri,
+    tafPri,
+    triggers
+  };
+}
 
 const OURAIRPORTS_AIRPORTS_URLS = [
   'https://ourairports.com/airports.csv',
@@ -159,23 +702,6 @@ function tokenizeAllVis(raw){
   // pick a primary token for display/highlight focus (if any)
   const primaryToken = toks.size ? Array.from(toks)[0] : null;
   return { min_m: min, tokensToHighlight: toks, primaryToken };
-}
-
-function ceilingFt(raw){
-  if(!raw) return null;
-  const tokens = raw.split(/\s+/);
-  let lowest = null;
-  for(const t of tokens){
-    // BKNxxx / OVCxxx / VVxxx where xxx is hundreds of feet
-    const m = t.match(/^(BKN|OVC|VV)(\d{3})$/);
-    if(m){
-      const ft = parseInt(m[2],10)*100;
-      if(Number.isFinite(ft)){
-        lowest = lowest==null ? ft : Math.min(lowest, ft);
-      }
-    }
-  }
-  return lowest;
 }
 
 function findHazards(text){
@@ -629,46 +1155,42 @@ async function main(){
     errors.push(`TAF fetch failed: ${String(e?.message ?? e)}`);
   }
 
+  // Load runway map (for OM policy layer) and compile OM evaluator.
+  let runwaysMap = {};
+  try{
+    runwaysMap = fs.existsSync(OUT_RUNWAYS) ? JSON.parse(fs.readFileSync(OUT_RUNWAYS, 'utf8')) : {};
+  }catch(e){
+    runwaysMap = {};
+  }
+  const omFn = loadOmApi(runwaysMap);
+
   const stations = icaos.map(icao => {
-    const metar = metars.get(icao) || null;
-    const taf = tafs.get(icao) || null;
+    const metar = metars.get(icao) || "";
+    const taf = tafs.get(icao) || "";
 
-    const metarVis = tokenizeAllVis(metar);
-    const tafVis = tokenizeAllVis(taf);
-
-    // Use the worse (minimum) visibility between METAR and TAF for severity ranking.
-    let worstVis = metarVis.min_m;
-    if(tafVis.min_m != null) worstVis = (worstVis == null) ? tafVis.min_m : Math.min(worstVis, tafVis.min_m);
-
-    const ceil_ft = ceilingFt(metar) ?? ceilingFt(taf);
-    const hazards = [...new Set([...findHazards(metar), ...findHazards(taf)])];
-
-    const score = severityScore({
-      hazards,
-      visibility_m: worstVis,
-      ceiling_ft: ceil_ft,
-      hasTaf: Boolean(taf)
-    });
-
-    return {
+    const base = {
       icao,
       iata: iataMap[icao]?.iata ?? null,
       name: iataMap[icao]?.name ?? null,
       lat: iataMap[icao]?.lat ?? null,
       lon: iataMap[icao]?.lon ?? null,
-
       updatedAt: metar ? (metar.match(/\b\d{6}Z\b/)?.[0] ?? null) : null,
-
-      visibility_m: metarVis.min_m ?? null,
-      taf_visibility_m: tafVis.min_m ?? null,
-      worst_visibility_m: worstVis,
-
-      ceiling_ft: ceil_ft,
-      hazards,
-      severityScore: score,
       metarRaw: metar,
       tafRaw: taf,
       minima: minimaByIcao[icao] ?? null,
+    };
+
+    const d = computeDerivedStation(base, omFn);
+
+    // Compatibility / quick filters: keep a few simple scalar fields alongside thin payload.
+    return {
+      ...d,
+      visibility_m: (d.met && d.met.vis != null) ? d.met.vis : null,
+      taf_visibility_m: (d.tafWorstVis != null) ? d.tafWorstVis : ((d.taf && d.taf.vis != null) ? d.taf.vis : null),
+      worst_visibility_m: d.worstVis ?? null,
+      ceiling_ft: d.cigAll ?? null,
+      hazards: [...new Set([...(d.met?.hz ? Object.keys(d.met.hz).filter(k=>d.met.hz[k]) : []), ...(d.taf?.hz ? Object.keys(d.taf.hz).filter(k=>d.taf.hz[k]) : [])])],
+      severityScore: d.severityScore ?? null,
     };
   });
 
