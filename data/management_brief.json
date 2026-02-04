@@ -1,11 +1,37 @@
 {
-  "generatedAt": "2026-02-04T11:53:22.647Z",
-  "headline20": "Critical WX: UBBB, EDDB, EDDH, EPGD, EPLB, EPMO, EPPO, EPRZ, EPSC, EPWA, LIBD, LIBG.",
-  "management45": "Critical WX: UBBB, EDDB, EDDH, EPGD, EPLB, EPMO, EPPO, EPRZ, EPSC, EPWA, LIBD, LIBG. Primary drivers: [object Object], [object Object], [object Object], [object Object]. Changes since last run: UBBB, EDDB, EDDH, EPGD, EPLB, EPPO, EPRZ, EPSC, EPWA, LIBD.",
-  "detail90": "Critical WX: UBBB, EDDB, EDDH, EPGD, EPLB, EPMO, EPPO, EPRZ, EPSC, EPWA, LIBD, LIBG. UBBB: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EDDB: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EDDH: CRIT ([object Object], [object Object], [object Object]) EPGD: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EPLB: CRIT ([object Object], [object Object], [object Object], [object Object]) EPMO: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object]) EPPO: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object], [object Object]) EPRZ: CRIT ([object Object], [object Object], [object Object], [object Object], [object Object]) Changed: UBBB, EDDB, EDDH, EPGD, EPLB, EPPO, EPRZ, EPSC, EPWA, LIBD",
+  "generatedAt": "2026-02-04T11:56:41.908Z",
+  "headline20": "Critical operational weather affecting 13 airports (e.g., Brindisi (BDS/LIBR), Heydar Aliyev (GYD/UBBB), Berlin Brandenburg Willy Brandt (BER/EDDB) (+10 more)).",
+  "management45": "Critical operational weather affecting 13 airports (e.g., Brindisi (BDS/LIBR), Heydar Aliyev (GYD/UBBB), Berlin Brandenburg Willy Brandt (BER/EDDB) (+10 more)). Most affected airports right now: Brindisi (BDS/LIBR), Heydar Aliyev (GYD/UBBB), Berlin Brandenburg Willy Brandt (BER/EDDB), Hamburg Helmut Schmidt (HAM/EDDH), Gdańsk Lech Wałęsa (GDN/EPGD), Lublin (LUZ/EPLB) (+7 more). Main issues: cold-temperature corrections (e.g., Heydar Aliyev (GYD/UBBB)); low cloud ceiling (e.g., Heydar Aliyev (GYD/UBBB)); snow / blowing snow (e.g., Heydar Aliyev (GYD/UBBB)). Notable changes since last run (ICAO): LIBR, UBBB, EDDB, EDDH, EPGD, EPLB, EPPO, EPRZ, EPSC, EPWA.",
+  "detail90": "Critical operational weather affecting 13 airports (e.g., Brindisi (BDS/LIBR), Heydar Aliyev (GYD/UBBB), Berlin Brandenburg Willy Brandt (BER/EDDB) (+10 more)). Brindisi (BDS/LIBR): CRIT — GUST≥40KT, GUST≥30KT, RA. Heydar Aliyev (GYD/UBBB): CRIT — XWIND>15KT, COLD CORR, CIG<500, GUST≥40KT, GUST≥30KT. Berlin Brandenburg Willy Brandt (BER/EDDB): CRIT — TO PROHIB, RWYCC<3 likely, COLD CORR, CIG<500, BR. Hamburg Helmut Schmidt (HAM/EDDH): CRIT — COLD CORR, CIG<500, SN. Gdańsk Lech Wałęsa (GDN/EPGD): CRIT — TO PROHIB, RWYCC<3 likely, COLD CORR, CIG<500, BR. Lublin (LUZ/EPLB): CRIT — COLD CORR, CIG<500, BR, SN. Changed airports (ICAO): LIBR, UBBB, EDDB, EDDH, EPGD, EPLB, EPPO, EPRZ, EPSC, EPWA.",
   "top": [
     {
+      "icao": "LIBR",
+      "iata": "BDS",
+      "name": "Brindisi Airport",
+      "alert": "CRIT",
+      "triggers": [
+        {
+          "label": "GUST≥40KT",
+          "cls": "tag--gust",
+          "src": "M"
+        },
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ],
+      "critSrc": "M"
+    },
+    {
       "icao": "UBBB",
+      "iata": "GYD",
+      "name": "Heydar Aliyev International Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -43,6 +69,8 @@
     },
     {
       "icao": "EDDB",
+      "iata": "BER",
+      "name": "Berlin Brandenburg Willy Brandt Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -80,6 +108,8 @@
     },
     {
       "icao": "EDDH",
+      "iata": "HAM",
+      "name": "Hamburg Helmut Schmidt Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -95,13 +125,15 @@
         {
           "label": "SN",
           "cls": "tag--wx",
-          "src": "MT"
+          "src": "T"
         }
       ],
       "critSrc": "E"
     },
     {
       "icao": "EPGD",
+      "iata": "GDN",
+      "name": "Gdańsk Lech Wałęsa Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -139,6 +171,8 @@
     },
     {
       "icao": "EPLB",
+      "iata": "LUZ",
+      "name": "Lublin Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -166,6 +200,8 @@
     },
     {
       "icao": "EPMO",
+      "iata": "WMI",
+      "name": "Modlin Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -198,6 +234,8 @@
     },
     {
       "icao": "EPPO",
+      "iata": "POZ",
+      "name": "Poznań-Ławica Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -241,6 +279,8 @@
     },
     {
       "icao": "EPRZ",
+      "iata": "RZE",
+      "name": "Rzeszów-Jasionka Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -273,6 +313,8 @@
     },
     {
       "icao": "EPSC",
+      "iata": "SZZ",
+      "name": "Solidarity Szczecin–Goleniów Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -310,6 +352,8 @@
     },
     {
       "icao": "EPWA",
+      "iata": "WAW",
+      "name": "Warsaw Chopin Airport",
       "alert": "CRIT",
       "triggers": [
         {
@@ -342,45 +386,125 @@
     },
     {
       "icao": "LIBD",
+      "iata": "BRI",
+      "name": "Bari Karol Wojtyła International Airport",
       "alert": "CRIT",
       "triggers": [
         {
           "label": "GUST≥40KT",
           "cls": "tag--gust",
           "src": "T"
-        },
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "M"
         },
         {
           "label": "RA",
           "cls": "tag--wx",
-          "src": "T"
-        }
-      ],
-      "critSrc": "T"
-    },
-    {
-      "icao": "LIBG",
-      "alert": "CRIT",
-      "triggers": [
-        {
-          "label": "GUST≥40KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "M"
+          "src": "MT"
         }
       ],
       "critSrc": "T"
     }
   ],
   "changed": [
+    {
+      "icao": "LIBR",
+      "type": "CHANGE",
+      "changes": {
+        "alert": {
+          "from": "HIGH",
+          "to": "CRIT"
+        },
+        "critSrc": {
+          "from": null,
+          "to": "M"
+        },
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 9999,
+            "cig": 3000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 9999,
+            "cig": 2500
+          }
+        },
+        "minimaTaf": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 8000,
+            "cig": 1000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 8000,
+            "cig": 1000
+          }
+        },
+        "triggers": {
+          "from": [
+            {
+              "label": "GUST≥30KT",
+              "cls": "tag--gust",
+              "src": "T"
+            },
+            {
+              "label": "GUST≥25KT",
+              "cls": "tag--gust",
+              "src": "M"
+            },
+            {
+              "label": "RA",
+              "cls": "tag--wx",
+              "src": "T"
+            }
+          ],
+          "to": [
+            {
+              "label": "GUST≥40KT",
+              "cls": "tag--gust",
+              "src": "M"
+            },
+            {
+              "label": "GUST≥30KT",
+              "cls": "tag--gust",
+              "src": "T"
+            },
+            {
+              "label": "RA",
+              "cls": "tag--wx",
+              "src": "T"
+            }
+          ]
+        }
+      },
+      "alert": "CRIT",
+      "triggers": [
+        {
+          "label": "GUST≥40KT",
+          "cls": "tag--gust",
+          "src": "M"
+        },
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
     {
       "icao": "UBBB",
       "type": "CHANGE",
@@ -539,7 +663,7 @@
             "belowBest": false,
             "belowAlt": false,
             "onlyBest": false,
-            "effVis": 9000,
+            "effVis": 9999,
             "cig": 1400
           }
         },
@@ -575,7 +699,7 @@
         {
           "label": "SN",
           "cls": "tag--wx",
-          "src": "MT"
+          "src": "T"
         }
       ]
     },
@@ -986,62 +1110,6 @@
         },
         {
           "label": "SN",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "icao": "LIBD",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 9999,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 9999,
-            "cig": null
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 8000,
-            "cig": 3000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 8000,
-            "cig": 3000
-          }
-        }
-      },
-      "alert": "CRIT",
-      "triggers": [
-        {
-          "label": "GUST≥40KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "M"
-        },
-        {
-          "label": "RA",
           "cls": "tag--wx",
           "src": "T"
         }
