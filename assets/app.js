@@ -2342,6 +2342,34 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
     }
   };
 
+
+
+  const mgmtBtn = $("copyMgmtBrief");
+  if (mgmtBtn){
+    mgmtBtn.onclick = async () => {
+      const url = "data/management_brief.json?ts=" + Date.now();
+      try{
+        const res = await fetch(url, {cache:"no-store"});
+        const j = await res.json();
+        const text = (j && (j.management45 || j.headline20 || j.detail90)) ? String(j.management45 || j.headline20 || j.detail90) : "—";
+        await navigator.clipboard.writeText(text);
+        mgmtBtn.textContent = "Copied";
+        setTimeout(()=> mgmtBtn.textContent = "Copy mgmt brief", 900);
+      }catch{
+        // fallback: derive from current station as last resort
+        const text = "WX brief: " + buildBriefingLine(st);
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        mgmtBtn.textContent = "Copied";
+        setTimeout(()=> mgmtBtn.textContent = "Copy mgmt brief", 900);
+      }
+    };
+  }
+
   // open
   $("drawer").classList.add("is-open");
   $("drawer").setAttribute("aria-hidden","false");

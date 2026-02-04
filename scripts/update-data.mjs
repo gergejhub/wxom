@@ -19,6 +19,9 @@ const OUT_LATEST = path.join(ROOT, 'data', 'latest.json');
 const OUT_IATA_MAP = path.join(ROOT, 'data', 'iata_map.json');
 const OUT_STATUS = path.join(ROOT, 'data', 'status.json');
 const OUT_RUNWAYS = path.join(ROOT, 'data', 'runways.json');
+const OUT_BRIEF = path.join(ROOT, 'data', 'management_brief.json');
+const OUT_CHANGES = path.join(ROOT, 'data', 'changes.json');
+const OUT_SCHEMA_DEBUG = path.join(ROOT, 'data', 'schema_debug.json');
 
 // --- Thin-client precompute -------------------------------------------------
 // Precompute parsing + trigger logic server-side so the browser client can render
@@ -54,6 +57,60 @@ function escapeHtmlThin(s){
     .replace(/>/g,"&gt;")
     .replace(/\"/g,"&quot;")
     .replace(/'/g,"&#39;");
+}
+
+// --- Schema normalization helpers -------------------------------------------
+// The API / pipeline must always write string raw fields and safe scalar display fields.
+// This prevents frontend crashes and keeps data/latest.json "clean".
+
+function rawToString(v){
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  // Common patterns: { raw:"..." } / { text:"..." } / { metar:"..." }
+  if (typeof v === "object"){
+    for (const k of ["raw","text","metar","taf","value","data"]){
+      const x = v?.[k];
+      if (typeof x === "string") return x;
+    }
+    try { return JSON.stringify(v); } catch { return String(v); }
+  }
+  return String(v);
+}
+
+function optStringOrNull(v){
+  const s = rawToString(v).trim();
+  return s ? s : null;
+}
+
+function ensureArrayOfStrings(v){
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(x=>rawToString(x)).filter(Boolean);
+  // if single string/object provided
+  const s = rawToString(v).trim();
+  return s ? [s] : [];
+}
+
+function schemaProbeStation(st){
+  // Returns list of schema issues for a station object.
+  const issues = [];
+  const mustStr = ["icao"];
+  const rawStr = ["metarRaw","tafRaw","updatedAt"];
+  for (const k of mustStr){
+    if (typeof st[k] !== "string") issues.push(`${k} type=${typeof st[k]}`);
+  }
+  for (const k of rawStr){
+    if (st[k] != null && typeof st[k] !== "string") issues.push(`${k} type=${typeof st[k]}`);
+  }
+  if (st.iata != null && typeof st.iata !== "string") issues.push(`iata type=${typeof st.iata}`);
+  if (st.name != null && typeof st.name !== "string") issues.push(`name type=${typeof st.name}`);
+  // Common computed strings
+  for (const k of ["minExplainMet","minExplainTaf","alert","critSrc"]){
+    if (st[k] != null && typeof st[k] !== "string") issues.push(`${k} type=${typeof st[k]}`);
+  }
+  // triggers must be an array (object items are expected)
+  if (st.triggers != null && !Array.isArray(st.triggers)) issues.push(`triggers not array (${typeof st.triggers})`);
+  return issues;
 }
 
 function parseTempC(raw){
@@ -633,6 +690,110 @@ function writeStatus({generatedAt, stats, errors}){
   fs.writeFileSync(OUT_STATUS, JSON.stringify(payload, null, 2));
 }
 
+function safeReadJson(file){
+  try{
+    if (!fs.existsSync(file)) return null;
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  }catch{
+    return null;
+  }
+}
+
+function diffStations(prevStations, nextStations){
+  // Build quick maps by ICAO.
+  const prev = new Map((prevStations||[]).map(s=>[s.icao, s]));
+  const next = new Map((nextStations||[]).map(s=>[s.icao, s]));
+  const events = [];
+
+  for (const [icao, n] of next.entries()){
+    const p = prev.get(icao);
+    if (!p){
+      events.push({icao, type:"NEW", alert:n.alert||"OK", triggers:n.triggers||[], minimaNow:n.minimaNow||null});
+      continue;
+    }
+    const changes = {};
+    for (const key of ["alert","critSrc","minimaNow","minimaTaf"]){
+      const pv = p[key] ?? null;
+      const nv = n[key] ?? null;
+      if (pv !== nv) changes[key] = {from: pv, to: nv};
+    }
+    const pTrig = Array.isArray(p.triggers) ? p.triggers.join("|") : "";
+    const nTrig = Array.isArray(n.triggers) ? n.triggers.join("|") : "";
+    if (pTrig !== nTrig) changes.triggers = {from: p.triggers||[], to: n.triggers||[]};
+
+    if (Object.keys(changes).length){
+      events.push({icao, type:"CHANGE", changes, alert:n.alert||"OK", triggers:n.triggers||[]});
+    }
+  }
+
+  // Removed stations (rare)
+  for (const [icao, p] of prev.entries()){
+    if (!next.has(icao)) events.push({icao, type:"REMOVED", alert:p.alert||"OK"});
+  }
+
+  return events;
+}
+
+function buildManagementBrief({generatedAt, stations, events}){
+  const top = (stations||[]).slice(0, 12);
+  const crit = top.filter(s=>s.alert==="CRIT");
+  const high = top.filter(s=>s.alert==="HIGH");
+  const med = top.filter(s=>s.alert==="MED");
+
+  const changed = (events||[]).filter(e=>e.type==="CHANGE").slice(0, 10);
+
+  const listICAO = (arr)=>arr.map(s=>s.icao).filter(Boolean).slice(0, 12).join(", ") || "—";
+
+  const headline20 =
+    crit.length ? `Critical WX: ${listICAO(crit)}.` :
+    high.length ? `High WX: ${listICAO(high)}.` :
+    med.length ? `Medium WX: ${listICAO(med)}.` : "No significant WX alerts.";
+
+  const management45 = (() => {
+    const parts = [];
+    parts.push(headline20);
+    if (crit.length) parts.push(`Primary drivers: ${(crit[0]?.triggers||[]).slice(0,4).join(", ") || "—"}.`);
+    if (changed.length) parts.push(`Changes since last run: ${changed.map(e=>e.icao).join(", ")}.`);
+    return parts.join(" ");
+  })();
+
+  const detail90 = (() => {
+    const lines = [];
+    lines.push(headline20);
+    const show = top.slice(0, 8);
+    for (const s of show){
+      const trig = (s.triggers||[]).slice(0,6).join(", ") || "—";
+      lines.push(`${s.icao}: ${s.alert||"OK"} (${trig})`);
+    }
+    if (changed.length){
+      lines.push(`Changed: ${changed.map(e=>e.icao).join(", ")}`);
+    }
+    return lines.join(" ");
+  })();
+
+  return {
+    generatedAt,
+    headline20,
+    management45,
+    detail90,
+    top: top.map(s=>({icao:s.icao, alert:s.alert||"OK", triggers:s.triggers||[], critSrc:s.critSrc||null})),
+    changed: changed
+  };
+}
+
+function writeRollingChanges({generatedAt, events, limit=200}){
+  ensureDataDir();
+  const prev = safeReadJson(OUT_CHANGES);
+  const hist = Array.isArray(prev?.events) ? prev.events : [];
+  const merged = [
+    ...events.map(e=>({ts: generatedAt, ...e})),
+    ...hist
+  ].slice(0, limit);
+
+  fs.writeFileSync(OUT_CHANGES, JSON.stringify({generatedAt, events: merged}, null, 2));
+}
+
+
 function chunk(arr, n){
   const out=[];
   for(let i=0;i<arr.length;i+=n) out.push(arr.slice(i,i+n));
@@ -1165,13 +1326,13 @@ async function main(){
   const omFn = loadOmApi(runwaysMap);
 
   const stations = icaos.map(icao => {
-    const metar = metars.get(icao) || "";
-    const taf = tafs.get(icao) || "";
+    const metar = rawToString(metars.get(icao));
+    const taf = rawToString(tafs.get(icao));
 
     const base = {
       icao,
-      iata: iataMap[icao]?.iata ?? null,
-      name: iataMap[icao]?.name ?? null,
+      iata: optStringOrNull(iataMap[icao]?.iata),
+      name: optStringOrNull(iataMap[icao]?.name),
       lat: iataMap[icao]?.lat ?? null,
       lon: iataMap[icao]?.lon ?? null,
       updatedAt: metar ? (metar.match(/\b\d{6}Z\b/)?.[0] ?? null) : null,
@@ -1196,6 +1357,27 @@ async function main(){
 
   stations.sort((a,b) => (b.severityScore ?? 0) - (a.severityScore ?? 0));
 
+  // --- Schema validation / debug -------------------------------------------
+  const schemaIssues = [];
+  const schemaSamples = {};
+  for (const s of stations){
+    const issues = schemaProbeStation(s);
+    if (issues.length){
+      schemaIssues.push({icao: s.icao, issues});
+      if (!schemaSamples[s.icao]) schemaSamples[s.icao] = s;
+    }
+  }
+  if (schemaIssues.length){
+    errors.push(`Schema: ${schemaIssues.length} stations have non-string fields (see schema_debug.json)`);
+  }
+  fs.writeFileSync(OUT_SCHEMA_DEBUG, JSON.stringify({
+    generatedAt,
+    issueCount: schemaIssues.length,
+    issues: schemaIssues.slice(0, 50),
+    sample: Object.fromEntries(Object.entries(schemaSamples).slice(0, 3))
+  }, null, 2));
+
+
   const stats = {
     icaoCount: icaos.length,
     metarReturned: metars.size,
@@ -1204,6 +1386,13 @@ async function main(){
     missingMetar: stations.filter(s => !s.metarRaw).length,
     missingTaf: stations.filter(s => !s.tafRaw).length
   };
+
+  // --- Change log + management brief ("Musk step") --------------------------
+  const prevLatest = safeReadJson(OUT_LATEST);
+  const events = diffStations(prevLatest?.stations || [], stations);
+  writeRollingChanges({generatedAt, events});
+  const brief = buildManagementBrief({generatedAt, stations, events});
+  fs.writeFileSync(OUT_BRIEF, JSON.stringify(brief, null, 2));
 
   const out = { generatedAt, stations, stats, errors };
   fs.writeFileSync(OUT_LATEST, JSON.stringify(out, null, 2));
