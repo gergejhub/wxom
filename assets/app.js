@@ -2375,9 +2375,19 @@ $("dTriggers").innerHTML = st.triggers.map(t=>{
   }
 
   // open
-  $("drawer").classList.add("is-open");
-  $("drawer").setAttribute("aria-hidden","false");
-  $("scrim").hidden = false;
+  const dr = $("drawer");
+  const sc = $("scrim");
+  // The markup uses the CSS helper class `.hidden` (display:none), not the HTML `[hidden]` attribute.
+  // Therefore we must remove/add that class to show/hide the drawer + scrim.
+  if (dr){
+    dr.classList.remove("hidden");
+    dr.classList.add("is-open");
+    dr.setAttribute("aria-hidden","false");
+  }
+  if (sc){
+    sc.classList.remove("hidden");
+  }
+  try{ document.body.classList.add("drawer-open"); }catch(e){}
 }
 
 // Expose drawer opener for quick debugging in DevTools.
@@ -2395,9 +2405,18 @@ function refreshDrawerAges(){
 }
 
 function closeDrawer(){
-  $("drawer").classList.remove("is-open");
-  $("drawer").setAttribute("aria-hidden","true");
-  $("scrim").hidden = true;
+  const dr = $("drawer");
+  const sc = $("scrim");
+  if (dr){
+    dr.classList.remove("is-open");
+    dr.setAttribute("aria-hidden","true");
+    // Match openDrawer(...): hide via `.hidden`.
+    dr.classList.add("hidden");
+  }
+  if (sc){
+    sc.classList.add("hidden");
+  }
+  try{ document.body.classList.remove("drawer-open"); }catch(e){}
   drawerIcao = null;
 }
 

@@ -108,8 +108,21 @@ function schemaProbeStation(st){
   if (st.iata != null && typeof st.iata !== "string") issues.push(`iata type=${typeof st.iata}`);
   if (st.name != null && typeof st.name !== "string") issues.push(`name type=${typeof st.name}`);
   // Common computed strings
-  for (const k of ["minExplainMet","minExplainTaf","alert","critSrc"]){
+  for (const k of ["alert","critSrc"]){
     if (st[k] != null && typeof st[k] !== "string") issues.push(`${k} type=${typeof st[k]}`);
+  }
+
+  // Minima explain blocks are expected to be either null or an object with a string `.tip`.
+  // (Earlier UI issues were caused by treating the whole object as a string.)
+  for (const k of ["minExplainMet","minExplainTaf"]){
+    const ex = st[k];
+    if (ex == null) continue;
+    if (typeof ex !== "object"){
+      issues.push(`${k} type=${typeof ex}`);
+      continue;
+    }
+    if (ex.tip != null && typeof ex.tip !== "string") issues.push(`${k}.tip type=${typeof ex.tip}`);
+    if (ex.mode != null && typeof ex.mode !== "string") issues.push(`${k}.mode type=${typeof ex.mode}`);
   }
   // triggers must be an array (object items are expected)
   if (st.triggers != null && !Array.isArray(st.triggers)) issues.push(`triggers not array (${typeof st.triggers})`);
