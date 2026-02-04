@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-04T15:10:44.940Z",
+  "generatedAt": "2026-02-04T15:23:05.023Z",
   "stations": [
     {
       "icao": "EDDB",
@@ -2217,7 +2217,7 @@
       "lon": 7.261734,
       "updatedAt": "041450Z",
       "metarRaw": "METAR EDFH 041450Z 12005KT 0200 R21/0225N FG VV/// 02/02 Q0994",
-      "tafRaw": "TAF EDFH 041100Z 0412/0512 13014KT 0300 FG OVC001 \n  BECMG 0412/0415 9000 SCT003 \n  BECMG 0420/0424 3000 BR BKN002 \n  BECMG 0501/0503 0700 FZFG \n  TEMPO 0503/0510 0300 FZFG OVC001 \n  BECMG 0510/0512 1500 BR",
+      "tafRaw": "",
       "minima": {
         "best": {
           "cig_ft": 0,
@@ -2256,13 +2256,13 @@
         "score": 60
       },
       "taf": {
-        "raw": "TAF EDFH 041100Z 0412/0512 13014KT 0300 FG OVC001 \n  BECMG 0412/0415 9000 SCT003 \n  BECMG 0420/0424 3000 BR BKN002 \n  BECMG 0501/0503 0700 FZFG \n  TEMPO 0503/0510 0300 FZFG OVC001 \n  BECMG 0510/0512 1500 BR",
+        "raw": "",
         "hz": {
           "ts": false,
           "cb": false,
-          "fg": true,
-          "fzfg": true,
-          "br": true,
+          "fg": false,
+          "fzfg": false,
+          "br": false,
           "sn": false,
           "blsn": false,
           "ra": false,
@@ -2270,15 +2270,15 @@
         },
         "tempC": null,
         "gustMax": null,
-        "vis": 412,
-        "cig": 100,
+        "vis": null,
+        "cig": null,
         "rvrMin": null,
-        "score": 70
+        "score": 0
       },
       "worstVis": 200,
-      "tafWorstVis": 300,
+      "tafWorstVis": null,
       "rvrMinAll": 225,
-      "cigAll": 100,
+      "cigAll": null,
       "minimaNow": {
         "belowBest": false,
         "belowAlt": true,
@@ -2290,8 +2290,8 @@
         "belowBest": false,
         "belowAlt": false,
         "onlyBest": false,
-        "effVis": 300,
-        "cig": 100
+        "effVis": null,
+        "cig": null
       },
       "minExplainMet": {
         "mode": "LIMIT",
@@ -2324,7 +2324,7 @@
       "_minTokensT": [],
       "om": {
         "explain": {
-          "src": "MT",
+          "src": "M",
           "heavyMatches": [],
           "refVisType": "RVR",
           "refVisValue": 225,
@@ -2468,11 +2468,11 @@
       },
       "omTaf": {
         "explain": {
-          "src": "T",
+          "src": "MT",
           "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 300,
-          "worstVis": 300,
+          "refVisType": null,
+          "refVisValue": null,
+          "worstVis": null,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -2491,18 +2491,18 @@
             "evidence": []
           },
           "wind": {
-            "dir": 130,
-            "spd": 14,
+            "dir": null,
+            "spd": null,
             "gst": null,
-            "usedSpd": 14
+            "usedSpd": null
           },
           "xwind": {
             "available": true,
-            "xwindKt": 14,
-            "limitKt": 38,
-            "runwayHdg": 32,
-            "runwayName": "03/21",
-            "runwayWidthM": 45.1,
+            "xwindKt": null,
+            "limitKt": null,
+            "runwayHdg": null,
+            "runwayName": null,
+            "runwayWidthM": null,
             "narrow": false
           }
         },
@@ -2510,43 +2510,38 @@
         "tsOrCb": false,
         "heavyPrecip": false,
         "va": false,
-        "lvto": true,
-        "lvp": true,
+        "lvto": false,
+        "lvp": false,
         "lvtoQualReq": false,
         "rvr125": false,
-        "rvrRequired": true,
+        "rvrRequired": false,
         "cat2Plus": false,
         "cat3Only": false,
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 14,
-        "xwindLimitKt": 38,
+        "xwindKt": null,
+        "xwindLimitKt": null,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 14,
-        "xwindWindDir": 130
+        "xwindNarrow": null,
+        "xwindUsedSpdKt": null,
+        "xwindWindDir": null
       },
       "engIceOps": false,
       "severityScore": 60,
       "alert": "HIGH",
       "metCrit": false,
-      "tafCrit": true,
+      "tafCrit": false,
       "critSrc": null,
       "metPri": 60,
-      "tafPri": 70,
+      "tafPri": 0,
       "triggers": [
         {
           "label": "LVP (<400)",
           "cls": "tag--warn",
-          "src": "MT"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
+          "src": "M"
         },
         {
           "label": "CAT2+ <450",
@@ -2562,7 +2557,7 @@
         {
           "label": "VIS≤800",
           "cls": "tag--vis",
-          "src": "MT"
+          "src": "M"
         },
         {
           "label": "RVR≤500",
@@ -2570,34 +2565,17 @@
           "src": "M"
         },
         {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "T"
-        },
-        {
-          "label": "FZFG",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
           "label": "FG",
           "cls": "tag--wx",
-          "src": "MT"
-        },
-        {
-          "label": "BR",
-          "cls": "tag--wx",
-          "src": "T"
+          "src": "M"
         }
       ],
       "visibility_m": 200,
-      "taf_visibility_m": 300,
+      "taf_visibility_m": null,
       "worst_visibility_m": 200,
-      "ceiling_ft": 100,
+      "ceiling_ft": null,
       "hazards": [
-        "fg",
-        "fzfg",
-        "br"
+        "fg"
       ]
     },
     {
@@ -9582,8 +9560,8 @@
       "name": "Malta International Airport",
       "lat": 35.857498,
       "lon": 14.4775,
-      "updatedAt": "041445Z",
-      "metarRaw": "METAR LMML 041445Z 23016G26KT 9999 FEW023 14/09 Q1002 NOSIG",
+      "updatedAt": "041515Z",
+      "metarRaw": "METAR LMML 041515Z 23015KT 9999 SCT025 14/09 Q1002 NOSIG",
       "tafRaw": "TAF LMML 041100Z 0412/0512 26022G32KT 9999 FEW015 SCT035 \n  PROB30 \n  TEMPO 0412/0419 7000 SHRA BKN015TCU \n  BECMG 0416/0419 7000 \n  TEMPO 0419/0512 3000 DU -RA \n  BECMG 0500/0503 26014KT \n  BECMG 0508/0511 26017G27KT",
       "minima": {
         "best": {
@@ -9603,7 +9581,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR LMML 041445Z 23016G26KT 9999 FEW023 14/09 Q1002 NOSIG",
+        "raw": "METAR LMML 041515Z 23015KT 9999 SCT025 14/09 Q1002 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -9616,11 +9594,11 @@
           "va": false
         },
         "tempC": 14,
-        "gustMax": 26,
+        "gustMax": null,
         "vis": 9999,
         "cig": null,
         "rvrMin": null,
-        "score": 35
+        "score": 0
       },
       "taf": {
         "raw": "TAF LMML 041100Z 0412/0512 26022G32KT 9999 FEW015 SCT035 \n  PROB30 \n  TEMPO 0412/0419 7000 SHRA BKN015TCU \n  BECMG 0416/0419 7000 \n  TEMPO 0419/0512 3000 DU -RA \n  BECMG 0500/0503 26014KT \n  BECMG 0508/0511 26017G27KT",
@@ -9692,13 +9670,13 @@
           },
           "wind": {
             "dir": 230,
-            "spd": 16,
-            "gst": 26,
-            "usedSpd": 26
+            "spd": 15,
+            "gst": null,
+            "usedSpd": 15
           },
           "xwind": {
             "available": true,
-            "xwindKt": 3,
+            "xwindKt": 2,
             "limitKt": 35,
             "runwayHdg": 56,
             "runwayName": "05/23",
@@ -9720,13 +9698,13 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 3,
+        "xwindKt": 2,
         "xwindLimitKt": 35,
         "xwindCond": "WET",
         "rwyccEst": 5,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 26,
+        "xwindUsedSpdKt": 15,
         "xwindWindDir": 230
       },
       "omMet": {
@@ -9755,13 +9733,13 @@
           },
           "wind": {
             "dir": 230,
-            "spd": 16,
-            "gst": 26,
-            "usedSpd": 26
+            "spd": 15,
+            "gst": null,
+            "usedSpd": 15
           },
           "xwind": {
             "available": true,
-            "xwindKt": 3,
+            "xwindKt": 2,
             "limitKt": 38,
             "runwayHdg": 56,
             "runwayName": "05/23",
@@ -9783,13 +9761,13 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 3,
+        "xwindKt": 2,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 26,
+        "xwindUsedSpdKt": 15,
         "xwindWindDir": 230
       },
       "omTaf": {
@@ -9863,18 +9841,13 @@
       "metCrit": false,
       "tafCrit": false,
       "critSrc": null,
-      "metPri": 35,
+      "metPri": 0,
       "tafPri": 55,
       "triggers": [
         {
           "label": "GUST≥30KT",
           "cls": "tag--gust",
           "src": "T"
-        },
-        {
-          "label": "GUST≥25KT",
-          "cls": "tag--gust",
-          "src": "M"
         },
         {
           "label": "RA",
@@ -11170,8 +11143,8 @@
       "name": "Lennart Meri Tallinn Airport",
       "lat": 59.413246,
       "lon": 24.83264,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR EETN 041450Z 12003KT 9999 FEW008 SCT014 M13/M15 Q1026 TEMPO BKN010",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR EETN 041520Z 11004KT 9999 BKN013 M13/M15 Q1026 NOSIG",
       "tafRaw": "TAF EETN 041130Z 0412/0512 11006KT 9999 BKN015 \n  TEMPO 0412/0418 BKN007 \n  PROB40 \n  TEMPO 0412/0415 4000 SN",
       "minima": {
         "best": {
@@ -11191,7 +11164,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR EETN 041450Z 12003KT 9999 FEW008 SCT014 M13/M15 Q1026 TEMPO BKN010",
+        "raw": "METAR EETN 041520Z 11004KT 9999 BKN013 M13/M15 Q1026 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -11206,7 +11179,7 @@
         "tempC": -13,
         "gustMax": null,
         "vis": 9999,
-        "cig": 1000,
+        "cig": 1300,
         "rvrMin": null,
         "score": 0
       },
@@ -11239,7 +11212,7 @@
         "belowAlt": false,
         "onlyBest": false,
         "effVis": 9999,
-        "cig": 1000
+        "cig": 1300
       },
       "minimaTaf": {
         "belowBest": false,
@@ -11279,10 +11252,10 @@
             ]
           },
           "wind": {
-            "dir": 120,
-            "spd": 3,
+            "dir": 110,
+            "spd": 4,
             "gst": null,
-            "usedSpd": 3
+            "usedSpd": 4
           },
           "xwind": {
             "available": true,
@@ -11314,8 +11287,8 @@
         "rwyccEst": 3,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 3,
-        "xwindWindDir": 120
+        "xwindUsedSpdKt": 4,
+        "xwindWindDir": 110
       },
       "omMet": {
         "explain": {
@@ -11342,10 +11315,10 @@
             "evidence": []
           },
           "wind": {
-            "dir": 120,
-            "spd": 3,
+            "dir": 110,
+            "spd": 4,
             "gst": null,
-            "usedSpd": 3
+            "usedSpd": 4
           },
           "xwind": {
             "available": true,
@@ -11377,8 +11350,8 @@
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 3,
-        "xwindWindDir": 120
+        "xwindUsedSpdKt": 4,
+        "xwindWindDir": 110
       },
       "omTaf": {
         "explain": {
@@ -11796,8 +11769,8 @@
       "name": "Kaunas International Airport",
       "lat": 54.963965,
       "lon": 24.08582,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR EYKA 041450Z 09010KT CAVOK M11/M15 Q1020",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR EYKA 041520Z 08008KT CAVOK M13/M16 Q1020",
       "tafRaw": "TAF EYKA 041100Z 0412/0512 09009KT 9000 NSC \n  TEMPO 0417/0419 5000 BR SCT005 \n  BECMG 0419/0421 5000 SN BKN010 OVC015 \n  TEMPO 0502/0506 3000 FZDZ BR OVC005",
       "minima": {
         "best": {
@@ -11817,7 +11790,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR EYKA 041450Z 09010KT CAVOK M11/M15 Q1020",
+        "raw": "METAR EYKA 041520Z 08008KT CAVOK M13/M16 Q1020",
         "hz": {
           "ts": false,
           "cb": false,
@@ -11829,7 +11802,7 @@
           "ra": false,
           "va": false
         },
-        "tempC": -11,
+        "tempC": -13,
         "gustMax": null,
         "vis": 10000,
         "cig": 5000,
@@ -11896,7 +11869,7 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": -11,
+          "tempC": -13,
           "runwayCond": {
             "cond": "SEVERE",
             "rwyccEst": 2,
@@ -11905,10 +11878,10 @@
             ]
           },
           "wind": {
-            "dir": 90,
-            "spd": 10,
+            "dir": 80,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 10
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
@@ -11940,8 +11913,8 @@
         "rwyccEst": 2,
         "noOpsLikely": true,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 10,
-        "xwindWindDir": 90
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 80
       },
       "omMet": {
         "explain": {
@@ -11961,17 +11934,17 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": -11,
+          "tempC": -13,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 90,
-            "spd": 10,
+            "dir": 80,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 10
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
@@ -12003,8 +11976,8 @@
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 10,
-        "xwindWindDir": 90
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 80
       },
       "omTaf": {
         "explain": {
@@ -12116,8 +12089,8 @@
       "name": "Palanga International Airport",
       "lat": 55.973202,
       "lon": 21.093901,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR EYPA 041450Z 09010KT CAVOK M10/M16 Q1020",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR EYPA 041520Z 09010KT CAVOK M10/M16 Q1020",
       "tafRaw": "TAF EYPA 041100Z 0412/0512 09012KT 9000 NSC \n  BECMG 0503/0506 SCT010 BKN015 \n  TEMPO 0508/0512 5000 SN OVC005",
       "minima": {
         "best": {
@@ -12137,7 +12110,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR EYPA 041450Z 09010KT CAVOK M10/M16 Q1020",
+        "raw": "METAR EYPA 041520Z 09010KT CAVOK M10/M16 Q1020",
         "hz": {
           "ts": false,
           "cb": false,
@@ -18405,8 +18378,8 @@
       "name": "Priština Adem Jashari International Airport",
       "lat": 42.5728,
       "lon": 21.035801,
-      "updatedAt": "041500Z",
-      "metarRaw": "METAR BKPR 041500Z 13019KT 9999 FEW050 10/05 Q1006 NOSIG",
+      "updatedAt": null,
+      "metarRaw": "",
       "tafRaw": "TAF BKPR 041130Z 0412/0512 17008KT 9999 SCT030 BKN080 \n  TEMPO 0412/0422 16018G28KT",
       "minima": {
         "best": {
@@ -18426,7 +18399,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR BKPR 041500Z 13019KT 9999 FEW050 10/05 Q1006 NOSIG",
+        "raw": "",
         "hz": {
           "ts": false,
           "cb": false,
@@ -18438,9 +18411,9 @@
           "ra": false,
           "va": false
         },
-        "tempC": 10,
+        "tempC": null,
         "gustMax": null,
-        "vis": 9999,
+        "vis": null,
         "cig": null,
         "rvrMin": null,
         "score": 0
@@ -18473,7 +18446,7 @@
         "belowBest": false,
         "belowAlt": false,
         "onlyBest": false,
-        "effVis": 9999,
+        "effVis": null,
         "cig": null
       },
       "minimaTaf": {
@@ -18489,7 +18462,7 @@
       "_minTokensT": [],
       "om": {
         "explain": {
-          "src": "MT",
+          "src": "T",
           "heavyMatches": [],
           "refVisType": "VIS",
           "refVisValue": 9999,
@@ -18505,21 +18478,21 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 10,
+          "tempC": null,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 130,
-            "spd": 19,
+            "dir": 170,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 19
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": 14,
+            "xwindKt": 1,
             "limitKt": 38,
             "runwayHdg": 176,
             "runwayName": "17/35",
@@ -18541,22 +18514,22 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 14,
+        "xwindKt": 1,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 19,
-        "xwindWindDir": 130
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 170
       },
       "omMet": {
         "explain": {
-          "src": "M",
+          "src": "MT",
           "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 9999,
-          "worstVis": 9999,
+          "refVisType": null,
+          "refVisValue": null,
+          "worstVis": null,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -18568,25 +18541,25 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 10,
+          "tempC": null,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 130,
-            "spd": 19,
+            "dir": null,
+            "spd": null,
             "gst": null,
-            "usedSpd": 19
+            "usedSpd": null
           },
           "xwind": {
             "available": true,
-            "xwindKt": 14,
-            "limitKt": 38,
-            "runwayHdg": 176,
-            "runwayName": "17/35",
-            "runwayWidthM": 45.1,
+            "xwindKt": null,
+            "limitKt": null,
+            "runwayHdg": null,
+            "runwayName": null,
+            "runwayWidthM": null,
             "narrow": false
           }
         },
@@ -18604,14 +18577,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 14,
-        "xwindLimitKt": 38,
+        "xwindKt": null,
+        "xwindLimitKt": null,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 19,
-        "xwindWindDir": 130
+        "xwindNarrow": null,
+        "xwindUsedSpdKt": null,
+        "xwindWindDir": null
       },
       "omTaf": {
         "explain": {
@@ -18691,7 +18664,7 @@
           "src": "T"
         }
       ],
-      "visibility_m": 9999,
+      "visibility_m": null,
       "taf_visibility_m": 9999,
       "worst_visibility_m": 9999,
       "ceiling_ft": 8000,
@@ -21698,8 +21671,8 @@
       "name": "Turku Airport",
       "lat": 60.514099,
       "lon": 22.2628,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR EFTU 041450Z AUTO 07004KT CAVOK M10/M13 Q1026",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR EFTU 041520Z AUTO 06003KT CAVOK M12/M14 Q1026",
       "tafRaw": "TAF EFTU 041427Z 0415/0515 06004KT CAVOK \n  PROB40 0422/0512 BKN007",
       "minima": {
         "best": {
@@ -21719,7 +21692,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR EFTU 041450Z AUTO 07004KT CAVOK M10/M13 Q1026",
+        "raw": "METAR EFTU 041520Z AUTO 06003KT CAVOK M12/M14 Q1026",
         "hz": {
           "ts": false,
           "cb": false,
@@ -21731,7 +21704,7 @@
           "ra": false,
           "va": false
         },
-        "tempC": -10,
+        "tempC": -12,
         "gustMax": null,
         "vis": 10000,
         "cig": 5000,
@@ -21798,17 +21771,17 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": -10,
+          "tempC": -12,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 70,
-            "spd": 4,
+            "dir": 60,
+            "spd": 3,
             "gst": null,
-            "usedSpd": 4
+            "usedSpd": 3
           },
           "xwind": {
             "available": true,
@@ -21840,8 +21813,8 @@
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 4,
-        "xwindWindDir": 70
+        "xwindUsedSpdKt": 3,
+        "xwindWindDir": 60
       },
       "omMet": {
         "explain": {
@@ -21861,17 +21834,17 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": -10,
+          "tempC": -12,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 70,
-            "spd": 4,
+            "dir": 60,
+            "spd": 3,
             "gst": null,
-            "usedSpd": 4
+            "usedSpd": 3
           },
           "xwind": {
             "available": true,
@@ -21903,8 +21876,8 @@
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 4,
-        "xwindWindDir": 70
+        "xwindUsedSpdKt": 3,
+        "xwindWindDir": 60
       },
       "omTaf": {
         "explain": {
@@ -25929,8 +25902,8 @@
       "name": "Vilnius International Airport",
       "lat": 54.634102,
       "lon": 25.285801,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR EYVI 041450Z 09007KT CAVOK M12/M15 Q1020 NOSIG",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR EYVI 041520Z 09008KT CAVOK M12/M16 Q1020 NOSIG",
       "tafRaw": "TAF EYVI 041100Z 0412/0512 10010KT 9000 NSC \n  BECMG 0418/0420 BKN020 \n  TEMPO 0421/0506 3000 SN BR SCT005 BKN010 \n  TEMPO 0506/0512 BKN010",
       "minima": {
         "best": {
@@ -25950,7 +25923,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR EYVI 041450Z 09007KT CAVOK M12/M15 Q1020 NOSIG",
+        "raw": "METAR EYVI 041520Z 09008KT CAVOK M12/M16 Q1020 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -26039,13 +26012,13 @@
           },
           "wind": {
             "dir": 90,
-            "spd": 7,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 7
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": 6,
+            "xwindKt": 7,
             "limitKt": 15,
             "runwayHdg": 22,
             "runwayName": "01/19",
@@ -26067,13 +26040,13 @@
         "cat3BelowMin": false,
         "coldcorr": true,
         "xwindExceed": false,
-        "xwindKt": 6,
+        "xwindKt": 7,
         "xwindLimitKt": 15,
         "xwindCond": "CONTAM",
         "rwyccEst": 3,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 7,
+        "xwindUsedSpdKt": 8,
         "xwindWindDir": 90
       },
       "omMet": {
@@ -26102,13 +26075,13 @@
           },
           "wind": {
             "dir": 90,
-            "spd": 7,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 7
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": 6,
+            "xwindKt": 7,
             "limitKt": 38,
             "runwayHdg": 22,
             "runwayName": "01/19",
@@ -26130,13 +26103,13 @@
         "cat3BelowMin": false,
         "coldcorr": true,
         "xwindExceed": false,
-        "xwindKt": 6,
+        "xwindKt": 7,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 7,
+        "xwindUsedSpdKt": 8,
         "xwindWindDir": 90
       },
       "omTaf": {
@@ -27420,8 +27393,8 @@
       "name": "Tirana International Airport Mother Teresa",
       "lat": 41.4147,
       "lon": 19.7206,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR LATI 041450Z 17007KT 9999 OVC150 17/03 Q1001 NOSIG",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR LATI 041520Z 15009KT 9999 OVC150 16/02 Q1000 NOSIG",
       "tafRaw": "TAF LATI 041100Z 0412/0512 16014KT 9999 FEW050 BKN100 TX18/0412Z TN09/0505Z \n  TEMPO 0414/0420 16015G25KT \n  TEMPO 0419/0509 RA BKN025 OVC050",
       "minima": {
         "best": {
@@ -27441,7 +27414,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR LATI 041450Z 17007KT 9999 OVC150 17/03 Q1001 NOSIG",
+        "raw": "METAR LATI 041520Z 15009KT 9999 OVC150 16/02 Q1000 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -27453,7 +27426,7 @@
           "ra": false,
           "va": false
         },
-        "tempC": 17,
+        "tempC": 16,
         "gustMax": null,
         "vis": 9999,
         "cig": 15000,
@@ -27520,7 +27493,7 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 17,
+          "tempC": 16,
           "runwayCond": {
             "cond": "WET",
             "rwyccEst": 5,
@@ -27529,14 +27502,14 @@
             ]
           },
           "wind": {
-            "dir": 170,
-            "spd": 7,
+            "dir": 150,
+            "spd": 9,
             "gst": null,
-            "usedSpd": 7
+            "usedSpd": 9
           },
           "xwind": {
             "available": true,
-            "xwindKt": 0,
+            "xwindKt": 4,
             "limitKt": 35,
             "runwayHdg": 174,
             "runwayName": "17/35",
@@ -27558,14 +27531,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 0,
+        "xwindKt": 4,
         "xwindLimitKt": 35,
         "xwindCond": "WET",
         "rwyccEst": 5,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 7,
-        "xwindWindDir": 170
+        "xwindUsedSpdKt": 9,
+        "xwindWindDir": 150
       },
       "omMet": {
         "explain": {
@@ -27585,21 +27558,21 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 17,
+          "tempC": 16,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 170,
-            "spd": 7,
+            "dir": 150,
+            "spd": 9,
             "gst": null,
-            "usedSpd": 7
+            "usedSpd": 9
           },
           "xwind": {
             "available": true,
-            "xwindKt": 0,
+            "xwindKt": 4,
             "limitKt": 38,
             "runwayHdg": 174,
             "runwayName": "17/35",
@@ -27621,14 +27594,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 0,
+        "xwindKt": 4,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 7,
-        "xwindWindDir": 170
+        "xwindUsedSpdKt": 9,
+        "xwindWindDir": 150
       },
       "omTaf": {
         "explain": {
@@ -38194,8 +38167,8 @@
       "name": "Ben Gurion International Airport",
       "lat": 32.011398,
       "lon": 34.8867,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR LLBG 041450Z 34006KT 9999 FEW040 18/09 Q1019 NOSIG",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR LLBG 041520Z 33006KT 9999 FEW040 17/08 Q1019 NOSIG",
       "tafRaw": "TAF LLBG 041109Z 0412/0512 30010KT 9999 SCT040 \n  BECMG 0415/0417 VRB04KT CAVOK \n  TEMPO 0508/0512 29006KT TX19/0412Z TN08/0504Z",
       "minima": {
         "best": {
@@ -38215,7 +38188,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR LLBG 041450Z 34006KT 9999 FEW040 18/09 Q1019 NOSIG",
+        "raw": "METAR LLBG 041520Z 33006KT 9999 FEW040 17/08 Q1019 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -38227,7 +38200,7 @@
           "ra": false,
           "va": false
         },
-        "tempC": 18,
+        "tempC": 17,
         "gustMax": null,
         "vis": 9999,
         "cig": null,
@@ -38294,21 +38267,21 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 18,
+          "tempC": 17,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 340,
+            "dir": 330,
             "spd": 6,
             "gst": null,
             "usedSpd": 6
           },
           "xwind": {
             "available": true,
-            "xwindKt": 4,
+            "xwindKt": 3,
             "limitKt": 38,
             "runwayHdg": 121,
             "runwayName": "12/30",
@@ -38330,14 +38303,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 4,
+        "xwindKt": 3,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
         "xwindUsedSpdKt": 6,
-        "xwindWindDir": 340
+        "xwindWindDir": 330
       },
       "omMet": {
         "explain": {
@@ -38357,21 +38330,21 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 18,
+          "tempC": 17,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 340,
+            "dir": 330,
             "spd": 6,
             "gst": null,
             "usedSpd": 6
           },
           "xwind": {
             "available": true,
-            "xwindKt": 4,
+            "xwindKt": 3,
             "limitKt": 38,
             "runwayHdg": 121,
             "runwayName": "12/30",
@@ -38393,14 +38366,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 4,
+        "xwindKt": 3,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
         "xwindUsedSpdKt": 6,
-        "xwindWindDir": 340
+        "xwindWindDir": 330
       },
       "omTaf": {
         "explain": {
@@ -42699,8 +42672,8 @@
       "name": "Ohrid St. Paul the Apostle Airport",
       "lat": 41.18,
       "lon": 20.7423,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR LWOH 041450Z 08009KT 050V110 9999 SCT040 BKN090 09/04 Q1007",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR LWOH 041520Z 08005KT 020V110 9999 SCT035 BKN090 09/03 Q1006",
       "tafRaw": "TAF LWOH 041450Z 0415/0515 09010KT 9999 SCT040 BKN090 \n  BECMG 0416/0418 BKN015 OVC030 \n  TEMPO 0418/0507 RA",
       "minima": {
         "best": {
@@ -42720,7 +42693,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR LWOH 041450Z 08009KT 050V110 9999 SCT040 BKN090 09/04 Q1007",
+        "raw": "METAR LWOH 041520Z 08005KT 020V110 9999 SCT035 BKN090 09/03 Q1006",
         "hz": {
           "ts": false,
           "cb": false,
@@ -42809,13 +42782,13 @@
           },
           "wind": {
             "dir": 80,
-            "spd": 9,
+            "spd": 5,
             "gst": null,
-            "usedSpd": 9
+            "usedSpd": 5
           },
           "xwind": {
             "available": true,
-            "xwindKt": 8,
+            "xwindKt": 4,
             "limitKt": 35,
             "runwayHdg": 18,
             "runwayName": "01/19",
@@ -42837,13 +42810,13 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 8,
+        "xwindKt": 4,
         "xwindLimitKt": 35,
         "xwindCond": "WET",
         "rwyccEst": 5,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 9,
+        "xwindUsedSpdKt": 5,
         "xwindWindDir": 80
       },
       "omMet": {
@@ -42872,13 +42845,13 @@
           },
           "wind": {
             "dir": 80,
-            "spd": 9,
+            "spd": 5,
             "gst": null,
-            "usedSpd": 9
+            "usedSpd": 5
           },
           "xwind": {
             "available": true,
-            "xwindKt": 8,
+            "xwindKt": 4,
             "limitKt": 38,
             "runwayHdg": 18,
             "runwayName": "01/19",
@@ -42900,13 +42873,13 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 8,
+        "xwindKt": 4,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 9,
+        "xwindUsedSpdKt": 5,
         "xwindWindDir": 80
       },
       "omTaf": {
@@ -43003,8 +42976,8 @@
       "name": "Skopje International Airport",
       "lat": 41.958087,
       "lon": 21.622581,
-      "updatedAt": "041450Z",
-      "metarRaw": "METAR LWSK 041450Z VRB02KT 9999 FEW025 SCT060 11/07 Q1009 NOSIG",
+      "updatedAt": "041520Z",
+      "metarRaw": "METAR LWSK 041520Z 14006KT 120V180 9999 FEW025 SCT060 11/07 Q1009 NOSIG",
       "tafRaw": "TAF LWSK 041450Z 0415/0515 16010KT 9999 SCT030 BKN060 \n  TEMPO 0415/0420 18010G20KT \n  BECMG 0417/0419 BKN010 OVCO3O \n  TEMPO 0420/0503 RA",
       "minima": {
         "best": {
@@ -43024,7 +42997,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR LWSK 041450Z VRB02KT 9999 FEW025 SCT060 11/07 Q1009 NOSIG",
+        "raw": "METAR LWSK 041520Z 14006KT 120V180 9999 FEW025 SCT060 11/07 Q1009 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -43137,18 +43110,18 @@
             ]
           },
           "wind": {
-            "dir": null,
-            "spd": 2,
+            "dir": 140,
+            "spd": 6,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 6
           },
           "xwind": {
             "available": true,
-            "xwindKt": null,
-            "limitKt": null,
-            "runwayHdg": null,
-            "runwayName": null,
-            "runwayWidthM": null,
+            "xwindKt": 3,
+            "limitKt": 35,
+            "runwayHdg": 165,
+            "runwayName": "16/34",
+            "runwayWidthM": 45.1,
             "narrow": false
           }
         },
@@ -43166,14 +43139,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": null,
-        "xwindLimitKt": null,
+        "xwindKt": 3,
+        "xwindLimitKt": 35,
         "xwindCond": "WET",
         "rwyccEst": 5,
         "noOpsLikely": false,
-        "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 6,
+        "xwindWindDir": 140
       },
       "omMet": {
         "explain": {
@@ -43200,18 +43173,18 @@
             "evidence": []
           },
           "wind": {
-            "dir": null,
-            "spd": 2,
+            "dir": 140,
+            "spd": 6,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 6
           },
           "xwind": {
             "available": true,
-            "xwindKt": null,
-            "limitKt": null,
-            "runwayHdg": null,
-            "runwayName": null,
-            "runwayWidthM": null,
+            "xwindKt": 3,
+            "limitKt": 38,
+            "runwayHdg": 165,
+            "runwayName": "16/34",
+            "runwayWidthM": 45.1,
             "narrow": false
           }
         },
@@ -43229,14 +43202,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": null,
-        "xwindLimitKt": null,
+        "xwindKt": 3,
+        "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
-        "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 6,
+        "xwindWindDir": 140
       },
       "omTaf": {
         "explain": {
@@ -44827,8 +44800,8 @@
       "name": "Queen Alia International Airport",
       "lat": 31.7226009369,
       "lon": 35.9931983948,
-      "updatedAt": null,
-      "metarRaw": "",
+      "updatedAt": "041400Z",
+      "metarRaw": "METAR OJAI 041400Z 27008KT 5000 HZ NSC 13/05 Q1020 NOSIG",
       "tafRaw": "TAF OJAI 041100Z 0412/0518 29006KT 5000 HZ FEW035 \n  PROB30 \n  TEMPO 0412/0418 28018KT 4000 BLDU \n  BECMG 0419/0421 13004KT \n  PROB30 0502/0506 3000 BR",
       "minima": {
         "best": {
@@ -44848,7 +44821,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "",
+        "raw": "METAR OJAI 041400Z 27008KT 5000 HZ NSC 13/05 Q1020 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -44860,9 +44833,9 @@
           "ra": false,
           "va": false
         },
-        "tempC": null,
+        "tempC": 13,
         "gustMax": null,
-        "vis": null,
+        "vis": 5000,
         "cig": null,
         "rvrMin": null,
         "score": 0
@@ -44895,7 +44868,7 @@
         "belowBest": false,
         "belowAlt": false,
         "onlyBest": false,
-        "effVis": null,
+        "effVis": 5000,
         "cig": null
       },
       "minimaTaf": {
@@ -44911,7 +44884,7 @@
       "_minTokensT": [],
       "om": {
         "explain": {
-          "src": "T",
+          "src": "MT",
           "heavyMatches": [],
           "refVisType": "VIS",
           "refVisValue": 3000,
@@ -44927,21 +44900,21 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": null,
+          "tempC": 13,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": 290,
-            "spd": 6,
+            "dir": 270,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 6
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": 3,
+            "xwindKt": 1,
             "limitKt": 38,
             "runwayHdg": 81,
             "runwayName": "08L/26R",
@@ -44963,22 +44936,22 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 3,
+        "xwindKt": 1,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 6,
-        "xwindWindDir": 290
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 270
       },
       "omMet": {
         "explain": {
-          "src": "MT",
+          "src": "M",
           "heavyMatches": [],
-          "refVisType": null,
-          "refVisValue": null,
-          "worstVis": null,
+          "refVisType": "VIS",
+          "refVisValue": 5000,
+          "worstVis": 5000,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -44990,25 +44963,25 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": null,
+          "tempC": 13,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": null,
-            "spd": null,
+            "dir": 270,
+            "spd": 8,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": null,
-            "limitKt": null,
-            "runwayHdg": null,
-            "runwayName": null,
-            "runwayWidthM": null,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 81,
+            "runwayName": "08L/26R",
+            "runwayWidthM": 61,
             "narrow": false
           }
         },
@@ -45026,14 +44999,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": null,
-        "xwindLimitKt": null,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
-        "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 270
       },
       "omTaf": {
         "explain": {
@@ -45113,7 +45086,7 @@
           "src": "T"
         }
       ],
-      "visibility_m": null,
+      "visibility_m": 5000,
       "taf_visibility_m": 3000,
       "worst_visibility_m": 3000,
       "ceiling_ft": null,
@@ -49301,10 +49274,10 @@
   "stats": {
     "icaoCount": 159,
     "metarReturned": 157,
-    "tafReturned": 148,
+    "tafReturned": 147,
     "stationsWritten": 159,
     "missingMetar": 2,
-    "missingTaf": 11
+    "missingTaf": 12
   },
   "errors": []
 }
