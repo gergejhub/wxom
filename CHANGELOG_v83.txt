@@ -1,0 +1,14 @@
+wxom mgmt brief v83
+
+What changed
+- scripts/update-data.mjs
+  - Management brief generator now always includes base airports (from base.txt, IATA codes)
+  - Brief uses trigger.label (no [object Object])
+  - Adds plain-English summaries per airport (visibility/RVR/cloud base + plain weather words)
+  - Adds base-airports status block + examples of impacted bases
+  - Notable changes list uses airport name + IATA/ICAO (not ICAO-only)
+  - schema_debug no longer flags minExplainMet/minExplainTaf as a string issue (expects object w/ tip)
+
+What NOT to change
+- assets/*, index.html: no UI changes required
+- base.txt: keep as IATA codes, one per line (duplicates ok but unnecessary)

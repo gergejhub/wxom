@@ -15,6 +15,7 @@ import vm from 'node:vm';
 
 const ROOT = process.cwd();
 const AIRPORTS_TXT = path.join(ROOT, 'airports.txt');
+const BASE_TXT = path.join(ROOT, 'base.txt');
 const OUT_LATEST = path.join(ROOT, 'data', 'latest.json');
 const OUT_IATA_MAP = path.join(ROOT, 'data', 'iata_map.json');
 const OUT_STATUS = path.join(ROOT, 'data', 'status.json');
@@ -691,6 +692,22 @@ function readIcaoList() {
   return out.filter(x => (seen.has(x) ? false : (seen.add(x), true)));
 }
 
+function readBaseIataList(){
+  if (!fs.existsSync(BASE_TXT)) return [];
+  const raw = fs.readFileSync(BASE_TXT, 'utf8');
+  const lines = raw.split(/\r?\n/).map(l=>l.trim().toUpperCase()).filter(Boolean);
+  // de-dupe but keep order
+  const seen = new Set();
+  const out = [];
+  for (const x of lines){
+    if (seen.has(x)) continue;
+    seen.add(x);
+    out.push(x);
+  }
+  return out;
+}
+
+
 function ensureDataDir(){
   const dir = path.dirname(OUT_LATEST);
   fs.mkdirSync(dir, { recursive: true });
@@ -751,13 +768,14 @@ function diffStations(prevStations, nextStations){
   return events;
 }
 
-function buildManagementBrief({generatedAt, stations, events}){
-  const top = (stations||[]).slice(0, 20);
+function buildManagementBrief({generatedAt, stations, events, baseStations, baseMissing, baseOrder}){
+  const all = (stations||[]);
+  const top = all.slice(0, 40); // already sorted by severityScore desc
   const crit = top.filter(s=>s.alert==="CRIT");
   const high = top.filter(s=>s.alert==="HIGH");
   const med  = top.filter(s=>s.alert==="MED");
 
-  const changed = (events||[]).filter(e=>e.type==="CHANGE").slice(0, 10);
+  const changed = (events||[]).filter(e=>e.type==="CHANGE").slice(0, 12);
 
   const shortName = (name)=>{
     const s = String(name||"").trim();
@@ -766,6 +784,7 @@ function buildManagementBrief({generatedAt, stations, events}){
   };
   const airportLabel = (s)=>{
     const n = shortName(s.name) || s.iata || s.icao;
+    // Keep codes, but don't make the whole brief code-only.
     const code = s.iata ? `${s.iata}/${s.icao}` : s.icao;
     return `${n} (${code})`;
   };
@@ -780,30 +799,105 @@ function buildManagementBrief({generatedAt, stations, events}){
       .map(t=> (typeof t==="string")?t:(t?.label||""))
       .filter(Boolean);
 
+  const fmtVis = (m)=>{
+    if (m == null) return null;
+    const v = Number(m);
+    if (!Number.isFinite(v)) return null;
+    if (v >= 9999) return "10 km+";
+    if (v >= 1000) return `${(v/1000).toFixed(v%1000===0?0:1)} km`;
+    return `${Math.round(v)} m`;
+  };
+  const fmtRvr = (m)=>{
+    if (m == null) return null;
+    const v = Number(m);
+    if (!Number.isFinite(v)) return null;
+    return `${Math.round(v)} m`;
+  };
+  const fmtCeil = (ft)=>{
+    if (ft == null) return null;
+    const v = Number(ft);
+    if (!Number.isFinite(v)) return null;
+    if (v >= 5000) return "5,000 ft+";
+    return `${Math.round(v)} ft`;
+  };
+
   const categorize = (label)=>{
     const L = String(label||"").toUpperCase();
     if (L.includes("MINIMA")) return "approach minima limitations";
-    if (L.includes("LVP")) return "low-visibility procedures";
+    if (L.includes("LVP")) return "low-visibility operations (reduced capacity)";
     if (L.includes("LVTO")) return "low-visibility takeoff restrictions";
     if (L.includes("RVR")) return "runway visual range limitations";
-    if (L.includes("VIS")) return "very low visibility / fog risk";
-    if (L.includes("CIG")) return "low cloud ceiling";
-    if (L.includes("FG") || L.includes("FZFG")) return "fog/freezing fog";
+    if (L.includes("VIS")) return "very low visibility";
+    if (L.includes("CIG")) return "low cloud base";
+    if (L.includes("FZFG") || L.includes("FG")) return "fog / freezing fog";
     if (L.includes("BR")) return "mist";
-    if (L.includes("SN") || L.includes("BLSN")) return "snow / blowing snow";
+    if (L.includes("BLSN") || (L.includes("SN") && !L.includes("TSN"))) return "snow / blowing snow";
     if (L.includes("FZRA") || L.includes("FZDZ") || L.includes("ICE")) return "freezing precipitation / icing risk";
     if (L.includes("TS") || L.includes("CB")) return "thunderstorm / convective risk";
     if (L.includes("XWIND") || L.includes("CROSSWIND")) return "crosswind limitations";
-    if (L.includes("RWYCC") || L.includes("RWY")) return "runway contamination / braking action risk";
-    if (L.includes("COLD CORR")) return "cold-temperature corrections";
+    if (L.includes("RWYCC") || (L.includes("RWY") && L.includes("LIKELY"))) return "runway contamination / braking action risk";
+    if (L.includes("COLD CORR")) return "cold-temperature performance corrections";
     if (L.includes("VA")) return "volcanic ash risk";
     return null;
   };
 
-  const driverCounts = new Map();
-  const driverExamples = new Map();
-  const pool = crit.length ? crit : (high.length ? high : med);
+  const humanSummary = (s)=>{
+    // Short, management-readable cause line (no ICAO-only language).
+    const parts = [];
+    const haz = new Set(Array.isArray(s?.hazards) ? s.hazards : []);
+    const labs = trigLabels(s);
 
+    // Weather cause words
+    if (haz.has("fzfg")) parts.push("freezing fog");
+    else if (haz.has("fg")) parts.push("fog");
+    if (haz.has("br") && !parts.includes("fog") && !parts.includes("freezing fog")) parts.push("mist");
+    if (haz.has("sn") || haz.has("blsn")) parts.push("snow");
+    if (labs.some(x=>/FZRA|FZDZ|ICE/i.test(x))) parts.push("freezing precipitation / icing risk");
+    if (labs.some(x=>/RWYCC|RWYCC<|RWYCC/i.test(x))) parts.push("runway contamination risk");
+
+    // Measurable constraints
+    const v = fmtVis(s?.worstVis ?? s?.worst_visibility_m ?? s?.visibility_m);
+    const r = fmtRvr(s?.rvrMinAll);
+    const c = fmtCeil(s?.cigAll ?? s?.ceiling_ft);
+    const meas = [];
+    if (v && (s?.worstVis ?? 9999) < 9999) meas.push(`visibility down to ${v}`);
+    if (r && Number(s?.rvrMinAll) < 800) meas.push(`RVR down to ${r}`);
+    if (c && Number(s?.cigAll ?? 99999) < 1000) meas.push(`cloud base around ${c}`);
+    if (meas.length) parts.push(meas.join(", "));
+
+    // Minima
+    if (s?.minimaNow?.belowBest) parts.push("below approach minima in current METAR");
+    else if (s?.minimaNow?.belowAlt) parts.push("below alternate minima in current METAR");
+    if (s?.minimaTaf?.belowBest) parts.push("forecast below approach minima at times");
+
+    if (!parts.length){
+      // fallback to top 2 trigger labels
+      const t2 = labs.slice(0,2);
+      if (t2.length) return t2.join("; ");
+      return "operational constraints flagged";
+    }
+    // Keep it compact
+    return parts.slice(0,3).join("; ");
+  };
+
+  // Always include base airports (from base.txt), even if not in top list.
+  const bases = (baseStations||[]).slice().sort((a,b)=>{
+    const ao = (baseOrder?.[a.iata] ?? 1e9);
+    const bo = (baseOrder?.[b.iata] ?? 1e9);
+    if (ao !== bo) return ao - bo;
+    return (b.severityScore??0) - (a.severityScore??0);
+  });
+
+  const baseCounts = { CRIT:0, HIGH:0, MED:0, OK:0 };
+  for (const s of bases){
+    const a = s.alert || "OK";
+    baseCounts[a] = (baseCounts[a] ?? 0) + 1;
+  }
+  const baseImpacted = bases.filter(s=> (s.alert==="CRIT" || s.alert==="HIGH" || s.alert==="MED"));
+
+  // Build driver stats from the worst tier present (crit > high > med)
+  const pool = crit.length ? crit : (high.length ? high : med);
+  const driverCounts = new Map();
   for (const s of pool){
     const seen = new Set();
     for (const lab of trigLabels(s)){
@@ -811,43 +905,56 @@ function buildManagementBrief({generatedAt, stations, events}){
       if (!cat || seen.has(cat)) continue;
       seen.add(cat);
       driverCounts.set(cat, (driverCounts.get(cat)||0) + 1);
-      if (!driverExamples.has(cat)) driverExamples.set(cat, airportLabel(s));
     }
   }
-
-  const topDrivers = [...driverCounts.entries()]
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,3)
-    .map(([cat])=>{
-      const ex = driverExamples.get(cat);
-      return ex ? `${cat} (e.g., ${ex})` : cat;
-    });
+  const topDrivers = [...driverCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([cat,count])=>`${cat}`);
 
   const headline20 =
-    crit.length ? `Critical operational weather affecting ${crit.length} airports (e.g., ${listAirports(crit, 3)}).` :
-    high.length ? `High-impact weather affecting ${high.length} airports (e.g., ${listAirports(high, 3)}).` :
-    med.length ? `Weather watch: ${med.length} airports at medium risk (e.g., ${listAirports(med, 3)}).` :
-    "No significant weather alerts in the monitored airport set.";
+    crit.length ? `Critical operational constraints are flagged at ${crit.length} airports right now.` :
+    high.length ? `High-impact operational constraints are flagged at ${high.length} airports right now.` :
+    med.length ? `Medium-level weather constraints are flagged at ${med.length} airports right now.` :
+    "No significant operational weather constraints are currently flagged in the monitored airports.";
 
   const management45 = (() => {
     const parts = [];
     parts.push(headline20);
 
-    if (pool.length){
-      parts.push(`Most affected airports right now: ${listAirports(pool, 6)}.`);
-      if (topDrivers.length){
-        parts.push(`Main issues: ${topDrivers.join("; ")}.`);
+    // Base airports always visible
+    if (bases.length){
+      const baseStatus = [];
+      if (baseCounts.CRIT) baseStatus.push(`${baseCounts.CRIT} critical`);
+      if (baseCounts.HIGH) baseStatus.push(`${baseCounts.HIGH} high`);
+      if (baseCounts.MED)  baseStatus.push(`${baseCounts.MED} medium`);
+      const okCount = bases.length - (baseCounts.CRIT + baseCounts.HIGH + baseCounts.MED);
+      if (okCount) baseStatus.push(`${okCount} normal`);
+      parts.push(`Base airports status: ${baseStatus.join(", ")}.`);
+
+      if (baseImpacted.length){
+        const ex = baseImpacted.slice(0,4).map(s=>`${airportLabel(s)} — ${humanSummary(s)}`);
+        const extra = baseImpacted.length - ex.length;
+        parts.push(`Base airports with constraints: ${ex.join(" | ")}${extra>0 ? ` (+${extra} more)` : ""}.`);
       } else {
-        parts.push(`Main issues: low visibility and/or low ceilings are the most common constraints.`);
+        parts.push(`No base airports are currently showing significant constraints.`);
       }
-      if (driverCounts.get("low-visibility procedures") || driverCounts.get("runway visual range limitations") || driverCounts.get("very low visibility / fog risk")){
-        parts.push(`Operational impact: LVP/RVR constraints can reduce runway capacity, increase holding and taxi times, and drive diversion risk at the worst locations.`);
+      if (Array.isArray(baseMissing) && baseMissing.length){
+        parts.push(`Note: ${baseMissing.length} base codes are not present in the monitored ICAO list (${baseMissing.slice(0,6).join(", ")}${baseMissing.length>6 ? ", …" : ""}).`);
       }
     }
 
+    if (pool.length){
+      parts.push(`Most affected locations: ${listAirports(pool, 6)}.`);
+      if (topDrivers.length){
+        parts.push(`Main drivers: ${topDrivers.join("; ")}.`);
+      }
+      parts.push(`Expected impact: reduced runway capacity and higher delay/diversion risk at the worst-affected airports, especially where visibility/RVR and cloud base are very low.`);
+    }
+
     if (changed.length){
-      const changedStr = changed.map(e=>e.icao).join(", ");
-      parts.push(`Notable changes since last run (ICAO): ${changedStr}.`);
+      const changedNames = changed.map(e=>{
+        const s = all.find(x=>x.icao===e.icao);
+        return s ? airportLabel(s) : e.icao;
+      });
+      parts.push(`Notable changes since the last update: ${changedNames.slice(0,8).join(", ")}${changedNames.length>8 ? ", …" : ""}.`);
     }
     return parts.join(" ");
   })();
@@ -856,29 +963,51 @@ function buildManagementBrief({generatedAt, stations, events}){
     const lines = [];
     lines.push(headline20);
 
+    if (bases.length){
+      const showB = baseImpacted.length ? baseImpacted.slice(0,6) : bases.slice(0,6);
+      lines.push(`Base airports (detail): ${showB.map(s=>`${airportLabel(s)} — ${s.alert||"OK"} — ${humanSummary(s)}`).join(" | ")}.`);
+    }
+
     const show = pool.slice(0, 6);
     for (const s of show){
-      const labs = trigLabels(s).slice(0,5);
+      const labs = trigLabels(s).slice(0,4);
       const plain = labs.length ? labs.join(", ") : "—";
-      lines.push(`${airportLabel(s)}: ${s.alert||"OK"} — ${plain}.`);
+      lines.push(`${airportLabel(s)}: ${s.alert||"OK"} — ${humanSummary(s)}. Key tags: ${plain}.`);
     }
 
     if (changed.length){
-      lines.push(`Changed airports (ICAO): ${changed.map(e=>e.icao).join(", ")}.`);
+      lines.push(`Changed since last run: ${changed.map(e=>e.icao).join(", ")}.`);
     }
     return lines.join(" ");
   })();
+
+  // Include top + impacted bases in the exported top list for UI and debugging.
+  const topOut = [];
+  const seen = new Set();
+  const pushUnique = (s)=>{
+    if (!s || !s.icao || seen.has(s.icao)) return;
+    seen.add(s.icao);
+    topOut.push({
+      icao:s.icao, iata:s.iata||null, name:s.name||null,
+      alert:s.alert||"OK", critSrc:s.critSrc||null,
+      summary: humanSummary(s),
+      triggers: Array.isArray(s.triggers)?s.triggers:[],
+    });
+  };
+  for (const s of top.slice(0,12)) pushUnique(s);
+  for (const s of baseImpacted.slice(0,12)) pushUnique(s);
 
   return {
     generatedAt,
     headline20,
     management45,
     detail90,
-    top: top.slice(0,12).map(s=>({
+    base: bases.slice(0, 40).map(s=>({
       icao:s.icao, iata:s.iata||null, name:s.name||null,
-      alert:s.alert||"OK", triggers:s.triggers||[], critSrc:s.critSrc||null
+      alert:s.alert||"OK", summary: humanSummary(s)
     })),
-    changed
+    top: topOut,
+    changed: changed.map(e=>({icao:e.icao, type:e.type, alert:e.alert||"OK"}))
   };
 }
 
@@ -1359,6 +1488,10 @@ async function main(){
 
   const iataMap = await buildIataMap(icaos);
   fs.writeFileSync(OUT_IATA_MAP, JSON.stringify(iataMap, null, 2));
+
+  const baseIatas = readBaseIataList();
+  const baseIataSet = new Set(baseIatas);
+  const baseOrder = Object.fromEntries(baseIatas.map((x,i)=>[x,i]));
   try{
     // Runways dataset is heavy and changes rarely. Refresh at most daily,
     // but always re-try if file is missing or suspiciously tiny (e.g. "{}").
@@ -1488,11 +1621,15 @@ async function main(){
     missingTaf: stations.filter(s => !s.tafRaw).length
   };
 
+  const baseStations = stations.filter(s => (s.iata && baseIataSet.has(s.iata)));
+  const basePresent = new Set(baseStations.map(s=>s.iata));
+  const baseMissing = baseIatas.filter(x=>!basePresent.has(x));
+
   // --- Change log + management brief ("Musk step") --------------------------
   const prevLatest = safeReadJson(OUT_LATEST);
   const events = diffStations(prevLatest?.stations || [], stations);
   writeRollingChanges({generatedAt, events});
-  const brief = buildManagementBrief({generatedAt, stations, events});
+  const brief = buildManagementBrief({generatedAt, stations, events, baseStations, baseMissing, baseOrder});
   fs.writeFileSync(OUT_BRIEF, JSON.stringify(brief, null, 2));
 
   const out = { generatedAt, stations, stats, errors };
