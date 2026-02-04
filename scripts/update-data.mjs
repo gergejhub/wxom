@@ -948,32 +948,120 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
 
       const basePool = baseFocus.length ? baseFocus : baseImpactedAny;
       if (basePool.length){
-        // Build a short, spoken-friendly base summary (top 5 with causes).
-        const shown = basePool.slice(0,5).map(s => `${airportLabel(s)} — ${humanSummary(s)}`).filter(Boolean);
-        const extra = basePool.length - shown.length;
+        // Spoken-friendly base summary: mention key bases, then group common drivers (avoid repeating the same trigger per airport).
+        const shownBases = basePool.slice(0,5);
+        const extraBases = Math.max(0, basePool.length - shownBases.length);
+        const baseNames = shownBases.map(s => airportLabel(s)).filter(Boolean);
+        const joinList = (items)=>{
+          const a = (items||[]).filter(Boolean);
+          if (!a.length) return "";
+          if (a.length===1) return a[0];
+          if (a.length===2) return `${a[0]} and ${a[1]}`;
+          return a.slice(0,-1).join(", ") + ` and ${a[a.length-1]}`;
+        };
+        const baseList = joinList(baseNames) + (extraBases>0 ? ` and ${extraBases} others` : "");
+        parts.push(`Base airports needing attention include ${baseList}.`);
 
-        // Drivers at bases (top 2–3)
-        const baseDriverCounts = new Map();
+        if (baseMonitorCount>0){
+          parts.push(`Other base airports are mostly medium severity and should be monitored (${baseMonitorCount} flagged).`);
+        }
+
+        // Build driver groups across basePool
+        const driverMap = new Map(); // category -> stations[]
+        const addDriver = (cat, s)=>{
+          if (!cat) return;
+          if (!driverMap.has(cat)) driverMap.set(cat, []);
+          driverMap.get(cat).push(s);
+        };
         for (const s of basePool){
-          const seen = new Set();
+          const cats = new Set();
+          // hazards
+          const haz = new Set(Array.isArray(s?.hazards) ? s.hazards : []);
+          if (haz.has("fg") || haz.has("fzfg")) cats.add("fog / freezing fog");
+          if (haz.has("br")) cats.add("mist");
+          if (haz.has("sn") || haz.has("blsn")) cats.add("snow / blowing snow");
+          // trigger labels
           for (const lab of trigLabels(s)){
             const cat = categorize(lab);
-            if (!cat || seen.has(cat)) continue;
-            seen.add(cat);
-            baseDriverCounts.set(cat, (baseDriverCounts.get(cat)||0) + 1);
+            if (cat) cats.add(cat);
           }
+          for (const cat of cats) addDriver(cat, s);
         }
-        const baseDrivers = [...baseDriverCounts.entries()]
-          .sort((a,b)=>b[1]-a[1])
-          .slice(0,3)
-          .map(([cat])=>cat);
 
-        const driverPhrase = baseDrivers.length ? `Main base drivers are ${baseDrivers.join(", ").replace(/,([^,]*)$/, " and$1")}.` : "";
+        // Pick top categories by coverage
+        const ranked = [...driverMap.entries()]
+          .map(([cat, arr])=>[cat, new Set(arr.map(x=>x.icao)).size])
+          .sort((a,b)=>b[1]-a[1]);
 
-        let line = `Base airports needing attention include ${shown.join("; ")}${extra>0 ? `; and ${extra} others` : ""}.`;
-        if (baseMonitorCount>0) line += ` The remaining ${baseMonitorCount} base airports are flagged medium and should be monitored.`;
-        if (driverPhrase) line += ` ${driverPhrase}`;
-        parts.push(line);
+        // Optionally merge snow + runway contamination into one clause for more natural spoken output
+        const getSet = (cat)=>{
+          const arr = driverMap.get(cat) || [];
+          return new Set(arr.map(x=>x.icao));
+        };
+        const snowSet = getSet("snow / blowing snow");
+        const rwySet  = getSet("runway contamination / braking action risk");
+        if (snowSet.size && rwySet.size){
+          const merged = new Set([...snowSet, ...rwySet]);
+          driverMap.set("snow / runway contamination risk", [...basePool].filter(s=>merged.has(s.icao)));
+          // Reduce ranking weight by removing individual items later if present
+        }
+
+        const prettyCat = (cat)=>{
+          switch(cat){
+            case "snow / runway contamination risk": return "snow and runway contamination risk";
+            case "runway contamination / braking action risk": return "runway contamination / reduced braking risk";
+            case "cold-temperature performance corrections": return "cold‑temperature performance penalties";
+            case "low cloud base": return "low cloud base";
+            case "mist": return "mist";
+            case "fog / freezing fog": return "fog / freezing fog";
+            case "very low visibility": return "very low visibility";
+            case "runway visual range limitations": return "RVR limitations";
+            case "low-visibility operations (reduced capacity)": return "low‑visibility procedures";
+            case "approach minima limitations": return "approach minima limits";
+            case "crosswind limitations": return "crosswind constraints";
+            case "snow / blowing snow": return "snow / blowing snow";
+            default: return cat;
+          }
+        };
+
+        // Build up to 3 grouped clauses
+        const selectedCats = [];
+        for (const [cat, n] of ranked){
+          if (selectedCats.length>=3) break;
+          if (cat==="snow / blowing snow" && driverMap.has("snow / runway contamination risk")) continue;
+          if (cat==="runway contamination / braking action risk" && driverMap.has("snow / runway contamination risk")) continue;
+          if (!n) continue;
+          selectedCats.push(cat);
+        }
+        if (driverMap.has("snow / runway contamination risk") && !selectedCats.includes("snow / runway contamination risk")){
+          // Prefer merged clause if it is material
+          selectedCats.unshift("snow / runway contamination risk");
+          selectedCats.splice(3);
+        }
+
+        const clauseFor = (cat)=>{
+          const arr = driverMap.get(cat) || [];
+          const uniq = [];
+          const seen = new Set();
+          for (const s of arr){
+            if (seen.has(s.icao)) continue;
+            seen.add(s.icao);
+            uniq.push(s);
+          }
+          uniq.sort((a,b)=> (b.severityScore||0) - (a.severityScore||0));
+          const shown = uniq.slice(0,4).map(s=>airportLabel(s));
+          const extra = Math.max(0, uniq.length - shown.length);
+          const list = joinList(shown) + (extra>0 ? ` and ${extra} others` : "");
+          return `${prettyCat(cat)} at ${list}`;
+        };
+
+        const clauses = selectedCats.map(clauseFor).filter(Boolean);
+        if (clauses.length){
+          const spoken = (clauses.length===1) ? clauses[0]
+            : (clauses.length===2) ? `${clauses[0]}, and ${clauses[1]}`
+            : `${clauses[0]}, ${clauses[1]}, and ${clauses[2]}`;
+          parts.push(`At base airports, the main issues are ${spoken}.`);
+        }
       } else {
         parts.push(`No base airports are currently showing material operational constraints.`);
       }
