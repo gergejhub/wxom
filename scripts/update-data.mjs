@@ -748,7 +748,13 @@ function diffStations(prevStations, nextStations){
     for (const key of ["alert","critSrc","minimaNow","minimaTaf"]){
       const pv = p[key] ?? null;
       const nv = n[key] ?? null;
-      if (pv !== nv) changes[key] = {from: pv, to: nv};
+
+      let equal = (pv === nv);
+      if (!equal && (key === "minimaNow" || key === "minimaTaf")){
+        // minima objects are reconstructed each run; compare by value instead of reference
+        try { equal = JSON.stringify(pv) === JSON.stringify(nv); } catch { equal = false; }
+      }
+      if (!equal) changes[key] = {from: pv, to: nv};
     }
     const trigKey = (arr)=> (Array.isArray(arr)?arr:[]).map(t=> (typeof t==="string")?t:(t?.label||"")).filter(Boolean).join("|");
     const pTrig = trigKey(p.triggers);
@@ -1486,11 +1492,16 @@ async function fetchMetars(icaos){
     const txt = await fetchText(url);
     for(const line of txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)){
       // Example: "METAR EGLC ...." or "SPECI EDDM ..."
-      const parts = line.split(/\s+/);
-      const idx = (parts[0] === 'METAR' || parts[0] === 'SPECI') ? 1 : 0;
-      const icao = parts[idx];
-      if(icao) map.set(icao.toUpperCase(), line);
-    }
+      const parts = line.split(/\s+/).filter(Boolean);
+      const SKIP = new Set(['METAR','SPECI','COR','AUTO','RTD','NIL','AMD']);
+      let icao = null;
+      for (const t of parts){
+        const u = (t||'').toUpperCase();
+        if (SKIP.has(u)) continue;
+        if (/^[A-Z]{4}$/.test(u)) { icao = u; break; }
+      }
+      if (icao) map.set(icao, line);
+}
   }
   return map;
 }
@@ -1502,13 +1513,42 @@ async function fetchTafs(icaos){
     const url = `${AWC_TAF}?ids=${ids}&format=raw`;
     const txt = await fetchText(url);
 
-    // TAFs can be multi-line blocks; split by "TAF " header.
-    const blocks = txt.split(/\n(?=TAF\s)/).map(s=>s.trim()).filter(Boolean);
-    for(const b of blocks){
-      const m = b.match(/^(TAF\s+)?([A-Z0-9]{4})\b/);
-      if(m){
-        map.set(m[2].toUpperCase(), b);
+    // TAFs can be multi-line blocks. AWC output is usually separated by blank lines,
+    // but header formats vary (leading spaces, AMD/COR after TAF, etc.). We'll build blocks by scanning.
+    const lines = txt.split(/\r?\n/);
+    const blocks = [];
+    let cur = [];
+    const flush = () => {
+      const b = cur.join('\n').trim();
+      if (b) blocks.push(b);
+      cur = [];
+    };
+    for (const raw of lines){
+      const line = (raw ?? '').trimEnd();
+      if (!line.trim()){
+        // blank line -> block boundary
+        if (cur.length) flush();
+        continue;
       }
+      if (/^\s*TAF\b/i.test(line) && cur.length){
+        flush();
+        cur.push(line);
+      } else {
+        cur.push(line);
+      }
+    }
+    if (cur.length) flush();
+
+    const SKIP = new Set(['TAF','AMD','COR','RTD','NIL','AUTO']);
+    for (const b of blocks){
+      const parts = b.split(/\s+/).filter(Boolean);
+      let icao = null;
+      for (const t of parts){
+        const u = (t||'').toUpperCase();
+        if (SKIP.has(u)) continue;
+        if (/^[A-Z]{4}$/.test(u)) { icao = u; break; }
+      }
+      if (icao) map.set(icao, b);
     }
   }
   return map;
@@ -1691,31 +1731,20 @@ async function main(){
   let iataMap = {};
   try{
     iataMap = await buildIataMap(icaos);
+    fs.writeFileSync(OUT_IATA_MAP, JSON.stringify(iataMap, null, 2));
   }catch(e){
-    const msg = `IATA map refresh failed: ${String(e?.message ?? e)}`;
-    console.log(msg);
-    errors.push(msg);
-    iataMap = safeReadJson(OUT_IATA_MAP) || {};
-  }
-
-  // Ensure every watched ICAO exists in the map (even if OurAirports fetch failed).
-  for (const icao of icaos){
-    const v = iataMap[icao];
-    if (!v){
-      iataMap[icao] = { iata: null, name: null, lat: null, lon: null };
-      continue;
+    errors.push({ step: "buildIataMap", message: String(e?.message ?? e) });
+    // Fallback to previous map if available, so the whole pipeline doesn't stop.
+    if(fs.existsSync(OUT_IATA_MAP)){
+      try { iataMap = JSON.parse(fs.readFileSync(OUT_IATA_MAP,'utf8')); } catch { iataMap = {}; }
     }
-    iataMap[icao] = {
-      iata: optStringOrNull(v.iata),
-      name: optStringOrNull(v.name),
-      lat: (v.lat != null && Number.isFinite(Number(v.lat))) ? Number(v.lat) : null,
-      lon: (v.lon != null && Number.isFinite(Number(v.lon))) ? Number(v.lon) : null,
-    };
+    // Ensure every watched ICAO exists as placeholder
+    for(const icao of icaos){
+      if(!iataMap[icao]) iataMap[icao] = { iata: null, name: null, lat: null, lon: null };
+    }
   }
 
-  fs.writeFileSync(OUT_IATA_MAP, JSON.stringify(iataMap, null, 2));
-
-  const baseIatas = readBaseIataList();
+const baseIatas = readBaseIataList();
   const baseIataSet = new Set(baseIatas);
   const baseOrder = Object.fromEntries(baseIatas.map((x,i)=>[x,i]));
   try{
