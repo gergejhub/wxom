@@ -64,7 +64,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/latest.json data/status.json data/runways.json data/iata_map.json data/schema_debug.json data/management_brief.json data/changes.json data/force_heartbeat.json
+          git add data/latest.json data/status.json data/iata_map.json data/runways.json data/schema_debug.json data/management_brief.json data/changes.json data/force_heartbeat.json
           if [ -n "$(git status --porcelain)" ]; then
             git commit -m "Force refresh dataset (30m safety net)"
             git push
