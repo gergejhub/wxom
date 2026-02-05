@@ -1688,7 +1688,31 @@ async function main(){
 
   console.log(`ICAO list loaded: ${icaos.length} stations. Sample: ${icaos.slice(0,10).join(', ')}`);
 
-  const iataMap = await buildIataMap(icaos);
+  let iataMap = {};
+  try{
+    iataMap = await buildIataMap(icaos);
+  }catch(e){
+    const msg = `IATA map refresh failed: ${String(e?.message ?? e)}`;
+    console.log(msg);
+    errors.push(msg);
+    iataMap = safeReadJson(OUT_IATA_MAP) || {};
+  }
+
+  // Ensure every watched ICAO exists in the map (even if OurAirports fetch failed).
+  for (const icao of icaos){
+    const v = iataMap[icao];
+    if (!v){
+      iataMap[icao] = { iata: null, name: null, lat: null, lon: null };
+      continue;
+    }
+    iataMap[icao] = {
+      iata: optStringOrNull(v.iata),
+      name: optStringOrNull(v.name),
+      lat: (v.lat != null && Number.isFinite(Number(v.lat))) ? Number(v.lat) : null,
+      lon: (v.lon != null && Number.isFinite(Number(v.lon))) ? Number(v.lon) : null,
+    };
+  }
+
   fs.writeFileSync(OUT_IATA_MAP, JSON.stringify(iataMap, null, 2));
 
   const baseIatas = readBaseIataList();
