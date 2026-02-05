@@ -957,7 +957,7 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
       if (okCount) baseStatusBits.push(`${okCount} normal`);
 
       const basePool = baseFocus.length ? baseFocus : baseImpactedAny;
-      const shownBases = basePool.slice(0,4);
+      const shownBases = basePool.slice(0,3);
       const extraBases = Math.max(0, basePool.length - shownBases.length);
       const baseNames = shownBases.map(s => airportLabel(s)).filter(Boolean);
 
@@ -969,7 +969,11 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
         return a.slice(0,-1).join(", ") + ` and ${a[a.length-1]}`;
       };
 
-      const baseList = joinList(baseNames) + (extraBases>0 ? ` and ${extraBases} others` : "");
+      const baseList = (() => {
+        const listed = joinList(baseNames);
+        if (!listed) return extraBases>0 ? `plus ${extraBases} other bases` : "";
+        return extraBases>0 ? `${listed}; plus ${extraBases} other bases` : listed;
+      })();
       parts.push(`Across base airports: ${baseStatusBits.join(", ")}. Key bases needing attention include ${baseList}.`);
 
       const baseMonitor = Math.max(0, baseImpactedAny.length - baseFocus.length);
@@ -1049,7 +1053,7 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
         const cats = baseDriverCats.map(prettyBaseCat);
         const focusBases = basePool.slice().sort((a,b)=> (b.severityScore||0) - (a.severityScore||0)).slice(0,3);
         const focusNames = focusBases.map(s=>airportLabel(s)).filter(Boolean);
-        const focusPhrase = focusNames.length ? `—most notably around ${joinList(focusNames)}` : "";
+        const focusPhrase = focusNames.length ? ` — most notably around ${joinList(focusNames)}` : "";
         parts.push(`At base airports, the dominant pattern is ${joinCats(cats)} ${focusPhrase}.`);
       }
 
@@ -1062,7 +1066,7 @@ function buildManagementBrief({generatedAt, stations, events, baseStations, base
 
     // Network view (keep it short and readable).
     if (pool.length){
-      parts.push(`Network hotspots: ${listAirports(pool, 6)}.`);
+      parts.push(`Network hotspots: ${listAirports(pool, 5)}.`);
       if (topDrivers.length){
         const pretty = (d)=>({
           "approach minima limitations":"approach minima limits",
