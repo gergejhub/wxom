@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 /**
- * Render TV infographic (4K + 1080p) from render/infographic.html into WebP images.
- *
- * This version is hardened for CI:
- * - Starts a tiny local HTTP server (avoids file:// CORS issues)
- * - Does NOT hard-fail if window.__RENDER_READY__ is never set
- * - Waits for DOM + fonts + a short settling period, then screenshots anyway
- * - On failure, emits useful debug info (console/page errors) before exiting
+ * Render TV infographic (4K + 1080p) into WebP images.
+ * Fixes:
+ *  - Avoids page.waitForTimeout (not available in some puppeteer versions): uses delay()
+ *  - Ensures local HTTP server serves repo root and template fetches absolute /data/* paths
+ *  - Best-effort render-ready flag; continues even if not set
  */
 
 import http from "node:http";
@@ -17,22 +15,19 @@ import puppeteer from "puppeteer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Repo root assumed: scripts/ is one level below root
 const ROOT = path.resolve(__dirname, "..");
 
-// Outputs
 const OUT_DIR = path.join(ROOT, "assets", "render");
 const OUT_4K = path.join(OUT_DIR, "wxwi-dashboard-4k.webp");
 const OUT_1080 = path.join(OUT_DIR, "wxwi-dashboard-1080p.webp");
 
-// Page to render
 const PAGE_PATH = path.join(ROOT, "render", "infographic.html");
 const PAGE_URL_PATH = "/render/infographic.html";
 
-// Timeouts
 const NAV_TIMEOUT_MS = 120_000;
-const RENDER_SETTLE_MS = 1_250;
+const SETTLE_MS = 1_250;
+
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -44,14 +39,11 @@ function startServer(rootDir) {
       const url = new URL(req.url || "/", "http://127.0.0.1");
       let pathname = decodeURIComponent(url.pathname);
 
-      // Prevent directory traversal
       if (pathname.includes("..")) {
         res.writeHead(400);
         res.end("Bad request");
         return;
       }
-
-      // Default to index.html if directory
       if (pathname.endsWith("/")) pathname += "index.html";
 
       const filePath = path.join(rootDir, pathname);
@@ -60,7 +52,6 @@ function startServer(rootDir) {
         res.end("Forbidden");
         return;
       }
-
       if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
         res.writeHead(404);
         res.end("Not found");
@@ -79,12 +70,9 @@ function startServer(rootDir) {
         ext === ".webp" ? "image/webp" :
         "application/octet-stream";
 
-      res.writeHead(200, {
-        "Content-Type": mime,
-        "Cache-Control": "no-store",
-      });
+      res.writeHead(200, { "Content-Type": mime, "Cache-Control": "no-store" });
       fs.createReadStream(filePath).pipe(res);
-    } catch (e) {
+    } catch {
       res.writeHead(500);
       res.end("Server error");
     }
@@ -101,52 +89,33 @@ function startServer(rootDir) {
 async function waitForFonts(page) {
   try {
     await page.evaluate(async () => {
-      if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready;
-      }
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
     });
-  } catch (_) {
-    // ignore
-  }
+  } catch {}
 }
 
 async function tryWaitForRenderReady(page) {
-  // Best-effort only. If the template sets window.__RENDER_READY__ we honor it.
   try {
-    await page.waitForFunction(
-      () => (window.__RENDER_READY__ === true),
-      { timeout: 30_000 }
-    );
+    await page.waitForFunction(() => window.__RENDER_READY__ === true, { timeout: 30_000 });
     return true;
-  } catch (_) {
+  } catch {
     return false;
   }
 }
 
-async function shot(page, viewport, outPath, webpQuality) {
+async function shot(page, outPath, viewport, quality) {
   await page.setViewport({ width: viewport.w, height: viewport.h, deviceScaleFactor: 1 });
 
-  // Navigate and wait for DOM to load; avoid hard dependency on networkidle0 (some pages keep connections open)
-  await page.goto(page.url(), { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
+  // Reload to let CSS media queries/layout settle for this viewport
+  await page.reload({ waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
 
-  // Give fetches a chance to complete
-  await page.waitForTimeout(800);
-
-  // Fonts + layout settle
+  // Let fetches complete
+  await delay(900);
   await waitForFonts(page);
-
-  // If template exposes a render-ready flag, wait a bit for it; otherwise continue
   await tryWaitForRenderReady(page);
+  await delay(SETTLE_MS);
 
-  // Small settle (animations, layout)
-  await page.waitForTimeout(RENDER_SETTLE_MS);
-
-  await page.screenshot({
-    path: outPath,
-    type: "webp",
-    quality: webpQuality,
-    fullPage: false
-  });
+  await page.screenshot({ path: outPath, type: "webp", quality, fullPage: false });
 }
 
 async function main() {
@@ -156,19 +125,12 @@ async function main() {
   }
 
   ensureDir(OUT_DIR);
-
   const { server, port } = await startServer(ROOT);
   const url = `http://127.0.0.1:${port}${PAGE_URL_PATH}`;
 
   const browser = await puppeteer.launch({
     headless: "new",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--font-render-hinting=medium",
-    ],
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
   });
 
   const page = await browser.newPage();
@@ -179,10 +141,7 @@ async function main() {
   page.on("console", (msg) => {
     const line = `[${msg.type()}] ${msg.text()}`;
     consoleLogs.push(line);
-    // Keep logs short in Actions output
-    if (msg.type() === "error" || msg.type() === "warning") {
-      console.log(`[PAGE ${msg.type().toUpperCase()}] ${msg.text()}`);
-    }
+    if (msg.type() === "error" || msg.type() === "warning") console.log(`[PAGE ${msg.type().toUpperCase()}] ${msg.text()}`);
   });
   page.on("pageerror", (err) => {
     consoleLogs.push(`[pageerror] ${String(err)}`);
@@ -190,31 +149,25 @@ async function main() {
   });
 
   try {
-    // Set initial URL once; shot() uses page.url()
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
 
-    // 4K
-    await shot(page, { w: 3840, h: 2160 }, OUT_4K, 92);
+    await shot(page, OUT_4K, { w: 3840, h: 2160 }, 92);
+    await shot(page, OUT_1080, { w: 1920, h: 1080 }, 90);
 
-    // 1080p
-    await shot(page, { w: 1920, h: 1080 }, OUT_1080, 90);
-
-    console.log(`[RENDER OK] ${path.relative(ROOT, OUT_4K)}`);
-    console.log(`[RENDER OK] ${path.relative(ROOT, OUT_1080)}`);
+    console.log(`[RENDER OK] assets/render/wxwi-dashboard-4k.webp`);
+    console.log(`[RENDER OK] assets/render/wxwi-dashboard-1080p.webp`);
   } catch (e) {
     console.error(`[RENDER ERROR] ${e?.name || "Error"}: ${e?.message || String(e)}`);
-
-    // Dump a small debug artifact if possible
     try {
       const dbgDir = path.join(OUT_DIR, "debug");
       ensureDir(dbgDir);
+      fs.writeFileSync(path.join(dbgDir, "url.txt"), url, "utf8");
       const html = await page.content();
       fs.writeFileSync(path.join(dbgDir, "last.html"), html, "utf8");
       await page.screenshot({ path: path.join(dbgDir, "last.png"), type: "png" });
       fs.writeFileSync(path.join(dbgDir, "console.log"), consoleLogs.join("\n"), "utf8");
-      console.log(`[RENDER DEBUG] Wrote ${path.relative(ROOT, path.join(dbgDir, "last.png"))}`);
-    } catch (_) {}
-
+      console.log(`[RENDER DEBUG] Wrote assets/render/debug/last.png`);
+    } catch {}
     process.exitCode = 1;
   } finally {
     await browser.close().catch(() => {});
