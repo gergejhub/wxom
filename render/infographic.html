@@ -1,375 +1,289 @@
 <!doctype html>
-<html lang="en">
+<html lang="hu">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>WXWI TV Infographic</title>
   <style>
     :root{
-      --bg:#05060a;
-      --panel:#0b1120cc;
-      --stroke:#2fe7ff66;
-      --stroke2:#ffcc6666;
-      --text:#e9f7ff;
-      --muted:#a9c7d6;
-      --cyan:#2fe7ff;
-      --mag:#b88bff;
-      --amber:#ffcc66;
-      --red:#ff4d6d;
-      --green:#57ffb3;
-      --pad:3vw; /* TV-safe margin */
-      --r:18px;
-      --shadow: 0 0 26px #2fe7ff1f, 0 0 10px #2fe7ff12;
-      --shadow2: 0 0 26px #b88bff18, 0 0 10px #b88bff10;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --bg:#02030a;
+      --panel:#071026;
+      --stroke: rgba(0, 255, 255, 0.42);
+      --stroke2: rgba(0, 255, 255, 0.25);
+      --txt: rgba(235, 255, 255, 0.95);
+      --muted: rgba(180, 220, 220, 0.75);
+      --ok: rgba(0, 255, 200, 0.85);
+      --warn: rgba(255, 210, 80, 0.95);
+      --bad: rgba(255, 80, 120, 0.95);
     }
-    html,body{ height:100%; margin:0; background: radial-gradient(1200px 600px at 50% 20%, #0b1b2f 0%, var(--bg) 55%, #020308 100%); color:var(--text); font-family:var(--font); }
-    .frame{
-      width:100%; height:100%;
-      padding:var(--pad);
-      box-sizing:border-box;
-    }
-    .hud{
-      height:100%;
-      border-radius: 28px;
-      position:relative;
-      overflow:hidden;
-      box-shadow: 0 0 0 2px #2fe7ff22, 0 0 50px #2fe7ff0f;
-      background: linear-gradient(180deg, #061022 0%, #040711 100%);
-    }
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 24px 28px 12px;
-      border-bottom: 1px solid #2fe7ff22;
-      background: linear-gradient(180deg, #081a33 0%, #050a14 100%);
-    }
-    .title{
-      font-size: 72px; /* tuned for 4K, scaled down for 1080 by browser */
-      letter-spacing: 1px;
-      font-weight: 800;
-      color: var(--cyan);
-      text-shadow: 0 0 18px #2fe7ff3a;
-      line-height:1.05;
-      white-space:nowrap;
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+    .wrap{box-sizing:border-box;width:100vw;height:100vh;padding:3vw;display:flex;flex-direction:column;gap:2vw;}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:2vw;}
+    .brand{
+      font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
+      font-size: clamp(28px, 2.2vw, 78px);
+      text-shadow: 0 0 20px rgba(0,255,255,0.18);
     }
     .stamp{
-      text-align:right;
-      font-size: 30px;
+      font-size: clamp(14px, 0.9vw, 28px);
       color: var(--muted);
-      font-weight: 600;
+      text-align:right;
       line-height:1.2;
     }
-    .affected{
-      padding: 14px 28px 18px;
-      font-size: 30px;
-      color: var(--text);
-      display:flex;
-      gap:14px;
-      align-items:flex-start;
-      border-bottom: 1px solid #2fe7ff1c;
-    }
-    .affected b{
-      color:#d9f7ff;
-      font-weight:800;
-      white-space:nowrap;
-    }
-    .affected .list{
-      color: var(--muted);
-      font-weight: 600;
-      overflow:hidden;
-      display:-webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 22px;
-      padding: 20px 22px 24px;
-      height: calc(100% - 190px);
-      box-sizing:border-box;
-    }
-    .col{
-      display:flex;
-      flex-direction:column;
-      gap: 16px;
-      min-height:0;
-    }
-    .colhead{
-      display:flex;
-      justify-content:space-between;
-      align-items:baseline;
-      padding: 14px 18px;
-      border-radius: var(--r);
-      border: 1px solid #2fe7ff33;
-      background: linear-gradient(180deg, #07162d 0%, #050a14 100%);
-      box-shadow: var(--shadow);
-    }
-    .colhead.right{
-      border-color:#b88bff33;
-      box-shadow: var(--shadow2);
-    }
-    .coltitle{
-      font-size: 42px;
-      font-weight: 900;
-      color: #dff8ff;
-    }
-    .colsubtitle{
-      font-size: 26px;
-      font-weight: 800;
-      color: #9fd0e6;
-      opacity: .95;
-      letter-spacing:.3px;
-    }
-    .tiles{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      min-height:0;
-    }
-    .tile{
-      border-radius: var(--r);
-      padding: 16px 16px 14px;
-      border: 1px solid #2fe7ff2c;
-      background: linear-gradient(180deg, #061022 0%, #050913 100%);
-      box-shadow: 0 0 0 1px #2fe7ff14, 0 0 20px #2fe7ff10;
+    .grid{flex:1;display:grid;grid-template-columns:1.2fr 1fr;gap:2vw;min-height:0;}
+    .col{display:flex;flex-direction:column;gap:2vw;min-height:0;}
+    .card{
+      background:linear-gradient(180deg, rgba(7,16,38,0.92), rgba(7,16,38,0.72));
+      border:2px solid var(--stroke2);
+      border-radius:22px;
+      box-shadow: 0 0 0 1px rgba(0,255,255,0.10), 0 0 28px rgba(0,255,255,0.08);
+      padding:1.6vw;
       position:relative;
-      min-height: 170px;
-    }
-    .right .tile{
-      border-color:#b88bff2c;
-      box-shadow: 0 0 0 1px #b88bff14, 0 0 20px #b88bff10;
-    }
-    .tile .t{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom: 10px;
-    }
-    .tile .name{
-      font-size: 34px;
-      font-weight: 900;
-      color:#eafaff;
-      line-height:1.05;
-    }
-    .tile .badge{
-      font-size: 22px;
-      font-weight: 900;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid #ffffff26;
-      color:#ffffff;
-      background: #ffffff14;
-      white-space:nowrap;
-    }
-    .badge.red{ background:#ff4d6d1a; border-color:#ff4d6d55; color:#ffd5dd;}
-    .badge.cyan{ background:#2fe7ff1a; border-color:#2fe7ff55; color:#d5fbff;}
-    .badge.amber{ background:#ffcc661a; border-color:#ffcc6655; color:#ffe9bf;}
-    .badge.mag{ background:#b88bff1a; border-color:#b88bff55; color:#efe3ff;}
-    .tile .kpi{
-      font-size: 28px;
-      font-weight: 800;
-      color:#d8f6ff;
-      margin-bottom: 8px;
-    }
-    .tile .examples{
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--muted);
-      display:-webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
       overflow:hidden;
+      min-height:0;
     }
-    .foot{
-      position:absolute;
-      bottom: 18px;
-      left: 28px;
-      right: 28px;
-      display:flex;
-      justify-content:space-between;
-      color:#7fb6cc;
-      font-weight:700;
-      font-size: 22px;
-      opacity:.9;
+    .card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      border:2px solid var(--stroke);
+      border-radius:24px;
+      filter: drop-shadow(0 0 14px rgba(0,255,255,0.18));
+      pointer-events:none;
+      opacity:0.45;
     }
-    .foot span{white-space:nowrap}
+    .titleRow{display:flex;align-items:baseline;justify-content:space-between;gap:1.2vw;margin-bottom:1.1vw;}
+    .cardTitle{
+      font-size: clamp(20px, 1.35vw, 52px);
+      font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+      color: rgba(220,255,255,0.98);
+    }
+    .badge{
+      font-size: clamp(12px, 0.85vw, 26px);
+      padding:0.35em 0.7em;
+      border-radius:999px;
+      border:1px solid rgba(0,255,255,0.35);
+      color: rgba(210,255,255,0.9);
+    }
+    .kpis{display:grid;grid-template-columns:repeat(2, 1fr);gap:1.4vw;}
+    .kpi{
+      background: rgba(0,0,0,0.20);
+      border:1px solid rgba(0,255,255,0.18);
+      border-radius:18px;
+      padding:1.1vw;
+      box-shadow: inset 0 0 22px rgba(0,255,255,0.05);
+    }
+    .kpiName{font-size: clamp(12px, 0.85vw, 26px);color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;}
+    .kpiVal{margin-top:0.4vw;font-size: clamp(18px, 1.25vw, 46px);font-weight:800;}
+    .kpiSub{margin-top:0.35vw;font-size: clamp(12px, 0.75vw, 22px);color:var(--muted);line-height:1.25;}
+    .list{margin-top:1.2vw;font-size: clamp(12px, 0.8vw, 24px);color:var(--muted);line-height:1.35;}
+    .list b{color:rgba(235,255,255,0.95);}
+    .two{display:grid;grid-template-columns:1fr;gap:2vw;}
+    .smallTitle{font-size: clamp(18px, 1.2vw, 44px);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1vw;}
+    .row{display:flex;justify-content:space-between;gap:1vw;align-items:baseline;}
+    .row .lbl{color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-size: clamp(12px, 0.75vw, 22px);}
+    .row .val{font-weight:800;font-size: clamp(16px, 1.05vw, 38px);}
+    .sep{height:1px;background:rgba(0,255,255,0.15);margin:0.9vw 0;}
+    .foot{color:rgba(150,200,200,0.65);font-size: clamp(10px, 0.7vw, 20px);letter-spacing:0.05em;}
   </style>
 </head>
 <body>
-<div class="frame">
-  <div class="hud">
-    <div class="topbar">
-      <div class="title">WIZZ AIR WEATHER INTELLIGENCE DASHBOARD</div>
-      <div class="stamp">
-        <div id="ts">—</div>
-        <div id="ts2" style="opacity:.92">—</div>
-      </div>
-    </div>
-
-    <div class="affected">
-      <b>AFFECTED BASE AIRPORTS</b>
-      <div class="list" id="affectedBases">—</div>
+  <div class="wrap">
+    <div class="hdr">
+      <div class="brand">WXWI OPERATIONAL WEATHER – TV BRIEF</div>
+      <div class="stamp" id="stamp">Loading…</div>
     </div>
 
     <div class="grid">
-      <div class="col left">
-        <div class="colhead">
-          <div>
-            <div class="coltitle">CURRENT ALERTS (NOW) – LIVE DATA</div>
-            <div class="colsubtitle" id="nowSummary">—</div>
+      <div class="col">
+        <div class="card">
+          <div class="titleRow">
+            <div class="cardTitle">Current (METAR)</div>
+            <div class="badge" id="nowBadge">NOW</div>
+          </div>
+          <div class="kpis">
+            <div class="kpi">
+              <div class="kpiName">Critical</div>
+              <div class="kpiVal" id="nowCrit">–</div>
+              <div class="kpiSub" id="nowCritEx">Examples: –</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiName">High</div>
+              <div class="kpiVal" id="nowHigh">–</div>
+              <div class="kpiSub" id="nowHighEx">Examples: –</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiName">Medium</div>
+              <div class="kpiVal" id="nowMed">–</div>
+              <div class="kpiSub" id="nowMedEx">Examples: –</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiName">Affected Bases</div>
+              <div class="kpiVal" id="nowBases">–</div>
+              <div class="kpiSub" id="nowBasesEx">Bases: –</div>
+            </div>
+          </div>
+          <div class="list" id="nowNotes">
+            <b>Drivers:</b> visibility/RVR, low cloud base, wind/gusts, snow/contamination (from current triggers).
           </div>
         </div>
-        <div class="tiles" id="nowTiles"></div>
-      </div>
 
-      <div class="col right">
-        <div class="colhead right">
-          <div>
-            <div class="coltitle">FORECASTED ALERTS (FUTURE) – PREDICTIVE</div>
-            <div class="colsubtitle" id="futSummary">—</div>
+        <div class="card">
+          <div class="titleRow">
+            <div class="cardTitle">Forecast (TAF)</div>
+            <div class="badge" id="tafBadge">FORECAST</div>
           </div>
+          <div class="kpis">
+            <div class="kpi">
+              <div class="kpiName">Critical</div>
+              <div class="kpiVal" id="tafCrit">–</div>
+              <div class="kpiSub" id="tafCritEx">Examples: –</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiName">High</div>
+              <div class="kpiVal" id="tafHigh">–</div>
+              <div class="kpiSub" id="tafHighEx">Examples: –</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiName">Medium</div>
+              <div class="kpiVal" id="tafMed">–</div>
+              <div class="kpiSub" id="tafMedEx">Examples: –</div>
+            </div>
+            <div class="kpi">
+              <div class="kpiName">Affected Bases</div>
+              <div class="kpiVal" id="tafBases">–</div>
+              <div class="kpiSub" id="tafBasesEx">Bases: –</div>
+            </div>
+          </div>
+          <div class="foot" id="foot">This image is generated in CI and reflects the latest committed dataset.</div>
         </div>
-        <div class="tiles" id="futTiles"></div>
       </div>
-    </div>
 
-    <div class="foot">
-      <span id="gen">Generated: —</span>
-      <span>WXOM / WXWI</span>
+      <div class="col">
+        <div class="card" style="flex:1;">
+          <div class="smallTitle">Data Pipeline Health</div>
+          <div class="row"><div class="lbl">Generated At (UTC)</div><div class="val" id="genAt">–</div></div>
+          <div class="sep"></div>
+          <div class="row"><div class="lbl">METAR Returned</div><div class="val" id="metarRet">–</div></div>
+          <div class="row"><div class="lbl">Missing METAR</div><div class="val" id="metarMiss">–</div></div>
+          <div class="sep"></div>
+          <div class="row"><div class="lbl">TAF Returned</div><div class="val" id="tafRet">–</div></div>
+          <div class="row"><div class="lbl">Missing TAF</div><div class="val" id="tafMiss">–</div></div>
+          <div class="sep"></div>
+          <div class="row"><div class="lbl">Watchlist Airports</div><div class="val" id="wl">–</div></div>
+          <div class="sep"></div>
+          <div class="list" id="errBox"><b>Errors:</b> –</div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
 <script>
-(async function(){
-  const qs = new URLSearchParams(location.search);
-  const maxExamples = +(qs.get('n') || 8);
+(async () => {
+  // IMPORTANT: use absolute paths from repo root so the CI local server can serve them reliably
+  const STATUS_URL = "/data/status.json";
+  const LATEST_URL = "/data/latest.json";
+  const BASE_URL   = "/base.txt";
+
+  const el = (id) => document.getElementById(id);
 
   function uniq(arr){ return Array.from(new Set(arr)); }
-  function toISOish(s){
-    try{ const d = new Date(s); return isNaN(d) ? String(s) : d.toISOString(); }catch(e){ return String(s); }
+  function topN(arr, n){ return arr.slice(0, n); }
+  function fmtExamples(list){
+    const x = topN(list, 10);
+    return x.length ? x.join(", ") : "–";
+  }
+  function parseBases(txt){
+    return uniq(txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean));
   }
 
-  const [latest, status, baseTxt] = await Promise.all([
-    fetch('data/latest.json', {cache:'no-store'}).then(r=>r.json()),
-    fetch('data/status.json', {cache:'no-store'}).then(r=>r.json()),
-    fetch('base.txt', {cache:'no-store'}).then(r=>r.text()).catch(()=> '')
-  ]);
+  // --- data fetch (with safe fallbacks)
+  let status = null, latest = null, bases = [];
+  try { status = await (await fetch(STATUS_URL, {cache:"no-store"})).json(); } catch(e){ status = null; }
+  try { latest = await (await fetch(LATEST_URL, {cache:"no-store"})).json(); } catch(e){ latest = null; }
+  try { const t = await (await fetch(BASE_URL, {cache:"no-store"})).text(); bases = parseBases(t); } catch(e){ bases = []; }
 
-  const baseSet = new Set(baseTxt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean));
-  const stations = (latest.stations || []).map(s => ({
-    ...s,
-    isBase: !!(s.iata && baseSet.has(s.iata))
-  }));
+  // status UI
+  const genAt = status?.generatedAt || status?.generated_at || status?.generated || "–";
+  el("stamp").textContent = `Generated: ${genAt} UTC`;
+  el("genAt").textContent = genAt;
+  el("metarRet").textContent = String(status?.metarReturned ?? "–");
+  el("metarMiss").textContent = String(status?.missingMetar ?? "–");
+  el("tafRet").textContent = String(status?.tafReturned ?? "–");
+  el("tafMiss").textContent = String(status?.missingTaf ?? "–");
 
-  function hasSrc(t, ch){
-    return (t && t.src && t.src.includes(ch)) || false;
+  const errs = Array.isArray(status?.errors) ? status.errors : [];
+  el("errBox").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,6).join(" • ") : "–"}`;
+
+  // stations list (support both shapes: latest.stations or latest array)
+  const stations = Array.isArray(latest) ? latest : (latest?.stations || latest?.airports || []);
+  el("wl").textContent = String(stations.length || "–");
+
+  // --- classify (best-effort; uses common fields)
+  function getIata(s){
+    return (s.iata || s.IATA || s.iataCode || s.code || s.icao || s.ICAO || "").toString().trim();
   }
-  function hasTrigger(s, label, ch){
-    return (s.triggers || []).some(t => t.label === label && hasSrc(t, ch));
+  function sevNow(s){
+    return (s.nowSeverity || s.severityNow || s.severity || s.now_severity || "").toString().toLowerCase();
   }
-  function anyTrigger(s, ch){
-    return (s.triggers || []).some(t => hasSrc(t, ch));
+  function sevTaf(s){
+    return (s.tafSeverity || s.severityTaf || s.forecastSeverity || s.taf_severity || "").toString().toLowerCase();
   }
-
-  function splitBaseCounts(list){
-    const bases = list.filter(s=>s.isBase).length;
-    const out = list.length - bases;
-    return {bases, out};
-  }
-
-  function examples(list){
-    const top = list.slice().sort((a,b)=>(b.severityScore||0)-(a.severityScore||0));
-    const ex = top.slice(0,maxExamples).map(s=>s.iata || s.icao).filter(Boolean);
-    return ex.join(', ');
-  }
-
-  // Affected base airports line (any trigger NOW or FORECAST)
-  const affectedBases = stations
-    .filter(s=>s.isBase && (s.triggers||[]).length)
-    .sort((a,b)=>(b.severityScore||0)-(a.severityScore||0))
-    .map(s => `${s.name || s.icao} (${s.iata || s.icao})`);
-  document.getElementById('affectedBases').textContent = affectedBases.length ? affectedBases.join(' → ') : 'None';
-
-  // NOW datasets
-  const alertCritNow = stations.filter(s => s.alert === 'CRIT' && String(s.critSrc||'').includes('M'));
-  const metarCrit = stations.filter(s => !!s.metCrit); // METAR severity >= 70
-  const veryLowNow = stations.filter(s => (s.worstVis ?? 99999) < 300); // meters
-  const minimaBelowBestNow = stations.filter(s => s.minimaNow && s.minimaNow.belowBest);
-  const minimaBelowAltNow  = stations.filter(s => s.minimaNow && s.minimaNow.belowAlt);
-  const gust25Now = stations.filter(s => hasTrigger(s, 'GUST≥25KT', 'M'));
-  const snowNow   = stations.filter(s => hasTrigger(s, 'SN', 'M'));
-  const lvtoNow   = stations.filter(s => hasTrigger(s, 'LVTO (<550)', 'M'));
-  const toProhibNow = stations.filter(s => hasTrigger(s, 'TO PROHIB', 'M'));
-  const xwindExNow = stations.filter(s => (s.omMet && s.omMet.xwindExceed) || hasTrigger(s,'XWIND>15KT','M'));
-
-  // FUT datasets
-  const tafCrit = stations.filter(s => !!s.tafCrit);
-  const veryLowFut = stations.filter(s => (s.tafWorstVis ?? 99999) < 300);
-  const minimaBelowBestFut = stations.filter(s => s.minimaTaf && s.minimaTaf.belowBest);
-  const minimaBelowAltFut  = stations.filter(s => s.minimaTaf && s.minimaTaf.belowAlt);
-  const gust25Fut = stations.filter(s => hasTrigger(s, 'GUST≥25KT', 'T'));
-  const snowFut   = stations.filter(s => hasTrigger(s, 'SN', 'T'));
-  const lvtoFut   = stations.filter(s => hasTrigger(s, 'LVTO (<550)', 'T'));
-  const toProhibFut = stations.filter(s => hasTrigger(s, 'TO PROHIB', 'T'));
-
-  function tileHTML(title, badgeText, badgeClass, list){
-    const {bases, out} = splitBaseCounts(list);
-    const ex = examples(list);
-    const kpi = `${list.length} Airports (${bases} Bases, ${out} Outstations)`;
-    return `
-      <div class="tile">
-        <div class="t">
-          <div class="name">${title}</div>
-          <div class="badge ${badgeClass}">${badgeText}</div>
-        </div>
-        <div class="kpi">${kpi}</div>
-        <div class="examples">${ex ? `Examples: ${ex}${list.length>maxExamples ? ', … and others' : ''}` : 'Examples: —'}</div>
-      </div>`;
+  // normalize to crit/high/med
+  function normSev(v){
+    if (!v) return "";
+    if (v.startsWith("crit")) return "crit";
+    if (v.startsWith("high")) return "high";
+    if (v.startsWith("med")) return "med";
+    if (v === "3") return "crit";
+    if (v === "2") return "high";
+    if (v === "1") return "med";
+    return "";
   }
 
-  const nowTiles = [
-    tileHTML('ALERT CRIT', 'Escalated', 'red', alertCritNow),
-    tileHTML('METAR CRIT', 'Severity ≥ 70', 'cyan', metarCrit),
-    tileHTML('Very Low VIS/RVR', '< 300 m', 'amber', veryLowNow),
-    tileHTML('Approach Minima', 'Below BEST', 'cyan', minimaBelowBestNow),
-    tileHTML('Approach Minima', 'Below 2nd', 'amber', minimaBelowAltNow),
-    tileHTML('Wind Gusts', '≥ 25 kt', 'cyan', gust25Now),
-    tileHTML('Snow Observed', 'SN', 'mag', snowNow),
-    tileHTML('OM Advisory', 'LVTO', 'mag', lvtoNow),
-    tileHTML('OM Advisory', 'TO PROHIB', 'red', toProhibNow),
-    tileHTML('OM Advisory', 'XWIND Exceed', 'amber', xwindExNow),
-  ].slice(0,8); // keep grid clean like sample (2x4)
+  const nowCrit=[], nowHigh=[], nowMed=[], tafCrit=[], tafHigh=[], tafMed=[];
+  const nowBases=[], tafBases=[];
+  for (const s of stations) {
+    const code = getIata(s);
+    if (!code) continue;
 
-  const futTiles = [
-    tileHTML('CRITICAL', 'TAF Score ≥ 70', 'red', tafCrit),
-    tileHTML('Very Low VIS/RVR', '< 300 m', 'amber', veryLowFut),
-    tileHTML('Approach Minima', 'Below BEST', 'cyan', minimaBelowBestFut),
-    tileHTML('Approach Minima', 'Below 2nd', 'amber', minimaBelowAltFut),
-    tileHTML('Wind Gusts', '≥ 25 kt', 'cyan', gust25Fut),
-    tileHTML('Snow Forecast', 'SN', 'mag', snowFut),
-    tileHTML('OM Advisory', 'LVTO', 'mag', lvtoFut),
-    tileHTML('OM Advisory', 'TO PROHIB', 'red', toProhibFut),
-  ];
+    const n = normSev(sevNow(s));
+    const t = normSev(sevTaf(s));
 
-  document.getElementById('nowTiles').innerHTML = nowTiles.join('');
-  document.getElementById('futTiles').innerHTML = futTiles.join('');
+    if (n==="crit") nowCrit.push(code);
+    else if (n==="high") nowHigh.push(code);
+    else if (n==="med") nowMed.push(code);
 
-  const nowStats = splitBaseCounts(stations.filter(s=>anyTrigger(s,'M')));
-  const futStats = splitBaseCounts(stations.filter(s=>anyTrigger(s,'T')));
-  document.getElementById('nowSummary').textContent = `${nowStats.bases} base airports affected • ${nowStats.out} outstations affected`;
-  document.getElementById('futSummary').textContent = `${futStats.bases} base airports affected • ${futStats.out} outstations affected`;
+    if (t==="crit") tafCrit.push(code);
+    else if (t==="high") tafHigh.push(code);
+    else if (t==="med") tafMed.push(code);
 
-  const g = status.generatedAt || latest.generatedAt || new Date().toISOString();
-  document.getElementById('ts').textContent = toISOish(g);
-  document.getElementById('ts2').textContent = 'TV Infographic (4K optimized)';
-  document.getElementById('gen').textContent = `Generated: ${toISOish(g)}`;
+    if (bases.includes(code) && n) nowBases.push(code);
+    if (bases.includes(code) && t) tafBases.push(code);
+  }
 
-  // Tell Puppeteer we are ready for screenshot
+  // Fill now
+  el("nowCrit").textContent = String(nowCrit.length);
+  el("nowHigh").textContent = String(nowHigh.length);
+  el("nowMed").textContent = String(nowMed.length);
+  el("nowBases").textContent = String(uniq(nowBases).length);
+
+  el("nowCritEx").textContent = `Examples: ${fmtExamples(uniq(nowCrit))}`;
+  el("nowHighEx").textContent = `Examples: ${fmtExamples(uniq(nowHigh))}`;
+  el("nowMedEx").textContent = `Examples: ${fmtExamples(uniq(nowMed))}`;
+  el("nowBasesEx").textContent = `Bases: ${fmtExamples(uniq(nowBases))}`;
+
+  // Fill taf
+  el("tafCrit").textContent = String(tafCrit.length);
+  el("tafHigh").textContent = String(tafHigh.length);
+  el("tafMed").textContent = String(tafMed.length);
+  el("tafBases").textContent = String(uniq(tafBases).length);
+
+  el("tafCritEx").textContent = `Examples: ${fmtExamples(uniq(tafCrit))}`;
+  el("tafHighEx").textContent = `Examples: ${fmtExamples(uniq(tafHigh))}`;
+  el("tafMedEx").textContent = `Examples: ${fmtExamples(uniq(tafMed))}`;
+  el("tafBasesEx").textContent = `Bases: ${fmtExamples(uniq(tafBases))}`;
+
+  // signal ready for CI renderer
   window.__RENDER_READY__ = true;
 })();
 </script>
