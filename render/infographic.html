@@ -214,12 +214,25 @@
 
     .secHdr2{position:relative; display:flex; align-items:baseline; justify-content:space-between; gap:.8vw;}
     .secHdr2 .t{
+      display:flex;
+      align-items:center;
+      gap:.55em;
+
       font-weight: 950;
       letter-spacing:.12em;
       text-transform:uppercase;
       font-size: clamp(12px, .85vw, 26px);
       color: rgba(235,255,255,.92);
     }
+    .ico{
+      width: 1.25em;
+      height: 1.25em;
+      display:inline-flex;
+      filter: drop-shadow(0 0 14px rgba(62,246,255,.16));
+      opacity:.95;
+    }
+    .ico svg{ width:100%; height:100%; }
+
     .secHdr2 .sub{
       color: var(--muted);
       font-size: clamp(10px, .7vw, 18px);
@@ -297,6 +310,24 @@
       color: rgba(190,210,235,.78);
       margin-right:.6em;
     }
+
+    .b{
+      color: rgba(255,77,184,.98); /* Wizz magenta highlight */
+      text-shadow: 0 0 18px rgba(198,0,126,.24), 0 0 14px rgba(62,246,255,.10);
+    }
+    .basesEx{
+      font-size: clamp(11px, .80vw, 24px);
+      -webkit-line-clamp: 6;
+      letter-spacing: .08em;
+    }
+    /* Make overall image a bit brighter */
+    body:after{ opacity:.52; }
+    .col{ background: linear-gradient(180deg, rgba(16,24,62,.82), rgba(12,18,48,.58)); }
+    .hdr{ background: linear-gradient(180deg, rgba(16,24,62,.92), rgba(12,18,48,.72)); }
+    .sec{ background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.08)); }
+
+    /* Slightly reduce examples in tight tiles (prevents cut-off) */
+    .ex{ -webkit-line-clamp: 5; }
 
     /* Big airport callout */
     .bigCall{
@@ -391,7 +422,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">High impact alerts</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3 2.6 20.2c-.5.9.1 1.8 1.1 1.8h16.6c1 0 1.6-1 .1-1.8L12 3Z" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/><path d="M12 8v6" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1" fill="rgba(62,246,255,.95)"/></svg></span>High impact alerts</div>
               <div class="sub">escalated / metar critical</div>
             </div>
             <div class="kpis">
@@ -415,7 +446,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">Visibility & landing conditions</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" stroke="rgba(62,246,255,.95)" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/></svg></span>Visibility & landing conditions</div>
               <div class="sub">RVR/VIS + minima</div>
             </div>
             <div class="kpis">
@@ -439,7 +470,7 @@
               <div class="kpi">
                 <div class="k">Affected bases</div>
                 <div class="v med" id="nowBases">0</div>
-                <div class="ex" id="nowBasesEx"><small>Bases:</small>—</div>
+                <div class="ex basesEx" id="nowBasesEx"><small>Bases:</small>—</div>
               </div>
             </div>
           </div>
@@ -447,7 +478,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">Severe weather events</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v20M4 6l16 12M20 6 4 18" stroke="rgba(62,246,255,.95)" stroke-width="1.6" stroke-linecap="round"/><path d="M7 4l2 3M17 4l-2 3M7 20l2-3M17 20l-2-3" stroke="rgba(255,77,184,.95)" stroke-width="1.6" stroke-linecap="round"/></svg></span>Severe weather events</div>
               <div class="sub">wind / snow / eng ice</div>
             </div>
             <div class="kpis">
@@ -479,7 +510,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">Operational advisories</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13.5 12 6l8 7.5" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 12.8h11" stroke="rgba(255,77,184,.95)" stroke-width="1.8" stroke-linecap="round"/></svg></span>Operational advisories</div>
               <div class="sub">OM advisory</div>
             </div>
             <div class="kpis">
@@ -516,7 +547,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">High impact alerts</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3 2.6 20.2c-.5.9.1 1.8 1.1 1.8h16.6c1 0 1.6-1 .1-1.8L12 3Z" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/><path d="M12 8v6" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1" fill="rgba(62,246,255,.95)"/></svg></span>High impact alerts</div>
               <div class="sub">critical / taf score</div>
             </div>
             <div class="kpis">
@@ -528,7 +559,7 @@
               <div class="kpi">
                 <div class="k">Affected bases</div>
                 <div class="v med" id="tafBases">0</div>
-                <div class="ex" id="tafBasesEx"><small>Bases:</small>—</div>
+                <div class="ex basesEx" id="tafBasesEx"><small>Bases:</small>—</div>
               </div>
             </div>
             <div class="bigCall">
@@ -540,7 +571,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">Visibility & landing conditions</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" stroke="rgba(62,246,255,.95)" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/></svg></span>Visibility & landing conditions</div>
               <div class="sub">RVR/VIS + minima</div>
             </div>
             <div class="kpis">
@@ -561,10 +592,10 @@
                 <div class="v med" id="tafBelowAlt">0</div>
                 <div class="ex" id="tafBelowAltEx"><small>Examples:</small>—</div>
               </div>
-              <div class="kpi">
-                <div class="k">Data pipeline health</div>
-                <div class="v med" id="wl">—</div>
-                <div class="ex" id="pipeMini"><small>METAR/TAF:</small>—</div>
+              <div class="kpi kpiWide">
+                <div class="k">Base airports impacted</div>
+                <div class="v med" id="tafBaseAnyCnt">0</div>
+                <div class="ex basesEx" id="tafBaseAnyEx"><small>Bases:</small>—</div>
               </div>
             </div>
           </div>
@@ -572,7 +603,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">Severe weather events</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v20M4 6l16 12M20 6 4 18" stroke="rgba(62,246,255,.95)" stroke-width="1.6" stroke-linecap="round"/><path d="M7 4l2 3M17 4l-2 3M7 20l2-3M17 20l-2-3" stroke="rgba(255,77,184,.95)" stroke-width="1.6" stroke-linecap="round"/></svg></span>Severe weather events</div>
               <div class="sub">wind / snow</div>
             </div>
             <div class="kpis">
@@ -592,7 +623,7 @@
           <div class="sec">
             <div class="brackets"></div>
             <div class="secHdr2">
-              <div class="t">Operational advisories</div>
+              <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13.5 12 6l8 7.5" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 12.8h11" stroke="rgba(255,77,184,.95)" stroke-width="1.8" stroke-linecap="round"/></svg></span>Operational advisories</div>
               <div class="sub">OM advisory</div>
             </div>
             <div class="kpis">
@@ -625,9 +656,11 @@
 
   function uniq(arr){ return Array.from(new Set(arr)); }
   function topN(arr, n){ return arr.slice(0, n); }
-  function fmt(list, n=12){
+  function fmt(list, n=12, baseSet=null){
     const a = topN(list, n);
-    return a.length ? a.join("  ") : "—";
+    if (!a.length) return "—";
+    if (!baseSet) return a.join("  ");
+    return a.map(c => baseSet.has(c) ? `<span class="b">${c}</span>` : c).join("  ");
   }
 
   function isSnow(hzArr){
@@ -701,10 +734,7 @@
   $("errBoxNow").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,2).join(" • ") : "—"}`;
 
   const stations = Array.isArray(latest?.stations) ? latest.stations : (Array.isArray(latest) ? latest : []);
-  $("wl").textContent = String(stations.length || "—");
-  $("pipeMini").innerHTML = `<small>METAR/TAF:</small>${metRet}/${tafRet} (miss ${metMiss}/${tafMiss})`;
-
-  // Collections
+// Collections
   const nowAlertCrit=[], nowMetCrit=[], nowVis300=[], nowBelowBest=[], nowBelowAlt=[], nowGust25=[], nowSnow=[], nowLvto=[], nowNoOps=[], nowEngIce=[], nowIcingRisk=[];
   const tafCrit=[], tafVis300=[], tafBelowBest=[], tafBelowAlt=[], tafGust25=[], tafSnow=[], tafLvto=[], tafNoOps=[];
   const affectedBasesSet = new Set();
@@ -763,72 +793,76 @@
   // Bases
   const affectedBases = Array.from(affectedBasesSet).sort();
 
+  // Base-any (union NOW+FORECAST) for the forecast visibility tile
+  $("tafBaseAnyCnt").textContent = String(countBases(affectedBases, baseSet));
+  $("tafBaseAnyEx").innerHTML = `<small>Bases:</small>${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 10, baseSet)}`;
+
   $("nowBases").textContent = String(countBases(affectedBases, baseSet));
-  $("nowBasesEx").innerHTML = `<small>Bases:</small>${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 12)}`;
+  $("nowBasesEx").innerHTML = `<small>Bases:</small>${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 10, baseSet)}`;
 
   $("tafBases").textContent = String(countBases(tafCrit, baseSet));
-  $("tafBasesEx").innerHTML = `<small>Bases:</small>${fmt(tafCrit.filter(c => baseSet.has(c)).sort(), 12)}`;
+  $("tafBasesEx").innerHTML = `<small>Bases:</small>${fmt(tafCrit.filter(c => baseSet.has(c)).sort(), 10, baseSet)}`;
 
   // Fill NOW
   $("nowAlertCrit").textContent = String(nowAlertCrit.length);
-  $("nowAlertCritEx").innerHTML = `<small>Examples:</small>${fmt(nowAlertCrit.sort())}`;
+  $("nowAlertCritEx").innerHTML = `<small>Examples:</small>${fmt(nowAlertCrit.sort(), 12, baseSet)}`;
 
   $("nowMetCrit").textContent = String(nowMetCrit.length);
-  $("nowMetCritEx").innerHTML = `<small>Examples:</small>${fmt(nowMetCrit.sort())}`;
+  $("nowMetCritEx").innerHTML = `<small>Examples:</small>${fmt(nowMetCrit.sort(), 12, baseSet)}`;
 
   $("nowVis300").textContent = String(nowVis300.length);
-  $("nowVis300Ex").innerHTML = `<small>Examples:</small>${fmt(nowVis300.sort())}`;
+  $("nowVis300Ex").innerHTML = `<small>Examples:</small>${fmt(nowVis300.sort(), 12, baseSet)}`;
 
   $("nowBelowBest").textContent = String(nowBelowBest.length);
-  $("nowBelowBestEx").innerHTML = `<small>Examples:</small>${fmt(nowBelowBest.sort())}`;
+  $("nowBelowBestEx").innerHTML = `<small>Examples:</small>${fmt(nowBelowBest.sort(), 12, baseSet)}`;
 
   $("nowBelowAlt").textContent = String(nowBelowAlt.length);
-  $("nowBelowAltEx").innerHTML = `<small>Examples:</small>${fmt(nowBelowAlt.sort())}`;
+  $("nowBelowAltEx").innerHTML = `<small>Examples:</small>${fmt(nowBelowAlt.sort(), 12, baseSet)}`;
 
   $("nowGust25").textContent = String(nowGust25.length);
-  $("nowGust25Ex").innerHTML = `<small>Examples:</small>${fmt(nowGust25.sort())}`;
+  $("nowGust25Ex").innerHTML = `<small>Examples:</small>${fmt(nowGust25.sort(), 12, baseSet)}`;
 
   $("nowSnow").textContent = String(nowSnow.length);
-  $("nowSnowEx").innerHTML = `<small>Examples:</small>${fmt(nowSnow.sort())}`;
+  $("nowSnowEx").innerHTML = `<small>Examples:</small>${fmt(nowSnow.sort(), 12, baseSet)}`;
 
   $("nowEngIce").textContent = String(nowEngIce.length);
-  $("nowEngIceEx").innerHTML = `<small>Examples:</small>${fmt(nowEngIce.sort())}`;
+  $("nowEngIceEx").innerHTML = `<small>Examples:</small>${fmt(nowEngIce.sort(), 12, baseSet)}`;
 
   $("nowIcingRisk").textContent = String(nowIcingRisk.length);
-  $("nowIcingRiskEx").innerHTML = `<small>Examples:</small>${fmt(nowIcingRisk.sort())}`;
+  $("nowIcingRiskEx").innerHTML = `<small>Examples:</small>${fmt(nowIcingRisk.sort(), 12, baseSet)}`;
 
   $("nowLvto").textContent = String(nowLvto.length);
-  $("nowLvtoEx").innerHTML = `<small>Examples:</small>${fmt(nowLvto.sort())}`;
+  $("nowLvtoEx").innerHTML = `<small>Examples:</small>${fmt(nowLvto.sort(), 12, baseSet)}`;
 
   $("nowNoOps").textContent = String(nowNoOps.length);
-  $("nowNoOpsEx").innerHTML = `<small>Examples:</small>${fmt(nowNoOps.sort())}`;
+  $("nowNoOpsEx").innerHTML = `<small>Examples:</small>${fmt(nowNoOps.sort(), 12, baseSet)}`;
 
   $("nowTop2").textContent = topByPri(stations, "metPri", 2).join("  ");
 
   // Fill FORECAST
   $("tafCrit").textContent = String(tafCrit.length);
-  $("tafCritEx").innerHTML = `<small>Examples:</small>${fmt(tafCrit.sort())}`;
+  $("tafCritEx").innerHTML = `<small>Examples:</small>${fmt(tafCrit.sort(), 12, baseSet)}`;
 
   $("tafVis300").textContent = String(tafVis300.length);
-  $("tafVis300Ex").innerHTML = `<small>Examples:</small>${fmt(tafVis300.sort())}`;
+  $("tafVis300Ex").innerHTML = `<small>Examples:</small>${fmt(tafVis300.sort(), 12, baseSet)}`;
 
   $("tafBelowBest").textContent = String(tafBelowBest.length);
-  $("tafBelowBestEx").innerHTML = `<small>Examples:</small>${fmt(tafBelowBest.sort())}`;
+  $("tafBelowBestEx").innerHTML = `<small>Examples:</small>${fmt(tafBelowBest.sort(), 12, baseSet)}`;
 
   $("tafBelowAlt").textContent = String(tafBelowAlt.length);
-  $("tafBelowAltEx").innerHTML = `<small>Examples:</small>${fmt(tafBelowAlt.sort())}`;
+  $("tafBelowAltEx").innerHTML = `<small>Examples:</small>${fmt(tafBelowAlt.sort(), 12, baseSet)}`;
 
   $("tafGust25").textContent = String(tafGust25.length);
-  $("tafGust25Ex").innerHTML = `<small>Examples:</small>${fmt(tafGust25.sort())}`;
+  $("tafGust25Ex").innerHTML = `<small>Examples:</small>${fmt(tafGust25.sort(), 12, baseSet)}`;
 
   $("tafSnow").textContent = String(tafSnow.length);
-  $("tafSnowEx").innerHTML = `<small>Examples:</small>${fmt(tafSnow.sort())}`;
+  $("tafSnowEx").innerHTML = `<small>Examples:</small>${fmt(tafSnow.sort(), 12, baseSet)}`;
 
   $("tafLvto").textContent = String(tafLvto.length);
-  $("tafLvtoEx").innerHTML = `<small>Examples:</small>${fmt(tafLvto.sort())}`;
+  $("tafLvtoEx").innerHTML = `<small>Examples:</small>${fmt(tafLvto.sort(), 12, baseSet)}`;
 
   $("tafNoOps").textContent = String(tafNoOps.length);
-  $("tafNoOpsEx").innerHTML = `<small>Examples:</small>${fmt(tafNoOps.sort())}`;
+  $("tafNoOpsEx").innerHTML = `<small>Examples:</small>${fmt(tafNoOps.sort(), 12, baseSet)}`;
 
   $("tafTop2").textContent = topByPri(stations, "tafPri", 2).join("  ");
 
