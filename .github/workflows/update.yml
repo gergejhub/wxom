@@ -26,17 +26,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+
+      - name: Install deps (puppeteer)
+        run: npm install --no-audit --no-fund
 
       - name: Update data
         run: node scripts/update-data.mjs
+
+      - name: Render TV infographic (4K + 1080p)
+        run: node scripts/render-infographic.mjs
 
       - name: Commit & push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain)" ]; then
-          git add data/latest.json data/status.json data/iata_map.json data/runways.json data/schema_debug.json data/management_brief.json data/changes.json
-            git commit -m "Update METAR/TAF dataset"
+            git add data/latest.json data/status.json data/runways.json data/iata_map.json data/schema_debug.json data/management_brief.json data/changes.json
+            git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp
+            git commit -m "Update dataset + TV infographic"
             git push
           else
             echo "No changes to commit."
