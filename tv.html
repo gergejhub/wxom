@@ -1,18 +1,62 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>TV Infographic</title>
-  <style>
-    html,body{ margin:0; height:100%; background:#000; }
-    img{ width:100vw; height:100vh; object-fit:contain; display:block; }
-  </style>
-</head>
-<body>
-  <picture>
-    <source srcset="assets/render/wxwi-dashboard-4k.webp?cachebust=1" type="image/webp">
-    <img src="assets/render/wxwi-dashboard-1080p.webp?cachebust=1" alt="WXWI TV Infographic">
-  </picture>
-</body>
-</html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>WXWI TV Infographic</title>
+<style>
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; }
+  .bar{
+    position:fixed; left:0; right:0; top:0;
+    padding:10px 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    font-weight:900; letter-spacing:.08em;
+    font-size: 18px;
+    color: rgba(235,255,255,.92);
+    background: linear-gradient(180deg, rgba(0,0,0,.68), rgba(0,0,0,.0));
+    text-shadow: 0 0 16px rgba(62,246,255,.12);
+    display:flex; justify-content:space-between; gap:12px; align-items:center;
+    pointer-events:none;
+  }
+  img { width:100vw; height:100vh; object-fit:contain; display:block; }
+</style>
+
+<div class="bar">
+  <div>WXWI TV</div>
+  <div id="ts">TIMESTAMP: —</div>
+</div>
+
+<picture id="pic">
+  <source id="s4k" srcset="assets/render/wxwi-dashboard-4k.webp" type="image/webp">
+  <img id="img" src="assets/render/wxwi-dashboard-1080p.webp" alt="WXWI Dashboard">
+</picture>
+
+<script>
+(() => {
+  const statusUrl = "data/status.json";
+  const tsEl = document.getElementById("ts");
+  const s4k = document.getElementById("s4k");
+  const img = document.getElementById("img");
+
+  let last = null;
+
+  async function poll(){
+    try{
+      const r = await fetch(statusUrl + "?_=" + Date.now(), { cache: "no-store" });
+      const j = await r.json();
+      const gen = j.generatedAt || j.generated_at || j.generated || null;
+      if(gen) tsEl.textContent = "TIMESTAMP: " + gen;
+      if(gen && gen !== last){
+        last = gen;
+        // bust cache for images so TV doesn't need manual refresh
+        const bust = encodeURIComponent(gen) + "_" + Date.now();
+        s4k.srcset = "assets/render/wxwi-dashboard-4k.webp?x=" + bust;
+        img.src = "assets/render/wxwi-dashboard-1080p.webp?x=" + bust;
+      }
+    }catch(e){
+      // ignore; keep previous
+    }
+  }
+
+  poll();
+  setInterval(poll, 60 * 1000); // check every 60s
+})();
+</script>
