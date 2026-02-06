@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
  * Render TV infographic (4K + 1080p) into WebP images.
- * Fixes:
- *  - Avoids page.waitForTimeout (not available in some puppeteer versions): uses delay()
- *  - Ensures local HTTP server serves repo root and template fetches absolute /data/* paths
- *  - Best-effort render-ready flag; continues even if not set
+ * Hardened for CI:
+ * - Local HTTP server serving repo root
+ * - Best-effort render-ready flag (doesn't hang)
+ * - Downloads Wizz Air logo into assets/brand/ if missing
  */
 
 import http from "node:http";
+import https from "node:https";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -24,6 +25,10 @@ const OUT_1080 = path.join(OUT_DIR, "wxwi-dashboard-1080p.webp");
 const PAGE_PATH = path.join(ROOT, "render", "infographic.html");
 const PAGE_URL_PATH = "/render/infographic.html";
 
+const LOGO_DIR = path.join(ROOT, "assets", "brand");
+const LOGO_PATH = path.join(LOGO_DIR, "wizzair-logo.png");
+const LOGO_URL = "https://1000logos.net/wp-content/uploads/2021/04/Wizzair-logo.png";
+
 const NAV_TIMEOUT_MS = 120_000;
 const SETTLE_MS = 1_250;
 
@@ -31,6 +36,33 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
+}
+
+function download(url, outFile) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        // redirect
+        return resolve(download(res.headers.location, outFile));
+      }
+      if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
+      const file = fs.createWriteStream(outFile);
+      res.pipe(file);
+      file.on("finish", () => file.close(resolve));
+      file.on("error", reject);
+    }).on("error", reject);
+  });
+}
+
+async function ensureLogo() {
+  ensureDir(LOGO_DIR);
+  if (fs.existsSync(LOGO_PATH) && fs.statSync(LOGO_PATH).size > 10_000) return;
+  console.log(`[LOGO] downloading to assets/brand/wizzair-logo.png`);
+  try {
+    await download(LOGO_URL, LOGO_PATH);
+  } catch (e) {
+    console.log(`[LOGO] download failed (${e.message}). Continuing without.`);
+  }
 }
 
 function startServer(rootDir) {
@@ -105,16 +137,11 @@ async function tryWaitForRenderReady(page) {
 
 async function shot(page, outPath, viewport, quality) {
   await page.setViewport({ width: viewport.w, height: viewport.h, deviceScaleFactor: 1 });
-
-  // Reload to let CSS media queries/layout settle for this viewport
   await page.reload({ waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
-
-  // Let fetches complete
   await delay(900);
   await waitForFonts(page);
   await tryWaitForRenderReady(page);
   await delay(SETTLE_MS);
-
   await page.screenshot({ path: outPath, type: "webp", quality, fullPage: false });
 }
 
@@ -125,6 +152,8 @@ async function main() {
   }
 
   ensureDir(OUT_DIR);
+  await ensureLogo();
+
   const { server, port } = await startServer(ROOT);
   const url = `http://127.0.0.1:${port}${PAGE_URL_PATH}`;
 
