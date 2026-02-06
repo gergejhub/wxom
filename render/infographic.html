@@ -133,7 +133,7 @@
   .hdrR{justify-self:end; text-align:right; color: var(--muted); font-size: clamp(12px, .85vw, 26px); line-height:1.15;}
 
   /* Main columns */
-  .main{flex:1; min-height:0; display:grid; grid-template-columns: repeat(2, max-content); gap:2.0vw;}
+  .main{flex:1; min-height:0; display:grid; grid-template-columns: 1fr 1fr; gap:2.0vw;}
   .col{
     position:relative;
     min-height:0;
@@ -176,7 +176,7 @@
   .quad{
     flex:1; min-height:0;
     display:grid;
-    grid-template-columns: repeat(2, max-content);
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: minmax(0,1fr) minmax(0,1fr);
     gap:1.25vw;
   }
@@ -279,7 +279,7 @@
     margin-top:.45vw;
     display:flex;
     flex-direction:column;
-    gap:.22vw;
+    gap:.35vw;
     min-height:0;
     flex:1;
   }
@@ -295,17 +295,16 @@
   /* Two-column code grid (no clipping: we limit by count, not height) */
   .codes{
     display:grid;
-    grid-template-columns: repeat(2, max-content);
+    grid-template-columns: 1fr 1fr;
     column-gap: 1.2em;
-    row-gap: .22em;
+    row-gap: .30em;
     align-content:start;
   }
   .code{
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-weight: 950;
     letter-spacing:.10em;
-    font-size: clamp(11px, .86vw, 28px);
-    line-height: 1.05;
+    font-size: clamp(12px, .92vw, 30px);
     color: rgba(240,255,255,.92);
     white-space:nowrap;
     text-shadow: 0 0 16px rgba(62,246,255,.12);
@@ -860,36 +859,6 @@
       .map(x => x.c);
   }
 
-  const LIMITS = {
-    // High impact (smaller tiles)
-    nowAlertCritCodes: 6,
-    nowMetCritCodes: 6,
-    tafCritCodes: 8,
-    // Visibility (bigger)
-    nowVis300Codes: 8,
-    nowBelowBestCodes: 8,
-    nowBelowAltCodes: 8,
-    tafVis300Codes: 8,
-    tafBelowBestCodes: 8,
-    tafBelowAltCodes: 8,
-    // Bases boxes (avoid clipping: keep '+X more' visible)
-    nowBasesCodes: 6,
-    tafBasesCodes: 6,
-    tafBaseAnyCodes: 6,
-    // Severe (medium)
-    nowGust25Codes: 8,
-    nowSnowCodes: 8,
-    nowEngIceCodes: 8,
-    nowIcingRiskCodes: 8,
-    tafGust25Codes: 10,
-    tafSnowCodes: 8,
-    // Ops (small)
-    nowNoOpsCodes: 6,
-    nowLvtoCodes: 6,
-    tafNoOpsCodes: 6,
-    tafLvtoCodes: 6,
-  };
-
   function renderCodes(el, list, baseSet, n){
     const codes = safeArr(list).map(x => String(x).trim().toUpperCase()).filter(Boolean);
     if (!codes.length){
@@ -1010,32 +979,35 @@
   $("tafLvto").textContent = String(tafLvto.length);
 
   // Code grids (n tuned per section so NOTHING clips)
-  renderCodes($("nowAlertCritCodes"), nowAlertCrit, baseSet, (LIMITS["nowAlertCritCodes"] ?? 8));
-  renderCodes($("nowMetCritCodes"), nowMetCrit, baseSet, (LIMITS["nowMetCritCodes"] ?? 8));
+  renderCodes($("nowAlertCritCodes"), nowAlertCrit, baseSet, 8);
+  renderCodes($("nowMetCritCodes"), nowMetCrit, baseSet, 8);
 
-  renderCodes($("nowVis300Codes"), nowVis300, baseSet, (LIMITS["nowVis300Codes"] ?? 8));
-  renderCodes($("nowBelowBestCodes"), nowBelowBest, baseSet, (LIMITS["nowBelowBestCodes"] ?? 8));
-  renderCodes($("nowBelowAltCodes"), nowBelowAlt, baseSet, (LIMITS["nowBelowAltCodes"] ?? 8));
-  renderCodes($("nowBasesCodes"), affectedBases, baseSet, (LIMITS["nowBasesCodes"] ?? 6));
-renderCodes($("nowGust25Codes"), nowGust25, baseSet, (LIMITS["nowGust25Codes"] ?? 8));
-  renderCodes($("nowSnowCodes"), nowSnow, baseSet, (LIMITS["nowSnowCodes"] ?? 8));
-  renderCodes($("nowEngIceCodes"), nowEngIce, baseSet, (LIMITS["nowEngIceCodes"] ?? 8));
-  renderCodes($("nowIcingRiskCodes"), nowIcingRisk, baseSet, (LIMITS["nowIcingRiskCodes"] ?? 8));
+  renderCodes($("nowVis300Codes"), nowVis300, baseSet, 14);
+  renderCodes($("nowBelowBestCodes"), nowBelowBest, baseSet, 14);
+  renderCodes($("nowBelowAltCodes"), nowBelowAlt, baseSet, 14);
+  renderCodes($("nowBasesCodes"), affectedBases, baseSet, 14);
 
-  renderCodes($("nowNoOpsCodes"), nowNoOps, baseSet, (LIMITS["nowNoOpsCodes"] ?? 8));
-  renderCodes($("nowLvtoCodes"), nowLvto, baseSet, (LIMITS["nowLvtoCodes"] ?? 8));
+  renderCodes($("nowGust25Codes"), nowGust25, baseSet, 14);
+  renderCodes($("nowSnowCodes"), nowSnow, baseSet, 14);
+  renderCodes($("nowEngIceCodes"), nowEngIce, baseSet, 14);
+  renderCodes($("nowIcingRiskCodes"), nowIcingRisk, baseSet, 14);
 
-  renderCodes($("tafCritCodes"), tafCrit, baseSet, (LIMITS["tafCritCodes"] ?? 8));
-  renderCodes($("tafBasesCodes"), tafBases, baseSet, (LIMITS["tafBasesCodes"] ?? 6));
-renderCodes($("tafVis300Codes"), tafVis300, baseSet, (LIMITS["tafVis300Codes"] ?? 8));
-  renderCodes($("tafBelowBestCodes"), tafBelowBest, baseSet, (LIMITS["tafBelowBestCodes"] ?? 8));
-  renderCodes($("tafBelowAltCodes"), tafBelowAlt, baseSet, (LIMITS["tafBelowAltCodes"] ?? 8));
-  renderCodes($("tafBaseAnyCodes"), tafImpactedBases, baseSet, (LIMITS["tafBaseAnyCodes"] ?? 6));
-renderCodes($("tafGust25Codes"), tafGust25, baseSet, (LIMITS["tafGust25Codes"] ?? 8));
-  renderCodes($("tafSnowCodes"), tafSnow, baseSet, (LIMITS["tafSnowCodes"] ?? 8));
+  renderCodes($("nowNoOpsCodes"), nowNoOps, baseSet, 10);
+  renderCodes($("nowLvtoCodes"), nowLvto, baseSet, 10);
 
-  renderCodes($("tafNoOpsCodes"), tafNoOps, baseSet, (LIMITS["tafNoOpsCodes"] ?? 8));
-  renderCodes($("tafLvtoCodes"), tafLvto, baseSet, (LIMITS["tafLvtoCodes"] ?? 8));
+  renderCodes($("tafCritCodes"), tafCrit, baseSet, 10);
+  renderCodes($("tafBasesCodes"), tafBases, baseSet, 10);
+
+  renderCodes($("tafVis300Codes"), tafVis300, baseSet, 14);
+  renderCodes($("tafBelowBestCodes"), tafBelowBest, baseSet, 14);
+  renderCodes($("tafBelowAltCodes"), tafBelowAlt, baseSet, 14);
+  renderCodes($("tafBaseAnyCodes"), tafImpactedBases, baseSet, 14);
+
+  renderCodes($("tafGust25Codes"), tafGust25, baseSet, 14);
+  renderCodes($("tafSnowCodes"), tafSnow, baseSet, 14);
+
+  renderCodes($("tafNoOpsCodes"), tafNoOps, baseSet, 10);
+  renderCodes($("tafLvtoCodes"), tafLvto, baseSet, 10);
 
   $("nowTop2").textContent = topByPri(stations, "metPri", 2).join("  ") || "—";
   $("tafTop2").textContent = topByPri(stations, "tafPri", 2).join("  ") || "—";
