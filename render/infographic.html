@@ -311,7 +311,36 @@
       margin-right:.6em;
     }
 
-    .b{
+    
+/* Two-column code grid (TV-safe) */
+    .exGrid{
+      display:block;
+    }
+    .exGrid .codes{
+      display:grid;
+      grid-template-columns: repeat(2, max-content);
+      column-gap: 1.2em;
+      row-gap: .25em;
+      align-content:start;
+      max-height: 7.0em;
+      overflow:hidden;
+    }
+    .exGrid .code{
+      white-space:nowrap;
+    }
+
+    /* Section-specific sizing */
+    .sec.vis .kpi .v{ font-size: clamp(22px, 1.72vw, 70px); }
+    .sec.vis .ex{ font-size: clamp(13px, 1.00vw, 32px); }
+    .sec.vis .exGrid .codes{ max-height: 9.2em; } /* show more airports */
+
+    .sec.ops .kpi .v{ font-size: clamp(18px, 1.30vw, 52px); }
+    .sec.ops .ex{ font-size: clamp(11px, .78vw, 24px); letter-spacing:.08em; }
+    .sec.ops .exGrid .codes{ max-height: 6.2em; }
+
+    .sec.severe .ex{ font-size: clamp(13px, 1.00vw, 32px); }
+    .sec.severe .exGrid .codes{ max-height: 9.2em; } /* severe needs more list space */
+.b{
       color: rgba(255,77,184,.98); /* Wizz magenta highlight */
       text-shadow: 0 0 18px rgba(198,0,126,.24), 0 0 14px rgba(62,246,255,.10);
     }
@@ -419,7 +448,7 @@
         </div>
 
         <div class="quad">
-          <div class="sec">
+          <div class="sec vis">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3 2.6 20.2c-.5.9.1 1.8 1.1 1.8h16.6c1 0 1.6-1 .1-1.8L12 3Z" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/><path d="M12 8v6" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1" fill="rgba(62,246,255,.95)"/></svg></span>High impact alerts</div>
@@ -429,12 +458,12 @@
               <div class="kpi">
                 <div class="k">Overall alert crit</div>
                 <div class="v crit" id="nowAlertCrit">0</div>
-                <div class="ex" id="nowAlertCritEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowAlertCritEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">METAR critical</div>
                 <div class="v crit" id="nowMetCrit">0</div>
-                <div class="ex" id="nowMetCritEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowMetCritEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
             <div class="bigCall">
@@ -443,7 +472,7 @@
             </div>
           </div>
 
-          <div class="sec">
+          <div class="sec vis">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" stroke="rgba(62,246,255,.95)" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/></svg></span>Visibility & landing conditions</div>
@@ -453,29 +482,29 @@
               <div class="kpi">
                 <div class="k">Very low VIS/RVR</div>
                 <div class="v high" id="nowVis300">0</div>
-                <div class="ex" id="nowVis300Ex"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowVis300Ex"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">Below BEST minima</div>
                 <div class="v med" id="nowBelowBest">0</div>
-                <div class="ex" id="nowBelowBestEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowBelowBestEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
             <div class="kpis">
               <div class="kpi">
                 <div class="k">Below 2nd minima</div>
                 <div class="v med" id="nowBelowAlt">0</div>
-                <div class="ex" id="nowBelowAltEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowBelowAltEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">Affected bases</div>
                 <div class="v med" id="nowBases">0</div>
-                <div class="ex basesEx" id="nowBasesEx"><small>Bases:</small>—</div>
+                <div class="ex exGrid basesEx" id="nowBasesEx"><small>Bases:</small><span class="codes">—</span></div>
               </div>
             </div>
           </div>
 
-          <div class="sec">
+          <div class="sec vis">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v20M4 6l16 12M20 6 4 18" stroke="rgba(62,246,255,.95)" stroke-width="1.6" stroke-linecap="round"/><path d="M7 4l2 3M17 4l-2 3M7 20l2-3M17 20l-2-3" stroke="rgba(255,77,184,.95)" stroke-width="1.6" stroke-linecap="round"/></svg></span>Severe weather events</div>
@@ -485,29 +514,29 @@
               <div class="kpi">
                 <div class="k">Wind gusts ≥25kt</div>
                 <div class="v med" id="nowGust25">0</div>
-                <div class="ex" id="nowGust25Ex"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowGust25Ex"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">Snow observed</div>
                 <div class="v high" id="nowSnow">0</div>
-                <div class="ex" id="nowSnowEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowSnowEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
             <div class="kpis">
               <div class="kpi">
                 <div class="k">ENG ICE OPS</div>
                 <div class="v crit" id="nowEngIce">0</div>
-                <div class="ex" id="nowEngIceEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowEngIceEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">Icing risk (heur.)</div>
                 <div class="v high" id="nowIcingRisk">0</div>
-                <div class="ex" id="nowIcingRiskEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowIcingRiskEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
           </div>
 
-          <div class="sec">
+          <div class="sec vis">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13.5 12 6l8 7.5" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 12.8h11" stroke="rgba(255,77,184,.95)" stroke-width="1.8" stroke-linecap="round"/></svg></span>Operational advisories</div>
@@ -517,12 +546,12 @@
               <div class="kpi">
                 <div class="k">TO PROHIB</div>
                 <div class="v crit" id="nowNoOps">0</div>
-                <div class="ex" id="nowNoOpsEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowNoOpsEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">LVTO</div>
                 <div class="v med" id="nowLvto">0</div>
-                <div class="ex" id="nowLvtoEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="nowLvtoEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
             <div class="errors" id="errBoxNow"><b>Errors:</b> —</div>
@@ -544,7 +573,7 @@
         </div>
 
         <div class="quad">
-          <div class="sec">
+          <div class="sec vis">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3 2.6 20.2c-.5.9.1 1.8 1.1 1.8h16.6c1 0 1.6-1 .1-1.8L12 3Z" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/><path d="M12 8v6" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1" fill="rgba(62,246,255,.95)"/></svg></span>High impact alerts</div>
@@ -554,12 +583,12 @@
               <div class="kpi">
                 <div class="k">Critical (TAF ≥70)</div>
                 <div class="v crit" id="tafCrit">0</div>
-                <div class="ex" id="tafCritEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafCritEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">Affected bases</div>
                 <div class="v med" id="tafBases">0</div>
-                <div class="ex basesEx" id="tafBasesEx"><small>Bases:</small>—</div>
+                <div class="ex exGrid basesEx" id="tafBasesEx"><small>Bases:</small><span class="codes">—</span></div>
               </div>
             </div>
             <div class="bigCall">
@@ -568,7 +597,7 @@
             </div>
           </div>
 
-          <div class="sec">
+          <div class="sec vis">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" stroke="rgba(62,246,255,.95)" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/></svg></span>Visibility & landing conditions</div>
@@ -578,29 +607,29 @@
               <div class="kpi">
                 <div class="k">Very low VIS/RVR</div>
                 <div class="v high" id="tafVis300">0</div>
-                <div class="ex" id="tafVis300Ex"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafVis300Ex"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">Below BEST minima</div>
                 <div class="v med" id="tafBelowBest">0</div>
-                <div class="ex" id="tafBelowBestEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafBelowBestEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
             <div class="kpis">
               <div class="kpi">
                 <div class="k">Below 2nd minima</div>
                 <div class="v med" id="tafBelowAlt">0</div>
-                <div class="ex" id="tafBelowAltEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafBelowAltEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi kpiWide">
                 <div class="k">Base airports impacted</div>
                 <div class="v med" id="tafBaseAnyCnt">0</div>
-                <div class="ex basesEx" id="tafBaseAnyEx"><small>Bases:</small>—</div>
+                <div class="ex exGrid basesEx" id="tafBaseAnyEx"><small>Bases:</small><span class="codes">—</span></div>
               </div>
             </div>
           </div>
 
-          <div class="sec">
+          <div class="sec severe">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v20M4 6l16 12M20 6 4 18" stroke="rgba(62,246,255,.95)" stroke-width="1.6" stroke-linecap="round"/><path d="M7 4l2 3M17 4l-2 3M7 20l2-3M17 20l-2-3" stroke="rgba(255,77,184,.95)" stroke-width="1.6" stroke-linecap="round"/></svg></span>Severe weather events</div>
@@ -610,17 +639,17 @@
               <div class="kpi">
                 <div class="k">Wind gusts ≥25kt</div>
                 <div class="v med" id="tafGust25">0</div>
-                <div class="ex" id="tafGust25Ex"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafGust25Ex"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">Snow forecast</div>
                 <div class="v high" id="tafSnow">0</div>
-                <div class="ex" id="tafSnowEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafSnowEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
           </div>
 
-          <div class="sec">
+          <div class="sec ops">
             <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t"><span class="ico"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 13.5 12 6l8 7.5" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 12.8h11" stroke="rgba(255,77,184,.95)" stroke-width="1.8" stroke-linecap="round"/></svg></span>Operational advisories</div>
@@ -630,12 +659,12 @@
               <div class="kpi">
                 <div class="k">TO PROHIB (likely)</div>
                 <div class="v crit" id="tafNoOps">0</div>
-                <div class="ex" id="tafNoOpsEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafNoOpsEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
               <div class="kpi">
                 <div class="k">LVTO</div>
                 <div class="v med" id="tafLvto">0</div>
-                <div class="ex" id="tafLvtoEx"><small>Examples:</small>—</div>
+                <div class="ex exGrid" id="tafLvtoEx"><small>Examples:</small><span class="codes">—</span></div>
               </div>
             </div>
             <div class="errors" id="errBox"><b>Errors:</b> —</div>
@@ -659,8 +688,10 @@
   function fmt(list, n=12, baseSet=null){
     const a = topN(list, n);
     if (!a.length) return "—";
-    if (!baseSet) return a.join("  ");
-    return a.map(c => baseSet.has(c) ? `<span class="b">${c}</span>` : c).join("  ");
+    return a.map(c => {
+      const cls = baseSet && baseSet.has(c) ? "code b" : "code";
+      return `<span class="${cls}">${c}</span>`;
+    }).join("");
   }
 
   function isSnow(hzArr){
@@ -795,74 +826,74 @@
 
   // Base-any (union NOW+FORECAST) for the forecast visibility tile
   $("tafBaseAnyCnt").textContent = String(countBases(affectedBases, baseSet));
-  $("tafBaseAnyEx").innerHTML = `<small>Bases:</small>${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 10, baseSet)}`;
+  $("tafBaseAnyEx").innerHTML = `<small>Bases:</small><span class="codes">${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 16, baseSet)}</span>`;
 
   $("nowBases").textContent = String(countBases(affectedBases, baseSet));
-  $("nowBasesEx").innerHTML = `<small>Bases:</small>${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 10, baseSet)}`;
+  $("nowBasesEx").innerHTML = `<small>Bases:</small><span class="codes">${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 16, baseSet)}</span>`;
 
   $("tafBases").textContent = String(countBases(tafCrit, baseSet));
-  $("tafBasesEx").innerHTML = `<small>Bases:</small>${fmt(tafCrit.filter(c => baseSet.has(c)).sort(), 10, baseSet)}`;
+  $("tafBasesEx").innerHTML = `<small>Bases:</small><span class="codes">${fmt(tafCrit.filter(c => baseSet.has(c)).sort(), 16, baseSet)}</span>`;
 
   // Fill NOW
   $("nowAlertCrit").textContent = String(nowAlertCrit.length);
-  $("nowAlertCritEx").innerHTML = `<small>Examples:</small>${fmt(nowAlertCrit.sort(), 12, baseSet)}`;
+  $("nowAlertCritEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowAlertCrit.sort(), 12, baseSet)}</span>`;
 
   $("nowMetCrit").textContent = String(nowMetCrit.length);
-  $("nowMetCritEx").innerHTML = `<small>Examples:</small>${fmt(nowMetCrit.sort(), 12, baseSet)}`;
+  $("nowMetCritEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowMetCrit.sort(), 12, baseSet)}</span>`;
 
   $("nowVis300").textContent = String(nowVis300.length);
-  $("nowVis300Ex").innerHTML = `<small>Examples:</small>${fmt(nowVis300.sort(), 12, baseSet)}`;
+  $("nowVis300Ex").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowVis300.sort(), 12, baseSet)}</span>`;
 
   $("nowBelowBest").textContent = String(nowBelowBest.length);
-  $("nowBelowBestEx").innerHTML = `<small>Examples:</small>${fmt(nowBelowBest.sort(), 12, baseSet)}`;
+  $("nowBelowBestEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowBelowBest.sort(), 12, baseSet)}</span>`;
 
   $("nowBelowAlt").textContent = String(nowBelowAlt.length);
-  $("nowBelowAltEx").innerHTML = `<small>Examples:</small>${fmt(nowBelowAlt.sort(), 12, baseSet)}`;
+  $("nowBelowAltEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowBelowAlt.sort(), 12, baseSet)}</span>`;
 
   $("nowGust25").textContent = String(nowGust25.length);
-  $("nowGust25Ex").innerHTML = `<small>Examples:</small>${fmt(nowGust25.sort(), 12, baseSet)}`;
+  $("nowGust25Ex").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowGust25.sort(), 12, baseSet)}</span>`;
 
   $("nowSnow").textContent = String(nowSnow.length);
-  $("nowSnowEx").innerHTML = `<small>Examples:</small>${fmt(nowSnow.sort(), 12, baseSet)}`;
+  $("nowSnowEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowSnow.sort(), 12, baseSet)}</span>`;
 
   $("nowEngIce").textContent = String(nowEngIce.length);
-  $("nowEngIceEx").innerHTML = `<small>Examples:</small>${fmt(nowEngIce.sort(), 12, baseSet)}`;
+  $("nowEngIceEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowEngIce.sort(), 12, baseSet)}</span>`;
 
   $("nowIcingRisk").textContent = String(nowIcingRisk.length);
-  $("nowIcingRiskEx").innerHTML = `<small>Examples:</small>${fmt(nowIcingRisk.sort(), 12, baseSet)}`;
+  $("nowIcingRiskEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowIcingRisk.sort(), 12, baseSet)}</span>`;
 
   $("nowLvto").textContent = String(nowLvto.length);
-  $("nowLvtoEx").innerHTML = `<small>Examples:</small>${fmt(nowLvto.sort(), 12, baseSet)}`;
+  $("nowLvtoEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowLvto.sort(), 12, baseSet)}</span>`;
 
   $("nowNoOps").textContent = String(nowNoOps.length);
-  $("nowNoOpsEx").innerHTML = `<small>Examples:</small>${fmt(nowNoOps.sort(), 12, baseSet)}`;
+  $("nowNoOpsEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(nowNoOps.sort(), 12, baseSet)}</span>`;
 
   $("nowTop2").textContent = topByPri(stations, "metPri", 2).join("  ");
 
   // Fill FORECAST
   $("tafCrit").textContent = String(tafCrit.length);
-  $("tafCritEx").innerHTML = `<small>Examples:</small>${fmt(tafCrit.sort(), 12, baseSet)}`;
+  $("tafCritEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafCrit.sort(), 12, baseSet)}</span>`;
 
   $("tafVis300").textContent = String(tafVis300.length);
-  $("tafVis300Ex").innerHTML = `<small>Examples:</small>${fmt(tafVis300.sort(), 12, baseSet)}`;
+  $("tafVis300Ex").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafVis300.sort(), 12, baseSet)}</span>`;
 
   $("tafBelowBest").textContent = String(tafBelowBest.length);
-  $("tafBelowBestEx").innerHTML = `<small>Examples:</small>${fmt(tafBelowBest.sort(), 12, baseSet)}`;
+  $("tafBelowBestEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafBelowBest.sort(), 12, baseSet)}</span>`;
 
   $("tafBelowAlt").textContent = String(tafBelowAlt.length);
-  $("tafBelowAltEx").innerHTML = `<small>Examples:</small>${fmt(tafBelowAlt.sort(), 12, baseSet)}`;
+  $("tafBelowAltEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafBelowAlt.sort(), 12, baseSet)}</span>`;
 
   $("tafGust25").textContent = String(tafGust25.length);
-  $("tafGust25Ex").innerHTML = `<small>Examples:</small>${fmt(tafGust25.sort(), 12, baseSet)}`;
+  $("tafGust25Ex").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafGust25.sort(), 12, baseSet)}</span>`;
 
   $("tafSnow").textContent = String(tafSnow.length);
-  $("tafSnowEx").innerHTML = `<small>Examples:</small>${fmt(tafSnow.sort(), 12, baseSet)}`;
+  $("tafSnowEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafSnow.sort(), 12, baseSet)}</span>`;
 
   $("tafLvto").textContent = String(tafLvto.length);
-  $("tafLvtoEx").innerHTML = `<small>Examples:</small>${fmt(tafLvto.sort(), 12, baseSet)}`;
+  $("tafLvtoEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafLvto.sort(), 12, baseSet)}</span>`;
 
   $("tafNoOps").textContent = String(tafNoOps.length);
-  $("tafNoOpsEx").innerHTML = `<small>Examples:</small>${fmt(tafNoOps.sort(), 12, baseSet)}`;
+  $("tafNoOpsEx").innerHTML = `<small>Examples:</small><span class="codes">${fmt(tafNoOps.sort(), 12, baseSet)}</span>`;
 
   $("tafTop2").textContent = topByPri(stations, "tafPri", 2).join("  ");
 
