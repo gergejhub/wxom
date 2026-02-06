@@ -12,17 +12,17 @@
       --stroke2: rgba(0, 255, 255, 0.25);
       --txt: rgba(235, 255, 255, 0.95);
       --muted: rgba(180, 220, 220, 0.75);
-      --ok: rgba(0, 255, 200, 0.85);
-      --warn: rgba(255, 210, 80, 0.95);
-      --bad: rgba(255, 80, 120, 0.95);
+      --crit: rgba(255, 80, 120, 0.95);
+      --high: rgba(255, 210, 80, 0.95);
+      --med: rgba(90, 200, 255, 0.95);
     }
     html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
     .wrap{box-sizing:border-box;width:100vw;height:100vh;padding:3vw;display:flex;flex-direction:column;gap:2vw;}
     .hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:2vw;}
     .brand{
-      font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
-      font-size: clamp(28px, 2.2vw, 78px);
-      text-shadow: 0 0 20px rgba(0,255,255,0.18);
+      font-weight:900; letter-spacing:0.14em; text-transform:uppercase;
+      font-size: clamp(26px, 2.15vw, 78px);
+      text-shadow: 0 0 26px rgba(0,255,255,0.18);
     }
     .stamp{
       font-size: clamp(14px, 0.9vw, 28px);
@@ -36,7 +36,7 @@
       background:linear-gradient(180deg, rgba(7,16,38,0.92), rgba(7,16,38,0.72));
       border:2px solid var(--stroke2);
       border-radius:22px;
-      box-shadow: 0 0 0 1px rgba(0,255,255,0.10), 0 0 28px rgba(0,255,255,0.08);
+      box-shadow: 0 0 0 1px rgba(0,255,255,0.10), 0 0 30px rgba(0,255,255,0.08);
       padding:1.6vw;
       position:relative;
       overflow:hidden;
@@ -54,7 +54,7 @@
     .titleRow{display:flex;align-items:baseline;justify-content:space-between;gap:1.2vw;margin-bottom:1.1vw;}
     .cardTitle{
       font-size: clamp(20px, 1.35vw, 52px);
-      font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+      font-weight:900; letter-spacing:0.10em; text-transform:uppercase;
       color: rgba(220,255,255,0.98);
     }
     .badge{
@@ -63,6 +63,7 @@
       border-radius:999px;
       border:1px solid rgba(0,255,255,0.35);
       color: rgba(210,255,255,0.9);
+      background: rgba(0,0,0,0.18);
     }
     .kpis{display:grid;grid-template-columns:repeat(2, 1fr);gap:1.4vw;}
     .kpi{
@@ -72,16 +73,18 @@
       padding:1.1vw;
       box-shadow: inset 0 0 22px rgba(0,255,255,0.05);
     }
-    .kpiName{font-size: clamp(12px, 0.85vw, 26px);color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;}
-    .kpiVal{margin-top:0.4vw;font-size: clamp(18px, 1.25vw, 46px);font-weight:800;}
+    .kpiName{font-size: clamp(12px, 0.85vw, 26px);color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+    .kpiVal{margin-top:0.4vw;font-size: clamp(18px, 1.25vw, 46px);font-weight:900;}
+    .kpiVal.crit{color:var(--crit);text-shadow:0 0 14px rgba(255,80,120,0.20);}
+    .kpiVal.high{color:var(--high);text-shadow:0 0 14px rgba(255,210,80,0.16);}
+    .kpiVal.med{color:var(--med);text-shadow:0 0 14px rgba(90,200,255,0.16);}
     .kpiSub{margin-top:0.35vw;font-size: clamp(12px, 0.75vw, 22px);color:var(--muted);line-height:1.25;}
     .list{margin-top:1.2vw;font-size: clamp(12px, 0.8vw, 24px);color:var(--muted);line-height:1.35;}
     .list b{color:rgba(235,255,255,0.95);}
-    .two{display:grid;grid-template-columns:1fr;gap:2vw;}
-    .smallTitle{font-size: clamp(18px, 1.2vw, 44px);font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1vw;}
+    .smallTitle{font-size: clamp(18px, 1.2vw, 44px);font-weight:900;letter-spacing:0.10em;text-transform:uppercase;margin-bottom:1vw;}
     .row{display:flex;justify-content:space-between;gap:1vw;align-items:baseline;}
-    .row .lbl{color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-size: clamp(12px, 0.75vw, 22px);}
-    .row .val{font-weight:800;font-size: clamp(16px, 1.05vw, 38px);}
+    .row .lbl{color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-size: clamp(12px, 0.75vw, 22px);}
+    .row .val{font-weight:900;font-size: clamp(16px, 1.05vw, 38px);}
     .sep{height:1px;background:rgba(0,255,255,0.15);margin:0.9vw 0;}
     .foot{color:rgba(150,200,200,0.65);font-size: clamp(10px, 0.7vw, 20px);letter-spacing:0.05em;}
   </style>
@@ -89,7 +92,7 @@
 <body>
   <div class="wrap">
     <div class="hdr">
-      <div class="brand">WXWI OPERATIONAL WEATHER – TV BRIEF</div>
+      <div class="brand">WXWI OPERATIONAL WEATHER - TV BRIEF</div>
       <div class="stamp" id="stamp">Loading…</div>
     </div>
 
@@ -98,22 +101,22 @@
         <div class="card">
           <div class="titleRow">
             <div class="cardTitle">Current (METAR)</div>
-            <div class="badge" id="nowBadge">NOW</div>
+            <div class="badge">NOW</div>
           </div>
           <div class="kpis">
             <div class="kpi">
-              <div class="kpiName">Critical</div>
-              <div class="kpiVal" id="nowCrit">–</div>
+              <div class="kpiName">Critical (≥70)</div>
+              <div class="kpiVal crit" id="nowCrit">–</div>
               <div class="kpiSub" id="nowCritEx">Examples: –</div>
             </div>
             <div class="kpi">
-              <div class="kpiName">High</div>
-              <div class="kpiVal" id="nowHigh">–</div>
+              <div class="kpiName">High (45–69)</div>
+              <div class="kpiVal high" id="nowHigh">–</div>
               <div class="kpiSub" id="nowHighEx">Examples: –</div>
             </div>
             <div class="kpi">
-              <div class="kpiName">Medium</div>
-              <div class="kpiVal" id="nowMed">–</div>
+              <div class="kpiName">Medium (20–44)</div>
+              <div class="kpiVal med" id="nowMed">–</div>
               <div class="kpiSub" id="nowMedEx">Examples: –</div>
             </div>
             <div class="kpi">
@@ -130,22 +133,22 @@
         <div class="card">
           <div class="titleRow">
             <div class="cardTitle">Forecast (TAF)</div>
-            <div class="badge" id="tafBadge">FORECAST</div>
+            <div class="badge">FORECAST</div>
           </div>
           <div class="kpis">
             <div class="kpi">
-              <div class="kpiName">Critical</div>
-              <div class="kpiVal" id="tafCrit">–</div>
+              <div class="kpiName">Critical (≥70)</div>
+              <div class="kpiVal crit" id="tafCrit">–</div>
               <div class="kpiSub" id="tafCritEx">Examples: –</div>
             </div>
             <div class="kpi">
-              <div class="kpiName">High</div>
-              <div class="kpiVal" id="tafHigh">–</div>
+              <div class="kpiName">High (45–69)</div>
+              <div class="kpiVal high" id="tafHigh">–</div>
               <div class="kpiSub" id="tafHighEx">Examples: –</div>
             </div>
             <div class="kpi">
-              <div class="kpiName">Medium</div>
-              <div class="kpiVal" id="tafMed">–</div>
+              <div class="kpiName">Medium (20–44)</div>
+              <div class="kpiVal med" id="tafMed">–</div>
               <div class="kpiSub" id="tafMedEx">Examples: –</div>
             </div>
             <div class="kpi">
@@ -154,7 +157,7 @@
               <div class="kpiSub" id="tafBasesEx">Bases: –</div>
             </div>
           </div>
-          <div class="foot" id="foot">This image is generated in CI and reflects the latest committed dataset.</div>
+          <div class="foot">This image is generated in CI and reflects the latest committed dataset.</div>
         </div>
       </div>
 
@@ -179,7 +182,7 @@
 
 <script>
 (async () => {
-  // IMPORTANT: use absolute paths from repo root so the CI local server can serve them reliably
+  // Use absolute paths from repo root: works for GitHub Pages and the CI local server
   const STATUS_URL = "/data/status.json";
   const LATEST_URL = "/data/latest.json";
   const BASE_URL   = "/base.txt";
@@ -196,69 +199,81 @@
     return uniq(txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean));
   }
 
-  // --- data fetch (with safe fallbacks)
+  function alertFromScore(score){
+    const s = Number(score || 0);
+    return s >= 70 ? "CRIT" : s >= 45 ? "HIGH" : s >= 20 ? "MED" : "OK";
+  }
+
+  // data fetch (safe)
   let status = null, latest = null, bases = [];
   try { status = await (await fetch(STATUS_URL, {cache:"no-store"})).json(); } catch(e){ status = null; }
-  try { latest = await (await fetch(LATEST_URL, {cache:"no-store"})).json(); } catch(e){ latest = null; }
-  try { const t = await (await fetch(BASE_URL, {cache:"no-store"})).text(); bases = parseBases(t); } catch(e){ bases = []; }
+  try { latest  = await (await fetch(LATEST_URL,  {cache:"no-store"})).json(); } catch(e){ latest  = null; }
+  try { const t = await (await fetch(BASE_URL,   {cache:"no-store"})).text(); bases = parseBases(t); } catch(e){ bases = []; }
 
-  // status UI
-  const genAt = status?.generatedAt || status?.generated_at || status?.generated || "–";
+  // status UI: note -> stats live under status.stats
+  const genAt = status?.generatedAt || latest?.generatedAt || "–";
   el("stamp").textContent = `Generated: ${genAt} UTC`;
   el("genAt").textContent = genAt;
-  el("metarRet").textContent = String(status?.metarReturned ?? "–");
-  el("metarMiss").textContent = String(status?.missingMetar ?? "–");
-  el("tafRet").textContent = String(status?.tafReturned ?? "–");
-  el("tafMiss").textContent = String(status?.missingTaf ?? "–");
 
-  const errs = Array.isArray(status?.errors) ? status.errors : [];
+  const st = status?.stats || latest?.stats || {};
+  el("metarRet").textContent  = String(st.metarReturned ?? "–");
+  el("metarMiss").textContent = String(st.missingMetar ?? "–");
+  el("tafRet").textContent    = String(st.tafReturned ?? "–");
+  el("tafMiss").textContent   = String(st.missingTaf ?? "–");
+
+  const errs = Array.isArray(status?.errors) ? status.errors : (Array.isArray(latest?.errors) ? latest.errors : []);
   el("errBox").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,6).join(" • ") : "–"}`;
 
-  // stations list (support both shapes: latest.stations or latest array)
-  const stations = Array.isArray(latest) ? latest : (latest?.stations || latest?.airports || []);
+  // stations list
+  const stations = Array.isArray(latest?.stations) ? latest.stations : (Array.isArray(latest) ? latest : []);
   el("wl").textContent = String(stations.length || "–");
 
-  // --- classify (best-effort; uses common fields)
-  function getIata(s){
-    return (s.iata || s.IATA || s.iataCode || s.code || s.icao || s.ICAO || "").toString().trim();
-  }
-  function sevNow(s){
-    return (s.nowSeverity || s.severityNow || s.severity || s.now_severity || "").toString().toLowerCase();
-  }
-  function sevTaf(s){
-    return (s.tafSeverity || s.severityTaf || s.forecastSeverity || s.taf_severity || "").toString().toLowerCase();
-  }
-  // normalize to crit/high/med
-  function normSev(v){
-    if (!v) return "";
-    if (v.startsWith("crit")) return "crit";
-    if (v.startsWith("high")) return "high";
-    if (v.startsWith("med")) return "med";
-    if (v === "3") return "crit";
-    if (v === "2") return "high";
-    if (v === "1") return "med";
-    return "";
-  }
-
+  // classify using metPri/tafPri (the repo's canonical severity scores)
   const nowCrit=[], nowHigh=[], nowMed=[], tafCrit=[], tafHigh=[], tafMed=[];
   const nowBases=[], tafBases=[];
+
+  // Build sorted lists by priority
+  const byMet = stations
+    .map(s => ({ code: (s.iata||s.icao||"").toString().trim(), pri: Number(s.metPri||0) }))
+    .filter(x => x.code)
+    .sort((a,b)=>b.pri-a.pri);
+
+  const byTaf = stations
+    .map(s => ({ code: (s.iata||s.icao||"").toString().trim(), pri: Number(s.tafPri||0) }))
+    .filter(x => x.code)
+    .sort((a,b)=>b.pri-a.pri);
+
+  // quick lookup for base membership
+  const baseSet = new Set(bases);
+
   for (const s of stations) {
-    const code = getIata(s);
+    const code = (s.iata||s.icao||"").toString().trim();
     if (!code) continue;
 
-    const n = normSev(sevNow(s));
-    const t = normSev(sevTaf(s));
+    const nA = alertFromScore(s.metPri);
+    const tA = alertFromScore(s.tafPri);
 
-    if (n==="crit") nowCrit.push(code);
-    else if (n==="high") nowHigh.push(code);
-    else if (n==="med") nowMed.push(code);
+    if (nA==="CRIT") nowCrit.push(code);
+    else if (nA==="HIGH") nowHigh.push(code);
+    else if (nA==="MED") nowMed.push(code);
 
-    if (t==="crit") tafCrit.push(code);
-    else if (t==="high") tafHigh.push(code);
-    else if (t==="med") tafMed.push(code);
+    if (tA==="CRIT") tafCrit.push(code);
+    else if (tA==="HIGH") tafHigh.push(code);
+    else if (tA==="MED") tafMed.push(code);
 
-    if (bases.includes(code) && n) nowBases.push(code);
-    if (bases.includes(code) && t) tafBases.push(code);
+    if (baseSet.has(code) && nA!=="OK") nowBases.push(code);
+    if (baseSet.has(code) && tA!=="OK") tafBases.push(code);
+  }
+
+  // Examples: prefer highest priority airports
+  function examplesFromSorted(sorted, wantedAlert){
+    const out=[];
+    for (const x of sorted){
+      const a = alertFromScore(x.pri);
+      if (a===wantedAlert) out.push(x.code);
+      if (out.length>=10) break;
+    }
+    return out;
   }
 
   // Fill now
@@ -267,10 +282,10 @@
   el("nowMed").textContent = String(nowMed.length);
   el("nowBases").textContent = String(uniq(nowBases).length);
 
-  el("nowCritEx").textContent = `Examples: ${fmtExamples(uniq(nowCrit))}`;
-  el("nowHighEx").textContent = `Examples: ${fmtExamples(uniq(nowHigh))}`;
-  el("nowMedEx").textContent = `Examples: ${fmtExamples(uniq(nowMed))}`;
-  el("nowBasesEx").textContent = `Bases: ${fmtExamples(uniq(nowBases))}`;
+  el("nowCritEx").textContent = `Examples: ${fmtExamples(examplesFromSorted(byMet,"CRIT"))}`;
+  el("nowHighEx").textContent = `Examples: ${fmtExamples(examplesFromSorted(byMet,"HIGH"))}`;
+  el("nowMedEx").textContent  = `Examples: ${fmtExamples(examplesFromSorted(byMet,"MED"))}`;
+  el("nowBasesEx").textContent = `Bases: ${fmtExamples(uniq(nowBases).sort())}`;
 
   // Fill taf
   el("tafCrit").textContent = String(tafCrit.length);
@@ -278,10 +293,10 @@
   el("tafMed").textContent = String(tafMed.length);
   el("tafBases").textContent = String(uniq(tafBases).length);
 
-  el("tafCritEx").textContent = `Examples: ${fmtExamples(uniq(tafCrit))}`;
-  el("tafHighEx").textContent = `Examples: ${fmtExamples(uniq(tafHigh))}`;
-  el("tafMedEx").textContent = `Examples: ${fmtExamples(uniq(tafMed))}`;
-  el("tafBasesEx").textContent = `Bases: ${fmtExamples(uniq(tafBases))}`;
+  el("tafCritEx").textContent = `Examples: ${fmtExamples(examplesFromSorted(byTaf,"CRIT"))}`;
+  el("tafHighEx").textContent = `Examples: ${fmtExamples(examplesFromSorted(byTaf,"HIGH"))}`;
+  el("tafMedEx").textContent  = `Examples: ${fmtExamples(examplesFromSorted(byTaf,"MED"))}`;
+  el("tafBasesEx").textContent = `Bases: ${fmtExamples(uniq(tafBases).sort())}`;
 
   // signal ready for CI renderer
   window.__RENDER_READY__ = true;
