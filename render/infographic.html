@@ -3,29 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>WXWI Network Weather Status</title>
+  <title>Wizz Air Network Weather Status</title>
   <style>
     :root{
       --bg0:#050614;
       --bg1:#080a22;
-      --panel:#0c1233;
-      --panel2:#0a0f2a;
 
-      /* Wizz palette */
       --wizz:#c6007e;
       --wizz2:#ff4db8;
 
       --neon:#8f7bff;
-      --neon2: rgba(143,123,255,.45);
+      --neon2: rgba(143,123,255,.55);
       --cyan:#3ef6ff;
-      --cyan2: rgba(62,246,255,.28);
+      --cyan2: rgba(62,246,255,.36);
 
       --txt: rgba(245,255,255,.95);
-      --muted: rgba(190,210,235,.72);
+      --muted: rgba(190,210,235,.74);
 
       --crit:#ff3b7a;
       --high:#ffcf5a;
       --med:#7ac6ff;
+      --ok:#3dffcc;
 
       --safe: 3vw;
       --r: 18px;
@@ -34,28 +32,55 @@
     html,body{
       margin:0; height:100%;
       background:
-        radial-gradient(1000px 600px at 10% 5%, rgba(198,0,126,.22), transparent 62%),
-        radial-gradient(900px 580px at 90% 15%, rgba(62,246,255,.16), transparent 62%),
-        radial-gradient(800px 520px at 60% 0%, rgba(143,123,255,.14), transparent 70%),
+        radial-gradient(1200px 700px at 12% 6%, rgba(198,0,126,.28), transparent 62%),
+        radial-gradient(1100px 700px at 86% 10%, rgba(62,246,255,.18), transparent 65%),
+        radial-gradient(900px 650px at 55% 0%, rgba(143,123,255,.18), transparent 72%),
         linear-gradient(180deg, var(--bg0), var(--bg1));
       color: var(--txt);
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       overflow:hidden;
     }
 
-    /* subtle circuit grid */
+    /* subtle circuit grid + vignette */
     body:before{
       content:"";
       position:fixed; inset:0;
       background:
-        linear-gradient(rgba(62,246,255,.05) 1px, transparent 1px) 0 0/70px 70px,
-        linear-gradient(90deg, rgba(62,246,255,.05) 1px, transparent 1px) 0 0/70px 70px;
-      mask-image: radial-gradient(820px 560px at 50% 18%, rgba(0,0,0,.95), transparent 72%);
+        linear-gradient(rgba(62,246,255,.06) 1px, transparent 1px) 0 0/72px 72px,
+        linear-gradient(90deg, rgba(62,246,255,.06) 1px, transparent 1px) 0 0/72px 72px;
       opacity:.55;
+      mask-image: radial-gradient(820px 560px at 50% 18%, rgba(0,0,0,.95), transparent 74%);
       pointer-events:none;
     }
+    body:after{
+      content:"";
+      position:fixed; inset:-10%;
+      background: radial-gradient(1200px 760px at 50% 35%, transparent 55%, rgba(0,0,0,.65) 85%);
+      pointer-events:none;
+      opacity:.7;
+    }
 
-    .wrap{box-sizing:border-box; width:100vw; height:100vh; padding:var(--safe); display:flex; flex-direction:column; gap:1.8vw;}
+    .wrap{position:relative; box-sizing:border-box; width:100vw; height:100vh; padding:var(--safe); display:flex; flex-direction:column; gap:1.8vw;}
+
+    /* Corner-bracket HUD helper */
+    .brackets{
+      position:absolute; inset:10px;
+      pointer-events:none;
+      background:
+        linear-gradient(var(--cyan2), var(--cyan2)) 0 0/64px 2px no-repeat,
+        linear-gradient(var(--cyan2), var(--cyan2)) 0 0/2px 64px no-repeat,
+
+        linear-gradient(var(--cyan2), var(--cyan2)) 100% 0/64px 2px no-repeat,
+        linear-gradient(var(--cyan2), var(--cyan2)) 100% 0/2px 64px no-repeat,
+
+        linear-gradient(var(--cyan2), var(--cyan2)) 0 100%/64px 2px no-repeat,
+        linear-gradient(var(--cyan2), var(--cyan2)) 0 100%/2px 64px no-repeat,
+
+        linear-gradient(var(--cyan2), var(--cyan2)) 100% 100%/64px 2px no-repeat,
+        linear-gradient(var(--cyan2), var(--cyan2)) 100% 100%/2px 64px no-repeat;
+      filter: drop-shadow(0 0 14px rgba(62,246,255,.16));
+      opacity:.75;
+    }
 
     /* Header */
     .hdr{
@@ -66,31 +91,36 @@
       gap:1.2vw;
       padding:1.0vw 1.4vw;
       border-radius: 18px;
-      background: linear-gradient(180deg, rgba(12,18,51,.90), rgba(10,15,42,.70));
+      background: linear-gradient(180deg, rgba(12,18,51,.92), rgba(10,15,42,.72));
       border:1px solid rgba(143,123,255,.26);
-      box-shadow: 0 0 0 1px rgba(62,246,255,.08), 0 0 46px rgba(143,123,255,.10), 0 0 42px rgba(198,0,126,.08);
+      box-shadow:
+        0 0 0 1px rgba(62,246,255,.10),
+        0 0 70px rgba(143,123,255,.16),
+        0 0 60px rgba(198,0,126,.12);
       overflow:hidden;
     }
     .hdr:before{
       content:"";
       position:absolute; inset:-3px;
       border-radius: 20px;
-      border:2px solid rgba(62,246,255,.14);
-      filter: drop-shadow(0 0 20px rgba(62,246,255,.12));
+      border:2px solid rgba(62,246,255,.16);
+      filter: drop-shadow(0 0 24px rgba(62,246,255,.16));
       pointer-events:none;
-      opacity:.85;
+      opacity:.9;
     }
+    .hdr .brackets{ inset:14px; opacity:.6; }
+
     .hdrL{display:flex; align-items:center; gap:1.2vw;}
     .logo{
-      height: clamp(26px, 2.2vw, 72px);
-      filter: drop-shadow(0 0 14px rgba(198,0,126,.20));
+      height: clamp(26px, 2.15vw, 70px);
+      filter: drop-shadow(0 0 18px rgba(198,0,126,.25));
     }
     .hdrTitle{
       font-weight: 950;
       letter-spacing: .14em;
       text-transform: uppercase;
       font-size: clamp(18px, 1.55vw, 58px);
-      text-shadow: 0 0 24px rgba(143,123,255,.18);
+      text-shadow: 0 0 26px rgba(143,123,255,.20), 0 0 22px rgba(198,0,126,.14);
       white-space:nowrap;
     }
     .hdrR{justify-self:end; text-align:right; color: var(--muted); font-size: clamp(12px, .85vw, 26px); line-height:1.1;}
@@ -98,11 +128,11 @@
       justify-self:center;
       padding:.55em 1.0em;
       border-radius: 12px;
-      border:1px solid rgba(62,246,255,.22);
+      border:1px solid rgba(62,246,255,.24);
       background: rgba(0,0,0,.18);
-      box-shadow: inset 0 0 20px rgba(62,246,255,.07);
+      box-shadow: inset 0 0 24px rgba(62,246,255,.08);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-weight: 900;
+      font-weight: 950;
       letter-spacing:.10em;
       font-size: clamp(12px, .95vw, 28px);
       color: rgba(235,255,255,.96);
@@ -113,25 +143,29 @@
     .main{flex:1; display:grid; grid-template-columns:1fr 1fr; gap:2.0vw; min-height:0;}
 
     .col{
+      position:relative;
       min-height:0;
       display:flex; flex-direction:column; gap:1.4vw;
       padding:1.2vw;
       border-radius: 20px;
-      background: linear-gradient(180deg, rgba(12,18,51,.82), rgba(10,15,42,.58));
-      border:1px solid rgba(143,123,255,.22);
-      box-shadow: 0 0 0 1px rgba(62,246,255,.06), 0 0 40px rgba(143,123,255,.08);
-      position:relative;
+      background: linear-gradient(180deg, rgba(12,18,51,.84), rgba(10,15,42,.60));
+      border:1px solid rgba(143,123,255,.24);
+      box-shadow:
+        0 0 0 1px rgba(62,246,255,.10),
+        0 0 70px rgba(143,123,255,.14),
+        0 0 60px rgba(198,0,126,.10);
       overflow:hidden;
     }
     .col:before{
       content:"";
       position:absolute; inset:-4px;
       border-radius: 24px;
-      border:2px solid rgba(62,246,255,.12);
-      opacity:.65;
+      border:2px solid rgba(62,246,255,.14);
+      opacity:.7;
       pointer-events:none;
-      filter: drop-shadow(0 0 20px rgba(62,246,255,.10));
+      filter: drop-shadow(0 0 22px rgba(62,246,255,.12));
     }
+    .col .brackets{ inset:16px; opacity:.55; }
 
     .colHdr{display:flex; align-items:baseline; justify-content:space-between; gap:1vw;}
     .colHdr .h{
@@ -147,30 +181,37 @@
       background: rgba(0,0,0,.14);
       color: rgba(225,250,255,.88);
       white-space:nowrap;
+      box-shadow: 0 0 18px rgba(62,246,255,.08);
     }
 
     /* 2x2 sections inside column */
     .quad{flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:1.4vw;}
 
     .sec{
+      position:relative;
       min-height:0;
       border-radius: 18px;
       background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10));
-      border:1px solid rgba(62,246,255,.14);
-      box-shadow: inset 0 0 28px rgba(62,246,255,.06);
+      border:1px solid rgba(62,246,255,.16);
+      box-shadow:
+        inset 0 0 34px rgba(62,246,255,.12),
+        0 0 28px rgba(143,123,255,.12),
+        0 0 28px rgba(198,0,126,.10);
       padding:1.0vw 1.05vw;
       display:flex; flex-direction:column; gap:.8vw;
-      position:relative; overflow:hidden;
+      overflow:hidden;
     }
     .sec:after{
       content:"";
       position:absolute; inset:-30%;
-      background: radial-gradient(circle at 30% 25%, rgba(198,0,126,.18), transparent 55%),
-                  radial-gradient(circle at 70% 35%, rgba(143,123,255,.14), transparent 62%);
+      background: radial-gradient(circle at 30% 25%, rgba(198,0,126,.22), transparent 56%),
+                  radial-gradient(circle at 70% 35%, rgba(143,123,255,.18), transparent 64%);
       opacity:.35;
       transform: rotate(6deg);
       pointer-events:none;
     }
+    .sec .brackets{ inset:12px; opacity:.55; }
+
     .secHdr2{position:relative; display:flex; align-items:baseline; justify-content:space-between; gap:.8vw;}
     .secHdr2 .t{
       font-weight: 950;
@@ -189,16 +230,27 @@
 
     .kpis{position:relative; flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:1.0vw;}
     .kpi{
+      position:relative;
       min-height:0;
       border-radius: 14px;
-      border:1px solid rgba(143,123,255,.18);
-      background: rgba(0,0,0,.16);
-      padding:.85vw .9vw;
-      display:flex; flex-direction:column; gap:.45vw;
-      box-shadow: inset 0 0 18px rgba(143,123,255,.06);
+      border:1px solid rgba(143,123,255,.22);
+      background: linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.12));
+      padding:1.0vw 1.05vw;
+      display:flex; flex-direction:column; gap:.48vw;
+      box-shadow: inset 0 0 22px rgba(143,123,255,.10), 0 0 18px rgba(62,246,255,.08);
       overflow:hidden;
     }
+    .kpi:before{
+      content:"";
+      position:absolute; inset:0;
+      border-radius: 14px;
+      pointer-events:none;
+      border:1px solid rgba(62,246,255,.16);
+      box-shadow: 0 0 18px rgba(62,246,255,.10), 0 0 18px rgba(198,0,126,.08);
+      opacity:.55;
+    }
     .kpi .k{
+      position:relative;
       color: var(--muted);
       font-weight:900;
       letter-spacing:.10em;
@@ -207,28 +259,34 @@
       white-space:nowrap;
     }
     .kpi .v{
+      position:relative;
       font-weight: 950;
-      font-size: clamp(22px, 1.65vw, 68px);
+      font-size: clamp(20px, 1.55vw, 62px);
       line-height:1.0;
-      letter-spacing:.04em;
-      text-shadow: 0 0 18px rgba(62,246,255,.10);
+      letter-spacing:.03em;
+      text-shadow: 0 0 22px rgba(62,246,255,.12);
     }
-    .v.crit{color:var(--crit); text-shadow:0 0 20px rgba(255,59,122,.20);}
-    .v.high{color:var(--high); text-shadow:0 0 20px rgba(255,207,90,.16);}
-    .v.med{color:var(--med); text-shadow:0 0 20px rgba(122,198,255,.16);}
+    .v.crit{color:var(--crit); text-shadow:0 0 26px rgba(255,59,122,.24);}
+    .v.high{color:var(--high); text-shadow:0 0 26px rgba(255,207,90,.18);}
+    .v.med{color:var(--med); text-shadow:0 0 26px rgba(122,198,255,.18);}
+    .v.ok{color:var(--ok); text-shadow:0 0 26px rgba(61,255,204,.16);}
+
     .ex{
-      margin-top:.25vw;
+      position:relative;
+      margin-top:.20vw;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-weight: 950;
-      letter-spacing:.12em;
-      font-size: clamp(13px, .95vw, 30px); /* BIG IATA */
+      letter-spacing:.09em;
+      font-size: clamp(12px, .88vw, 28px); /* BIG IATA but safe */
       color: rgba(240,255,255,.92);
-      line-height:1.15;
-      display:-webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
+      line-height:1.18;
       overflow:hidden;
-      text-shadow: 0 0 14px rgba(62,246,255,.10);
+      display:-webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      text-shadow: 0 0 16px rgba(62,246,255,.12);
     }
     .ex small{
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -240,16 +298,25 @@
       margin-right:.6em;
     }
 
-    /* Big airport callout (like screenshot) */
+    /* Big airport callout */
     .bigCall{
       position:relative;
       margin-top:.3vw;
       border-radius: 14px;
-      border:1px solid rgba(62,246,255,.16);
+      border:1px solid rgba(62,246,255,.18);
       background: rgba(0,0,0,.18);
       padding:.8vw .9vw;
-      box-shadow: inset 0 0 22px rgba(62,246,255,.06);
+      box-shadow: inset 0 0 26px rgba(62,246,255,.08);
       display:flex; gap:1.0vw; align-items:baseline; justify-content:space-between;
+      overflow:hidden;
+    }
+    .bigCall:before{
+      content:"";
+      position:absolute; inset:0;
+      border-radius: 14px;
+      border:1px solid rgba(198,0,126,.16);
+      opacity:.35;
+      pointer-events:none;
     }
     .bigCall .label{
       color: var(--muted);
@@ -267,7 +334,7 @@
       font-size: clamp(18px, 1.35vw, 50px);
       text-align:right;
       color: rgba(255,255,255,.92);
-      text-shadow: 0 0 18px rgba(198,0,126,.14);
+      text-shadow: 0 0 22px rgba(198,0,126,.16);
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -283,28 +350,38 @@
     }
     .tag{display:flex; align-items:center; gap:.6em;}
     .dot{width:.85em; height:.85em; border-radius:999px;}
-    .dot.base{background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(255,255,255,.0) 55%), rgba(198,0,126,.9); box-shadow:0 0 14px rgba(198,0,126,.22);}
-    .dot.out{background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(255,255,255,.0) 55%), rgba(143,123,255,.9); box-shadow:0 0 14px rgba(143,123,255,.20);}
+    .dot.base{background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(255,255,255,.0) 55%), rgba(198,0,126,.92); box-shadow:0 0 16px rgba(198,0,126,.26);}
+    .dot.out{background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(255,255,255,.0) 55%), rgba(143,123,255,.92); box-shadow:0 0 16px rgba(143,123,255,.24);}
 
+    .errors{
+      position:relative;
+      color: rgba(190,210,235,.70);
+      font-size: clamp(11px, .78vw, 20px);
+      line-height:1.2;
+      margin-top:auto;
+    }
+    .errors b{color:rgba(240,255,255,.92); letter-spacing:.10em; text-transform:uppercase;}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="hdr">
+      <div class="brackets"></div>
       <div class="hdrL">
         <img class="logo" src="/assets/brand/wizzair-logo.png" alt="Wizz Air" />
         <div class="hdrTitle">Wizz Air Network Weather Status</div>
       </div>
       <div class="stampBox" id="stamp">TIMESTAMP: —</div>
       <div class="hdrR">
-        <div><span class="t">Generated:</span> <span id="genAt">—</span> UTC</div>
-        <div class="s">4K TV infographic • auto-rendered</div>
+        <div><b>Generated:</b> <span id="genAt">—</span> UTC</div>
+        <div>4K TV infographic • auto-rendered</div>
       </div>
     </div>
 
     <div class="main">
       <!-- NOW -->
       <div class="col">
+        <div class="brackets"></div>
         <div class="colHdr">
           <div class="h">Current status (NOW)</div>
           <div class="pill">LIVE</div>
@@ -312,6 +389,7 @@
 
         <div class="quad">
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">High impact alerts</div>
               <div class="sub">escalated / metar critical</div>
@@ -335,6 +413,7 @@
           </div>
 
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">Visibility & landing conditions</div>
               <div class="sub">RVR/VIS + minima</div>
@@ -366,9 +445,10 @@
           </div>
 
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">Severe weather events</div>
-              <div class="sub">wind / snow</div>
+              <div class="sub">wind / snow / eng ice</div>
             </div>
             <div class="kpis">
               <div class="kpi">
@@ -382,9 +462,22 @@
                 <div class="ex" id="nowSnowEx"><small>Examples:</small>—</div>
               </div>
             </div>
+            <div class="kpis">
+              <div class="kpi">
+                <div class="k">ENG ICE OPS</div>
+                <div class="v crit" id="nowEngIce">0</div>
+                <div class="ex" id="nowEngIceEx"><small>Examples:</small>—</div>
+              </div>
+              <div class="kpi">
+                <div class="k">Icing risk (heur.)</div>
+                <div class="v high" id="nowIcingRisk">0</div>
+                <div class="ex" id="nowIcingRiskEx"><small>Examples:</small>—</div>
+              </div>
+            </div>
           </div>
 
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">Operational advisories</div>
               <div class="sub">OM advisory</div>
@@ -401,6 +494,7 @@
                 <div class="ex" id="nowLvtoEx"><small>Examples:</small>—</div>
               </div>
             </div>
+            <div class="errors" id="errBoxNow"><b>Errors:</b> —</div>
           </div>
         </div>
 
@@ -412,6 +506,7 @@
 
       <!-- FORECAST -->
       <div class="col">
+        <div class="brackets"></div>
         <div class="colHdr">
           <div class="h">Future outlook (FORECAST)</div>
           <div class="pill">PREDICTIVE</div>
@@ -419,6 +514,7 @@
 
         <div class="quad">
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">High impact alerts</div>
               <div class="sub">critical / taf score</div>
@@ -442,6 +538,7 @@
           </div>
 
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">Visibility & landing conditions</div>
               <div class="sub">RVR/VIS + minima</div>
@@ -473,6 +570,7 @@
           </div>
 
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">Severe weather events</div>
               <div class="sub">wind / snow</div>
@@ -492,6 +590,7 @@
           </div>
 
           <div class="sec">
+            <div class="brackets"></div>
             <div class="secHdr2">
               <div class="t">Operational advisories</div>
               <div class="sub">OM advisory</div>
@@ -517,38 +616,61 @@
 
 <script>
 (async () => {
+  // Absolute paths (work with custom domain root + CI local server)
   const STATUS_URL = "/data/status.json";
   const LATEST_URL = "/data/latest.json";
   const BASE_URL   = "/base.txt";
 
   const $ = (id) => document.getElementById(id);
 
-  const delay = (ms) => new Promise(r => setTimeout(r, ms));
-
   function uniq(arr){ return Array.from(new Set(arr)); }
   function topN(arr, n){ return arr.slice(0, n); }
-  function fmt(list, n=14){
+  function fmt(list, n=12){
     const a = topN(list, n);
     return a.length ? a.join("  ") : "—";
   }
+
   function isSnow(hzArr){
     if (!Array.isArray(hzArr)) return false;
     const set = new Set(hzArr.map(x => String(x).toLowerCase()));
     if (Array.from(set).some(x => x.includes("sn"))) return true;
     return ["sn","shsn","blsn","sg","snsq","rSN","rASN"].some(x => set.has(x.toLowerCase()));
   }
+  function isIcingHaz(hzArr){
+    if (!Array.isArray(hzArr)) return false;
+    const set = new Set(hzArr.map(x => String(x).toLowerCase()));
+    // heuristic: FZRA/FZDZ/IC/PL/SG + minus temps are elsewhere; we don't have temp reliably here.
+    return ["fzra","fzdz","ic","pl","sg"].some(x => set.has(x)) || Array.from(set).some(x => x.includes("fz"));
+  }
+  function engIceOpsFlag(s){
+    // Flexible matching across different schema revisions
+    return Boolean(
+      s?.engIceOpsCrit === true ||
+      s?.engIceOps === "CRIT" ||
+      s?.engIceOps?.crit === true ||
+      s?.engIceOps?.required === true ||
+      s?.engIceOps?.prohibited === true ||
+      s?.omMet?.engIceOps === true ||
+      s?.omMet?.engIceOpsProhib === true ||
+      s?.omMet?.engIceOpsCrit === true ||
+      s?.met?.engIceOps === true
+    );
+  }
+
   function alertFromScore(score){
     const s = Number(score || 0);
     return s >= 70 ? "CRIT" : s >= 45 ? "HIGH" : s >= 20 ? "MED" : "OK";
   }
+
   function countBases(list, baseSet){
     let b=0;
     for (const c of list) if (baseSet.has(c)) b++;
     return b;
   }
+
   function topByPri(stations, field, n=2){
     return stations
-      .map(s => ({ c: (s.iata||s.icao||"").toString().trim(), p: Number(s[field]||0) }))
+      .map(s => ({ c: (s.iata||s.icao||"").toString().trim(), p: Number(s?.[field]||0) }))
       .filter(x => x.c)
       .sort((a,b)=>b.p-a.p)
       .slice(0,n)
@@ -558,8 +680,8 @@
   // Fetch
   let status=null, latest=null, baseTxt="";
   try { status = await (await fetch(STATUS_URL, {cache:"no-store"})).json(); } catch(e) { status=null; }
-  try { latest = await (await fetch(LATEST_URL, {cache:"no-store"})).json(); } catch(e) { latest=null; }
-  try { baseTxt = await (await fetch(BASE_URL, {cache:"no-store"})).text(); } catch(e) { baseTxt=""; }
+  try { latest  = await (await fetch(LATEST_URL,  {cache:"no-store"})).json(); } catch(e) { latest=null; }
+  try { baseTxt = await (await fetch(BASE_URL,   {cache:"no-store"})).text(); } catch(e) { baseTxt=""; }
 
   const bases = uniq(baseTxt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean));
   const baseSet = new Set(bases);
@@ -568,21 +690,22 @@
   $("genAt").textContent = genAt;
   $("stamp").textContent = `TIMESTAMP: ${genAt !== "—" ? genAt : "—"}`;
 
-  const errs = Array.isArray(status?.errors) ? status.errors : (Array.isArray(latest?.errors) ? latest.errors : []);
-  $("errBox").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,6).join(" • ") : "—"}`;
-
   const st = status?.stats || latest?.stats || {};
   const metRet = st.metarReturned ?? "—";
   const tafRet = st.tafReturned ?? "—";
   const metMiss = st.missingMetar ?? "—";
   const tafMiss = st.missingTaf ?? "—";
 
+  const errs = Array.isArray(status?.errors) ? status.errors : (Array.isArray(latest?.errors) ? latest.errors : []);
+  $("errBox").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,6).join(" • ") : "—"}`;
+  $("errBoxNow").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,2).join(" • ") : "—"}`;
+
   const stations = Array.isArray(latest?.stations) ? latest.stations : (Array.isArray(latest) ? latest : []);
   $("wl").textContent = String(stations.length || "—");
   $("pipeMini").innerHTML = `<small>METAR/TAF:</small>${metRet}/${tafRet} (miss ${metMiss}/${tafMiss})`;
 
   // Collections
-  const nowAlertCrit=[], nowMetCrit=[], nowVis300=[], nowBelowBest=[], nowBelowAlt=[], nowGust25=[], nowSnow=[], nowLvto=[], nowNoOps=[];
+  const nowAlertCrit=[], nowMetCrit=[], nowVis300=[], nowBelowBest=[], nowBelowAlt=[], nowGust25=[], nowSnow=[], nowLvto=[], nowNoOps=[], nowEngIce=[], nowIcingRisk=[];
   const tafCrit=[], tafVis300=[], tafBelowBest=[], tafBelowAlt=[], tafGust25=[], tafSnow=[], tafLvto=[], tafNoOps=[];
   const affectedBasesSet = new Set();
 
@@ -616,6 +739,10 @@
     if (s.omMet?.lvto === true) nowLvto.push(code);
     if (s.omMet?.noOpsLikely === true) nowNoOps.push(code);
 
+    if (engIceOpsFlag(s)) nowEngIce.push(code);
+
+    if (isIcingHaz(s.met?.hz) || isIcingHaz(s.hazards)) nowIcingRisk.push(code);
+
     // FORECAST
     if (tafPri >= 70 || s.tafCrit === true) tafCrit.push(code);
 
@@ -633,13 +760,14 @@
     if (s.omTaf?.noOpsLikely === true) tafNoOps.push(code);
   }
 
-  // Affected bases line
+  // Bases
   const affectedBases = Array.from(affectedBasesSet).sort();
+
   $("nowBases").textContent = String(countBases(affectedBases, baseSet));
-  $("nowBasesEx").innerHTML = `<small>Bases:</small>${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 18)}`;
+  $("nowBasesEx").innerHTML = `<small>Bases:</small>${fmt(affectedBases.filter(c => baseSet.has(c)).sort(), 12)}`;
 
   $("tafBases").textContent = String(countBases(tafCrit, baseSet));
-  $("tafBasesEx").innerHTML = `<small>Bases:</small>${fmt(tafCrit.filter(c => baseSet.has(c)).sort(), 18)}`;
+  $("tafBasesEx").innerHTML = `<small>Bases:</small>${fmt(tafCrit.filter(c => baseSet.has(c)).sort(), 12)}`;
 
   // Fill NOW
   $("nowAlertCrit").textContent = String(nowAlertCrit.length);
@@ -662,6 +790,12 @@
 
   $("nowSnow").textContent = String(nowSnow.length);
   $("nowSnowEx").innerHTML = `<small>Examples:</small>${fmt(nowSnow.sort())}`;
+
+  $("nowEngIce").textContent = String(nowEngIce.length);
+  $("nowEngIceEx").innerHTML = `<small>Examples:</small>${fmt(nowEngIce.sort())}`;
+
+  $("nowIcingRisk").textContent = String(nowIcingRisk.length);
+  $("nowIcingRiskEx").innerHTML = `<small>Examples:</small>${fmt(nowIcingRisk.sort())}`;
 
   $("nowLvto").textContent = String(nowLvto.length);
   $("nowLvtoEx").innerHTML = `<small>Examples:</small>${fmt(nowLvto.sort())}`;
@@ -698,7 +832,6 @@
 
   $("tafTop2").textContent = topByPri(stations, "tafPri", 2).join("  ");
 
-  // Ready for CI renderer
   window.__RENDER_READY__ = true;
 })();
 </script>
