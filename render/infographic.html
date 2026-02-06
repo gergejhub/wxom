@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1" />
+  <title>WXWI TV Infographic</title>
+  <style>
+    :root{
+      --bg:#05060a;
+      --panel:#0b1120cc;
+      --stroke:#2fe7ff66;
+      --stroke2:#ffcc6666;
+      --text:#e9f7ff;
+      --muted:#a9c7d6;
+      --cyan:#2fe7ff;
+      --mag:#b88bff;
+      --amber:#ffcc66;
+      --red:#ff4d6d;
+      --green:#57ffb3;
+      --pad:3vw; /* TV-safe margin */
+      --r:18px;
+      --shadow: 0 0 26px #2fe7ff1f, 0 0 10px #2fe7ff12;
+      --shadow2: 0 0 26px #b88bff18, 0 0 10px #b88bff10;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    html,body{ height:100%; margin:0; background: radial-gradient(1200px 600px at 50% 20%, #0b1b2f 0%, var(--bg) 55%, #020308 100%); color:var(--text); font-family:var(--font); }
+    .frame{
+      width:100%; height:100%;
+      padding:var(--pad);
+      box-sizing:border-box;
+    }
+    .hud{
+      height:100%;
+      border-radius: 28px;
+      position:relative;
+      overflow:hidden;
+      box-shadow: 0 0 0 2px #2fe7ff22, 0 0 50px #2fe7ff0f;
+      background: linear-gradient(180deg, #061022 0%, #040711 100%);
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 24px 28px 12px;
+      border-bottom: 1px solid #2fe7ff22;
+      background: linear-gradient(180deg, #081a33 0%, #050a14 100%);
+    }
+    .title{
+      font-size: 72px; /* tuned for 4K, scaled down for 1080 by browser */
+      letter-spacing: 1px;
+      font-weight: 800;
+      color: var(--cyan);
+      text-shadow: 0 0 18px #2fe7ff3a;
+      line-height:1.05;
+      white-space:nowrap;
+    }
+    .stamp{
+      text-align:right;
+      font-size: 30px;
+      color: var(--muted);
+      font-weight: 600;
+      line-height:1.2;
+    }
+    .affected{
+      padding: 14px 28px 18px;
+      font-size: 30px;
+      color: var(--text);
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      border-bottom: 1px solid #2fe7ff1c;
+    }
+    .affected b{
+      color:#d9f7ff;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .affected .list{
+      color: var(--muted);
+      font-weight: 600;
+      overflow:hidden;
+      display:-webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      padding: 20px 22px 24px;
+      height: calc(100% - 190px);
+      box-sizing:border-box;
+    }
+    .col{
+      display:flex;
+      flex-direction:column;
+      gap: 16px;
+      min-height:0;
+    }
+    .colhead{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      padding: 14px 18px;
+      border-radius: var(--r);
+      border: 1px solid #2fe7ff33;
+      background: linear-gradient(180deg, #07162d 0%, #050a14 100%);
+      box-shadow: var(--shadow);
+    }
+    .colhead.right{
+      border-color:#b88bff33;
+      box-shadow: var(--shadow2);
+    }
+    .coltitle{
+      font-size: 42px;
+      font-weight: 900;
+      color: #dff8ff;
+    }
+    .colsubtitle{
+      font-size: 26px;
+      font-weight: 800;
+      color: #9fd0e6;
+      opacity: .95;
+      letter-spacing:.3px;
+    }
+    .tiles{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      min-height:0;
+    }
+    .tile{
+      border-radius: var(--r);
+      padding: 16px 16px 14px;
+      border: 1px solid #2fe7ff2c;
+      background: linear-gradient(180deg, #061022 0%, #050913 100%);
+      box-shadow: 0 0 0 1px #2fe7ff14, 0 0 20px #2fe7ff10;
+      position:relative;
+      min-height: 170px;
+    }
+    .right .tile{
+      border-color:#b88bff2c;
+      box-shadow: 0 0 0 1px #b88bff14, 0 0 20px #b88bff10;
+    }
+    .tile .t{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 10px;
+    }
+    .tile .name{
+      font-size: 34px;
+      font-weight: 900;
+      color:#eafaff;
+      line-height:1.05;
+    }
+    .tile .badge{
+      font-size: 22px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid #ffffff26;
+      color:#ffffff;
+      background: #ffffff14;
+      white-space:nowrap;
+    }
+    .badge.red{ background:#ff4d6d1a; border-color:#ff4d6d55; color:#ffd5dd;}
+    .badge.cyan{ background:#2fe7ff1a; border-color:#2fe7ff55; color:#d5fbff;}
+    .badge.amber{ background:#ffcc661a; border-color:#ffcc6655; color:#ffe9bf;}
+    .badge.mag{ background:#b88bff1a; border-color:#b88bff55; color:#efe3ff;}
+    .tile .kpi{
+      font-size: 28px;
+      font-weight: 800;
+      color:#d8f6ff;
+      margin-bottom: 8px;
+    }
+    .tile .examples{
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--muted);
+      display:-webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow:hidden;
+    }
+    .foot{
+      position:absolute;
+      bottom: 18px;
+      left: 28px;
+      right: 28px;
+      display:flex;
+      justify-content:space-between;
+      color:#7fb6cc;
+      font-weight:700;
+      font-size: 22px;
+      opacity:.9;
+    }
+    .foot span{white-space:nowrap}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="hud">
+    <div class="topbar">
+      <div class="title">WIZZ AIR WEATHER INTELLIGENCE DASHBOARD</div>
+      <div class="stamp">
+        <div id="ts">—</div>
+        <div id="ts2" style="opacity:.92">—</div>
+      </div>
+    </div>
+
+    <div class="affected">
+      <b>AFFECTED BASE AIRPORTS</b>
+      <div class="list" id="affectedBases">—</div>
+    </div>
+
+    <div class="grid">
+      <div class="col left">
+        <div class="colhead">
+          <div>
+            <div class="coltitle">CURRENT ALERTS (NOW) – LIVE DATA</div>
+            <div class="colsubtitle" id="nowSummary">—</div>
+          </div>
+        </div>
+        <div class="tiles" id="nowTiles"></div>
+      </div>
+
+      <div class="col right">
+        <div class="colhead right">
+          <div>
+            <div class="coltitle">FORECASTED ALERTS (FUTURE) – PREDICTIVE</div>
+            <div class="colsubtitle" id="futSummary">—</div>
+          </div>
+        </div>
+        <div class="tiles" id="futTiles"></div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span id="gen">Generated: —</span>
+      <span>WXOM / WXWI</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const qs = new URLSearchParams(location.search);
+  const maxExamples = +(qs.get('n') || 8);
+
+  function uniq(arr){ return Array.from(new Set(arr)); }
+  function toISOish(s){
+    try{ const d = new Date(s); return isNaN(d) ? String(s) : d.toISOString(); }catch(e){ return String(s); }
+  }
+
+  const [latest, status, baseTxt] = await Promise.all([
+    fetch('data/latest.json', {cache:'no-store'}).then(r=>r.json()),
+    fetch('data/status.json', {cache:'no-store'}).then(r=>r.json()),
+    fetch('base.txt', {cache:'no-store'}).then(r=>r.text()).catch(()=> '')
+  ]);
+
+  const baseSet = new Set(baseTxt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean));
+  const stations = (latest.stations || []).map(s => ({
+    ...s,
+    isBase: !!(s.iata && baseSet.has(s.iata))
+  }));
+
+  function hasSrc(t, ch){
+    return (t && t.src && t.src.includes(ch)) || false;
+  }
+  function hasTrigger(s, label, ch){
+    return (s.triggers || []).some(t => t.label === label && hasSrc(t, ch));
+  }
+  function anyTrigger(s, ch){
+    return (s.triggers || []).some(t => hasSrc(t, ch));
+  }
+
+  function splitBaseCounts(list){
+    const bases = list.filter(s=>s.isBase).length;
+    const out = list.length - bases;
+    return {bases, out};
+  }
+
+  function examples(list){
+    const top = list.slice().sort((a,b)=>(b.severityScore||0)-(a.severityScore||0));
+    const ex = top.slice(0,maxExamples).map(s=>s.iata || s.icao).filter(Boolean);
+    return ex.join(', ');
+  }
+
+  // Affected base airports line (any trigger NOW or FORECAST)
+  const affectedBases = stations
+    .filter(s=>s.isBase && (s.triggers||[]).length)
+    .sort((a,b)=>(b.severityScore||0)-(a.severityScore||0))
+    .map(s => `${s.name || s.icao} (${s.iata || s.icao})`);
+  document.getElementById('affectedBases').textContent = affectedBases.length ? affectedBases.join(' → ') : 'None';
+
+  // NOW datasets
+  const alertCritNow = stations.filter(s => s.alert === 'CRIT' && String(s.critSrc||'').includes('M'));
+  const metarCrit = stations.filter(s => !!s.metCrit); // METAR severity >= 70
+  const veryLowNow = stations.filter(s => (s.worstVis ?? 99999) < 300); // meters
+  const minimaBelowBestNow = stations.filter(s => s.minimaNow && s.minimaNow.belowBest);
+  const minimaBelowAltNow  = stations.filter(s => s.minimaNow && s.minimaNow.belowAlt);
+  const gust25Now = stations.filter(s => hasTrigger(s, 'GUST≥25KT', 'M'));
+  const snowNow   = stations.filter(s => hasTrigger(s, 'SN', 'M'));
+  const lvtoNow   = stations.filter(s => hasTrigger(s, 'LVTO (<550)', 'M'));
+  const toProhibNow = stations.filter(s => hasTrigger(s, 'TO PROHIB', 'M'));
+  const xwindExNow = stations.filter(s => (s.omMet && s.omMet.xwindExceed) || hasTrigger(s,'XWIND>15KT','M'));
+
+  // FUT datasets
+  const tafCrit = stations.filter(s => !!s.tafCrit);
+  const veryLowFut = stations.filter(s => (s.tafWorstVis ?? 99999) < 300);
+  const minimaBelowBestFut = stations.filter(s => s.minimaTaf && s.minimaTaf.belowBest);
+  const minimaBelowAltFut  = stations.filter(s => s.minimaTaf && s.minimaTaf.belowAlt);
+  const gust25Fut = stations.filter(s => hasTrigger(s, 'GUST≥25KT', 'T'));
+  const snowFut   = stations.filter(s => hasTrigger(s, 'SN', 'T'));
+  const lvtoFut   = stations.filter(s => hasTrigger(s, 'LVTO (<550)', 'T'));
+  const toProhibFut = stations.filter(s => hasTrigger(s, 'TO PROHIB', 'T'));
+
+  function tileHTML(title, badgeText, badgeClass, list){
+    const {bases, out} = splitBaseCounts(list);
+    const ex = examples(list);
+    const kpi = `${list.length} Airports (${bases} Bases, ${out} Outstations)`;
+    return `
+      <div class="tile">
+        <div class="t">
+          <div class="name">${title}</div>
+          <div class="badge ${badgeClass}">${badgeText}</div>
+        </div>
+        <div class="kpi">${kpi}</div>
+        <div class="examples">${ex ? `Examples: ${ex}${list.length>maxExamples ? ', … and others' : ''}` : 'Examples: —'}</div>
+      </div>`;
+  }
+
+  const nowTiles = [
+    tileHTML('ALERT CRIT', 'Escalated', 'red', alertCritNow),
+    tileHTML('METAR CRIT', 'Severity ≥ 70', 'cyan', metarCrit),
+    tileHTML('Very Low VIS/RVR', '< 300 m', 'amber', veryLowNow),
+    tileHTML('Approach Minima', 'Below BEST', 'cyan', minimaBelowBestNow),
+    tileHTML('Approach Minima', 'Below 2nd', 'amber', minimaBelowAltNow),
+    tileHTML('Wind Gusts', '≥ 25 kt', 'cyan', gust25Now),
+    tileHTML('Snow Observed', 'SN', 'mag', snowNow),
+    tileHTML('OM Advisory', 'LVTO', 'mag', lvtoNow),
+    tileHTML('OM Advisory', 'TO PROHIB', 'red', toProhibNow),
+    tileHTML('OM Advisory', 'XWIND Exceed', 'amber', xwindExNow),
+  ].slice(0,8); // keep grid clean like sample (2x4)
+
+  const futTiles = [
+    tileHTML('CRITICAL', 'TAF Score ≥ 70', 'red', tafCrit),
+    tileHTML('Very Low VIS/RVR', '< 300 m', 'amber', veryLowFut),
+    tileHTML('Approach Minima', 'Below BEST', 'cyan', minimaBelowBestFut),
+    tileHTML('Approach Minima', 'Below 2nd', 'amber', minimaBelowAltFut),
+    tileHTML('Wind Gusts', '≥ 25 kt', 'cyan', gust25Fut),
+    tileHTML('Snow Forecast', 'SN', 'mag', snowFut),
+    tileHTML('OM Advisory', 'LVTO', 'mag', lvtoFut),
+    tileHTML('OM Advisory', 'TO PROHIB', 'red', toProhibFut),
+  ];
+
+  document.getElementById('nowTiles').innerHTML = nowTiles.join('');
+  document.getElementById('futTiles').innerHTML = futTiles.join('');
+
+  const nowStats = splitBaseCounts(stations.filter(s=>anyTrigger(s,'M')));
+  const futStats = splitBaseCounts(stations.filter(s=>anyTrigger(s,'T')));
+  document.getElementById('nowSummary').textContent = `${nowStats.bases} base airports affected • ${nowStats.out} outstations affected`;
+  document.getElementById('futSummary').textContent = `${futStats.bases} base airports affected • ${futStats.out} outstations affected`;
+
+  const g = status.generatedAt || latest.generatedAt || new Date().toISOString();
+  document.getElementById('ts').textContent = toISOish(g);
+  document.getElementById('ts2').textContent = 'TV Infographic (4K optimized)';
+  document.getElementById('gen').textContent = `Generated: ${toISOish(g)}`;
+
+  // Tell Puppeteer we are ready for screenshot
+  window.__RENDER_READY__ = true;
+})();
+</script>
+</body>
+</html>
