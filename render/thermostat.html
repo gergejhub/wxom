@@ -102,23 +102,19 @@
       pointer-events:none;
     }
 
-    /* neon corner brackets */
-    .bracket{ position:absolute; width:56px; height:56px; border:2px solid rgba(255,255,255,.18); border-radius:12px; }
-    .bracket:before{ content:""; position:absolute; inset:-2px; border-radius:14px; box-shadow: 0 0 22px var(--modeGlow); }
-    .bracket.tl{ top:14px; left:14px; border-right:none; border-bottom:none; }
-    .bracket.tr{ top:14px; right:14px; border-left:none; border-bottom:none; }
-    .bracket.bl{ bottom:14px; left:14px; border-right:none; border-top:none; }
-    .bracket.br{ bottom:14px; right:14px; border-left:none; border-top:none; }
+    /* corner brackets removed (clean TV) */
+    .bracket{ display:none !important; }
+
 
     .gaugeWrap{
-      position:relative; z-index:2;
-      height: 100%;
-      max-height: 100%;
-      width: min(100%, 78vh);
-      aspect-ratio:1 / 1;
-      display:grid;
-      place-items:center;
-    }
+  position:relative; z-index:2;
+  width: var(--dialSize, min(100%, 72vmin));
+  height: var(--dialSize, min(100%, 72vmin));
+  max-width: 100%;
+  max-height: 100%;
+  display:grid;
+  place-items:center;
+}
     svg{ width:100%; height:100%; }
     .ringBg{ stroke: rgba(255,255,255,.10); stroke-width: 16; fill: none; }
     .ringGlow{ filter: drop-shadow(0 0 18px var(--modeGlow)); }
@@ -219,7 +215,7 @@
     .iataGrid{
       z-index:1;
       display:grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: clamp(8px, .7vw, 14px) clamp(18px, 1.2vw, 30px);
       align-content:start;
       min-height: 0;
@@ -227,17 +223,21 @@
       overflow:hidden;
       padding-top: 2px;
     }
+@media (min-width: 2400px){
+  .iataGrid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
     
     
     /* Per-panel column tuning for TV readability */
     #basesGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
     #iceGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     @media (max-width: 1500px){
-      #basesGrid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #basesGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
 #basesGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
     #iceGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    @media (max-width: 1600px){ #basesGrid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 1600px){ #basesGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .iata{
   display:flex;
   align-items:center;
@@ -260,20 +260,21 @@
   opacity:.95;
 }
 .ico{
-  width: clamp(14px, .95vw, 22px);
-  height: clamp(14px, .95vw, 22px);
-  background: rgba(227,244,255,.92);
-  -webkit-mask: var(--mask) center / contain no-repeat;
-  mask: var(--mask) center / contain no-repeat;
-  filter: drop-shadow(0 0 8px rgba(62,246,255,.18));
+  width: clamp(18px, 1.15vw, 28px);
+  height: clamp(18px, 1.15vw, 28px);
+  display:inline-grid;
+  place-items:center;
+  opacity:.98;
+  filter: drop-shadow(0 0 10px rgba(62,246,255,.20));
 }
+.ico svg{ width:100%; height:100%; display:block; }
+.ico.snow{ color: rgba(62,246,255,.92); }
+.ico.vis{ color: rgba(170,120,255,.95); }
+.ico.wind{ color: rgba(255,176,32,.92); }
 .iata.base .ico{
   background: rgba(255,46,166,.92);
   filter: drop-shadow(0 0 10px rgba(255,46,166,.22));
 }
-.ico.snow{ --mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222.8%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M12%202v20%22/%3E%3Cpath%20d=%22M4.8%207l14.4%2010%22/%3E%3Cpath%20d=%22M19.2%207L4.8%2017%22/%3E%3Cpath%20d=%22M2%2012h20%22/%3E%3C/svg%3E"); }
-.ico.vis{ --mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22black%22%3E%3Cpath%20d=%22M12%205C6%205%202%2012%202%2012s4%207%2010%207%2010-7%2010-7-4-7-10-7z%22/%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%223%22%20fill=%22white%22/%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%222%22%20fill=%22black%22/%3E%3C/svg%3E"); }
-.ico.wind{ --mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222.8%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M3%208h10a3%203%200%201%200-3-3%22/%3E%3Cpath%20d=%22M2%2012h15a3%203%200%201%201-3%203%22/%3E%3Cpath%20d=%22M3%2016h9a2%202%200%201%201-2%202%22/%3E%3C/svg%3E"); }
     .iata.base{
       color: var(--wizzMagenta);
       text-shadow: 0 0 14px rgba(255,46,166,.28);
@@ -311,9 +312,7 @@
     </div>
 
     <div class="content">
-      <div class="bracket tl"></div><div class="bracket tr"></div><div class="bracket bl"></div><div class="bracket br"></div>
-
-      <div class="gaugeWrap">
+<div class="gaugeWrap">
         <svg viewBox="0 0 200 200" aria-hidden="true">
           <circle class="ringBg" cx="100" cy="100" r="86"></circle>
           <circle class="ringFg ringGlow" id="ring" cx="100" cy="100" r="86" transform="rotate(-90 100 100)"></circle>
@@ -365,6 +364,52 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
+const ICONS = {
+  snow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 2v20"/><path d="M4.5 6.5l15 11"/><path d="M19.5 6.5l-15 11"/>
+    <path d="M5 12h14"/>
+  </svg>`,
+  vis: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/>
+    <circle cx="12" cy="12" r="2.3" />
+  </svg>`,
+  wind: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 8h10a2.5 2.5 0 1 0-2.5-2.5"/>
+    <path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/>
+    <path d="M3 16h8a2 2 0 1 0-2 2"/>
+  </svg>`
+};
+
+function normTags(raw){
+  if(!raw) return [];
+  const arr = Array.isArray(raw) ? raw : [raw];
+  const out = [];
+  for(const t0 of arr){
+    const t = String(t0).toLowerCase();
+    // map synonyms -> canonical
+    if(t.includes("snow") || t.includes("snw") || t.includes("contam")) out.push("snow");
+    else if(t.includes("vis") || t.includes("rvr") || t.includes("rv") || t.includes("fog") || t.includes("minima") || t.includes("ceiling")) out.push("vis");
+    else if(t.includes("wind") || t.includes("gust") || t.includes("xwind")) out.push("wind");
+  }
+  // unique, stable order
+  return Array.from(new Set(out)).slice(0,2);
+}
+
+function computeDialSize(){
+  const box = document.querySelector(".content");
+  if(!box) return;
+  const cs = getComputedStyle(box);
+  const padX = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+  const padY = (parseFloat(cs.paddingTop)||0) + (parseFloat(cs.paddingBottom)||0);
+  const w = box.clientWidth - padX;
+  const h = box.clientHeight - padY;
+  const size = Math.max(240, Math.floor(Math.min(w, h)));
+  document.documentElement.style.setProperty("--dialSize", size + "px");
+}
+window.addEventListener("resize", () => { try{ computeDialSize(); }catch(e){} }, { passive:true });
+, () => { try{ computeDialSize(); }catch(e){} }, { passive:true });
+
+
     function setMode(mode, nsi){
       const m = String(mode || "PUSH").toUpperCase();
       const v = Number.isFinite(Number(nsi)) ? Number(nsi) : 0;
@@ -414,18 +459,21 @@
     codeEl.textContent = code;
     el.appendChild(codeEl);
 
-    const tags = tagMap && tagMap[code] ? tagMap[code] : [];
-    if(Array.isArray(tags) && tags.length){
-      const tWrap = document.createElement("span");
-      tWrap.className = "tags";
-      for(const t of tags.slice(0,2)){
-        const ico = document.createElement("span");
-        ico.className = "ico " + String(t);
-        ico.title = String(t).toUpperCase();
-        tWrap.appendChild(ico);
-      }
-      el.appendChild(tWrap);
-    }
+    const rawTags = tagMap && tagMap[code] ? tagMap[code] : [];
+const tags = normTags(rawTags);
+if(tags.length){
+  const tWrap = document.createElement("span");
+  tWrap.className = "tags";
+  for(const t of tags){
+    if(!ICONS[t]) continue;
+    const ico = document.createElement("span");
+    ico.className = "ico " + t;
+    ico.innerHTML = ICONS[t];
+    ico.title = t.toUpperCase();
+    tWrap.appendChild(ico);
+  }
+  if(tWrap.childNodes.length) el.appendChild(tWrap);
+}
     return el;
   };
 
@@ -461,6 +509,7 @@
     async function load(){
       try{
         window.__RENDER_READY__ = false;
+        computeDialSize();
 
         const r = await fetch(`/data/thermostat.json?ts=${Date.now()}`, { cache: "no-store" });
         if(!r.ok) throw new Error(`thermostat.json HTTP ${r.status}`);
