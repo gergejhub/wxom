@@ -1,495 +1,472 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>WXWI Disruption Thermostat</title>
   <style>
     :root{
-      --bg0:#050711;
-      --bg1:#070b1a;
-      --panel:rgba(10,16,40,.72);
-      --panel2:rgba(10,16,40,.45);
-      --stroke:rgba(120,235,255,.18);
-      --glowCyan:rgba(62,246,255,.22);
-      --glowMag:rgba(255,59,189,.18);
-      --txt:rgba(240,250,255,.92);
-      --mut:rgba(210,230,240,.62);
+      --bg0:#040611;
+      --bg1:#070a19;
+      --panel:#0b1028cc;
+      --stroke:#1b2a55;
+      --text:#e9f2ff;
+      --muted:#a9b7d6;
+      --wizzMagenta:#ff2ea6;
+      --wizzPurple:#7b2cff;
+      --cyan:#3ef6ff;
+      --amber:#ffb020;
+      --good:#52ffb7;
+      --bad:#ff355b;
 
-      --push:#38f6ff;
-      --stab:#ffd24a;
-      --prot:#ff3bbd;
+      --modeColor: var(--wizzMagenta);
+      --modeGlow: rgba(255,46,166,.22);
+      --radius: 26px;
+
+      /* TV-readable scale */
+      --fzBase: clamp(18px, 1.15vw, 34px);
+      --fzH1: clamp(28px, 2.1vw, 56px);
+      --fzH2: clamp(22px, 1.6vw, 44px);
+      --fzBig: clamp(160px, 10.8vw, 360px);
+      --fzNum: clamp(56px, 3.4vw, 120px);
+      --fzIata: clamp(20px, 1.55vw, 44px);
     }
 
-    html,body{height:100%;margin:0}
-    body{
-      background:
-        radial-gradient(1200px 700px at 18% 12%, rgba(255,59,189,.20), transparent 55%),
-        radial-gradient(1200px 700px at 92% 18%, rgba(62,246,255,.18), transparent 55%),
-        radial-gradient(900px 520px at 65% 88%, rgba(141,78,255,.14), transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg0));
-      color: var(--txt);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      letter-spacing:.02em;
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; background: radial-gradient(1100px 900px at 12% 18%, rgba(255,46,166,.18), transparent 60%),
+                                 radial-gradient(1000px 900px at 88% 22%, rgba(62,246,255,.12), transparent 60%),
+                                 radial-gradient(900px 800px at 55% 85%, rgba(123,44,255,.12), transparent 60%),
+                                 linear-gradient(180deg, var(--bg1), var(--bg0) 62%, #02030a);
+              color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+
+    .wrap{
+      height:100vh;
+      padding: clamp(18px, 1.6vw, 52px);
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(14px, 1.2vw, 28px);
       overflow:hidden;
     }
 
-    .wrap{position:relative; height:100%; padding:3.2vh 3.2vw;}
     .topbar{
       display:flex; align-items:center; justify-content:space-between;
-      padding:1.4vh 1.4vw;
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(12,18,46,.72), rgba(6,10,26,.58));
-      border:1px solid rgba(120,235,255,.14);
-      box-shadow: 0 0 0 1px rgba(255,59,189,.05) inset, 0 0 40px rgba(62,246,255,.08);
-    }
-    .brand{
-      display:flex; align-items:center; gap:14px;
-    }
-    .brand img{height:34px; filter: drop-shadow(0 0 16px rgba(255,59,189,.25)); opacity:.95}
-    .title{
-      font-size: clamp(18px, 1.55vw, 44px);
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing:.14em;
-      text-shadow: 0 0 18px rgba(62,246,255,.08);
-    }
-    .meta{
-      display:flex; gap:14px; align-items:center;
-      color: var(--mut);
-      font-size: clamp(11px, .82vw, 22px);
-    }
-    .pill{
-      padding:.55em .9em;
-      border-radius:999px;
-      border:1px solid rgba(120,235,255,.18);
-      background: rgba(12,18,46,.55);
-      box-shadow: 0 0 22px rgba(62,246,255,.06);
-      font-weight: 800;
-      letter-spacing:.12em;
-      text-transform: uppercase;
-    }
-
-    .grid{
-      margin-top:2.2vh;
-      display:grid;
-      grid-template-columns: 1.0fr 1.35fr 1.0fr;
-      gap:2.0vw;
-      height: calc(100% - 84px - 2.2vh);
-      min-height:0;
-    }
-
-    .panel{
+      padding: clamp(12px, 1.0vw, 22px) clamp(16px, 1.4vw, 30px);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(10,14,35,.72), rgba(6,8,22,.52));
+      border: 1px solid rgba(62,246,255,.16);
+      box-shadow: 0 0 0 1px rgba(255,46,166,.08) inset, 0 22px 60px rgba(0,0,0,.55);
       position:relative;
-      border-radius: 22px;
-      padding: 2.2vh 2.0vw;
-      background: linear-gradient(180deg, rgba(12,18,46,.68), rgba(6,10,26,.55));
-      border: 1px solid rgba(120,235,255,.14);
-      box-shadow:
-        0 0 0 1px rgba(255,59,189,.04) inset,
-        0 0 50px rgba(62,246,255,.07),
-        0 0 60px rgba(255,59,189,.05);
-      overflow:hidden;
     }
-    .panel:before{
-      content:"";
-      position:absolute; inset:-2px;
-      border-radius: 22px;
-      background:
-        radial-gradient(900px 260px at 18% 10%, rgba(62,246,255,.10), transparent 60%),
-        radial-gradient(900px 260px at 80% 8%, rgba(255,59,189,.10), transparent 60%);
+    .topbar:before{
+      content:""; position:absolute; inset:-2px; border-radius: calc(var(--radius) + 2px);
       pointer-events:none;
-      filter: blur(0px);
+      box-shadow: 0 0 34px rgba(255,46,166,.12), 0 0 38px rgba(62,246,255,.08);
     }
-    .corner{
-      position:absolute; width:26px; height:26px;
-      border:2px solid rgba(62,246,255,.22);
-      filter: drop-shadow(0 0 10px rgba(62,246,255,.12));
-      opacity:.85;
-    }
-    .corner.tl{top:14px;left:14px;border-right:none;border-bottom:none;border-radius:10px 0 0 0}
-    .corner.tr{top:14px;right:14px;border-left:none;border-bottom:none;border-radius:0 10px 0 0}
-    .corner.bl{bottom:14px;left:14px;border-right:none;border-top:none;border-radius:0 0 0 10px}
-    .corner.br{bottom:14px;right:14px;border-left:none;border-top:none;border-radius:0 0 10px 0}
 
-    .h{
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom: 1.2vh;
-    }
-    .h .k{font-weight:900; letter-spacing:.14em; text-transform:uppercase; font-size: clamp(14px, 1.1vw, 26px)}
-    .h .s{color:var(--mut); font-size: clamp(11px, .78vw, 18px); text-transform:uppercase; letter-spacing:.10em}
-
-    /* Gauge */
-    .gaugeWrap{
-      display:flex; align-items:center; justify-content:center;
-      height: 100%;
-      min-height:0;
-    }
-    .gauge{
-      width: min(34vw, 520px);
-      aspect-ratio: 1 / 1;
+    .brand{ display:flex; align-items:center; gap: clamp(10px, 1.0vw, 18px); min-width:0; }
+    .brand img{ height: clamp(22px, 2.0vw, 44px); filter: drop-shadow(0 0 10px rgba(255,46,166,.35)); }
+    .title{ font-weight: 900; letter-spacing:.18em; text-transform:uppercase; font-size: var(--fzH1); white-space:nowrap; }
+    .pills{ display:flex; align-items:center; gap: clamp(8px, .8vw, 14px); flex-wrap:wrap; justify-content:flex-end; }
+    .pill{
+      font-size: clamp(14px, .95vw, 24px);
+      letter-spacing:.14em; text-transform:uppercase; font-weight:800;
+      padding: clamp(6px, .55vw, 12px) clamp(10px, .85vw, 18px);
       border-radius: 999px;
-      position: relative;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(10,14,30,.55);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset;
+      white-space:nowrap;
+    }
+    .pill.mode{
+      border-color: rgba(255,46,166,.35);
+      box-shadow: 0 0 24px var(--modeGlow), 0 0 0 1px rgba(0,0,0,.35) inset;
+      color: var(--modeColor);
+    }
+    .pill.data.ok{ border-color: rgba(82,255,183,.35); color: var(--good); }
+    .pill.data.bad{ border-color: rgba(255,53,91,.35); color: var(--bad); box-shadow:0 0 24px rgba(255,53,91,.14); }
+
+    .content{
       display:grid;
       place-items:center;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(6,10,26,.35), rgba(6,10,26,.0) 60%),
-        conic-gradient(from -90deg, rgba(62,246,255,.20), rgba(255,210,74,.20), rgba(255,59,189,.20), rgba(62,246,255,.20));
-      box-shadow:
-        0 0 0 1px rgba(120,235,255,.10) inset,
-        0 0 55px rgba(62,246,255,.10),
-        0 0 55px rgba(255,59,189,.08);
+      padding: clamp(6px, .6vw, 12px);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(9,12,28,.62), rgba(4,5,16,.35));
+      border: 1px solid rgba(62,246,255,.14);
+      position:relative;
       overflow:hidden;
     }
-    .gauge:before{
-      content:"";
-      position:absolute; inset:16px;
-      border-radius:999px;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(255,59,189,.12), transparent 55%),
-        radial-gradient(circle at 25% 20%, rgba(62,246,255,.12), transparent 50%),
-        linear-gradient(180deg, rgba(12,18,46,.70), rgba(6,10,26,.62));
-      border:1px solid rgba(120,235,255,.14);
-      box-shadow: 0 0 0 1px rgba(255,59,189,.04) inset;
+    .content:after{
+      content:""; position:absolute; inset:0;
+      background: radial-gradient(900px 700px at 50% 55%, rgba(255,46,166,.08), transparent 64%),
+                  radial-gradient(900px 700px at 50% 55%, rgba(62,246,255,.06), transparent 70%);
+      pointer-events:none;
     }
-    .arc{
-      position:absolute;
-      inset:0;
-      border-radius:999px;
-      mask: radial-gradient(circle at 50% 50%, transparent 63%, #000 64%);
-      -webkit-mask: radial-gradient(circle at 50% 50%, transparent 63%, #000 64%);
-      background: conic-gradient(from -90deg, var(--modeColor) 0deg, var(--modeColor) var(--deg), rgba(120,235,255,.10) var(--deg), rgba(120,235,255,.06) 360deg);
-      filter: drop-shadow(0 0 18px var(--modeGlow));
-      opacity:.95;
+
+    /* neon corner brackets */
+    .bracket{ position:absolute; width:56px; height:56px; border:2px solid rgba(255,255,255,.18); border-radius:12px; }
+    .bracket:before{ content:""; position:absolute; inset:-2px; border-radius:14px; box-shadow: 0 0 22px var(--modeGlow); }
+    .bracket.tl{ top:14px; left:14px; border-right:none; border-bottom:none; }
+    .bracket.tr{ top:14px; right:14px; border-left:none; border-bottom:none; }
+    .bracket.bl{ bottom:14px; left:14px; border-right:none; border-top:none; }
+    .bracket.br{ bottom:14px; right:14px; border-left:none; border-top:none; }
+
+    .gaugeWrap{
+      position:relative; z-index:2;
+      height: 100%;
+      max-height: 100%;
+      width: min(100%, 78vh);
+      aspect-ratio:1 / 1;
+      display:grid;
+      place-items:center;
     }
+    svg{ width:100%; height:100%; }
+    .ringBg{ stroke: rgba(255,255,255,.10); stroke-width: 16; fill: none; }
+    .ringGlow{ filter: drop-shadow(0 0 18px var(--modeGlow)); }
+    .ringFg{ stroke: var(--modeColor); stroke-width: 20; stroke-linecap: round; fill:none; }
     .center{
-      position:relative;
-      z-index:2;
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
       text-align:center;
-      padding: 10px 18px;
+      padding: 8%;
     }
-    .nsi{
-      font-weight: 1000;
-      letter-spacing:.08em;
-      font-size: clamp(44px, 5.6vw, 140px);
-      line-height: 1;
-      text-shadow: 0 0 26px rgba(62,246,255,.08);
-    }
-    .mode{
-      margin-top: 10px;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:.55em 1.0em;
-      border-radius: 999px;
-      border: 1px solid rgba(120,235,255,.20);
-      background: rgba(10,16,40,.50);
-      box-shadow: 0 0 30px rgba(62,246,255,.06);
+    .nsiVal{
+      font-size: var(--fzBig);
       font-weight: 950;
-      text-transform: uppercase;
-      letter-spacing: .16em;
-      font-size: clamp(12px, .95vw, 24px);
+      line-height: .92;
+      letter-spacing: -.02em;
+      text-shadow: 0 0 36px rgba(0,0,0,.6), 0 0 26px var(--modeGlow);
     }
-    .dot{
-      width:10px;height:10px;border-radius:999px;background:var(--modeColor);
-      box-shadow: 0 0 18px var(--modeGlow);
+    .modeTxt{
+      margin-top: clamp(6px, .7vw, 14px);
+      font-size: clamp(22px, 1.55vw, 44px);
+      letter-spacing:.28em;
+      text-transform:uppercase;
+      font-weight: 900;
+      color: var(--modeColor);
+      text-shadow: 0 0 18px var(--modeGlow);
     }
     .sub{
-      color: var(--mut);
-      margin-top: 10px;
-      font-size: clamp(11px, .85vw, 20px);
-    }
-
-    /* Reasons */
-    .reasons{
-      display:flex; flex-direction:column; gap:12px;
-      height: 100%; min-height:0;
-    }
-    .why{
-      color: var(--mut);
-      font-size: clamp(12px, .95vw, 20px);
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      font-weight:900;
-      margin-bottom: 8px;
-    }
-    .reason{
-      display:flex; gap:12px; align-items:flex-start;
-      padding: 10px 12px;
-      border-radius: 16px;
-      background: rgba(10,16,40,.35);
-      border: 1px solid rgba(120,235,255,.12);
-      box-shadow: 0 0 24px rgba(62,246,255,.05);
-    }
-    .ico{
-      width:22px;height:22px; flex:0 0 22px;
-      opacity:.95;
-      filter: drop-shadow(0 0 12px rgba(62,246,255,.10));
-    }
-    .rtxt{
-      font-size: clamp(14px, 1.12vw, 26px);
-      font-weight: 900;
+      margin-top: clamp(6px, .7vw, 14px);
+      font-size: var(--fzBase);
+      color: var(--muted);
       letter-spacing:.06em;
     }
-    .small{
-      margin-top: 6px;
-      font-size: clamp(11px, .82vw, 18px);
-      color: var(--mut);
-      font-weight: 700;
-      letter-spacing:.03em;
-    }
 
-    /* Stats cards */
-    .cards{
+    .footer{
       display:grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      height:100%; min-height:0;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(14px, 1.2vw, 28px);
+      align-items:stretch;
+      height: clamp(320px, 34vh, 860px);
     }
     .card{
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(10,16,40,.35);
-      border: 1px solid rgba(120,235,255,.12);
-      box-shadow: 0 0 26px rgba(255,59,189,.05);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(10,14,35,.70), rgba(5,7,20,.50));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 0 0 1px rgba(62,246,255,.06) inset, 0 18px 54px rgba(0,0,0,.55);
+      padding: clamp(16px, 1.3vw, 28px);
+      position:relative;
       overflow:hidden;
+      min-height: 0;
+      height: 100%;
+      display:flex;
+      flex-direction:column;
+      gap: clamp(10px, .9vw, 18px);
     }
-    .card .lab{
-      color: var(--mut);
-      font-size: clamp(11px, .78vw, 18px);
-      text-transform: uppercase;
-      letter-spacing:.12em;
-      font-weight: 900;
-    }
-    .card .val{
-      margin-top: 6px;
-      font-size: clamp(22px, 2.3vw, 64px);
-      font-weight: 1000;
-      letter-spacing:.08em;
-    }
-    .pair{
-      display:flex; justify-content:space-between; gap:12px; align-items:baseline;
-    }
-    .iataRow{
-      margin-top: 8px;
-      display:flex; gap:10px; flex-wrap:wrap;
-    }
-    .iata{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-weight: 950;
-      letter-spacing:.10em;
-      font-size: clamp(12px, .95vw, 22px);
-      padding: .25em .45em;
-      border-radius: 10px;
-      border: 1px solid rgba(120,235,255,.14);
-      background: rgba(10,16,40,.25);
-      box-shadow: 0 0 18px rgba(62,246,255,.05);
+    .card:before{
+      content:""; position:absolute; inset:-2px; border-radius: calc(var(--radius) + 2px);
+      box-shadow: 0 0 30px rgba(62,246,255,.10), 0 0 34px rgba(255,46,166,.08);
+      pointer-events:none;
     }
 
-    /* Footer note */
-    .foot{
-      position:absolute; right: 3.2vw; bottom: 2.2vh;
-      color: rgba(210,230,240,.45);
-      font-size: clamp(10px, .70vw, 16px);
-      letter-spacing:.10em;
-      text-transform: uppercase;
+    .cardHead{ display:flex; align-items:baseline; justify-content:space-between; gap: 16px; z-index:1; }
+    .cardTitle{
+      font-size: var(--fzH2);
+      font-weight: 900;
+      letter-spacing:.20em;
+      text-transform:uppercase;
+      display:flex; align-items:center; gap: 10px;
+      white-space:nowrap;
+    }
+    .icon{
+      width: clamp(18px, 1.2vw, 30px);
+      height: clamp(18px, 1.2vw, 30px);
+      filter: drop-shadow(0 0 10px rgba(62,246,255,.20));
+      opacity:.95;
+    }
+    .count{
+      font-size: var(--fzNum);
+      font-weight: 950;
+      letter-spacing:-.01em;
+      color: var(--modeColor);
+      text-shadow: 0 0 18px var(--modeGlow);
+      white-space:nowrap;
+    }
+    .count.neutral{ color: #cfe6ff; text-shadow: 0 0 12px rgba(62,246,255,.12); }
+
+    .why{
+      z-index:1;
+      font-size: var(--fzBase);
+      color: var(--muted);
+      letter-spacing:.04em;
+      line-height: 1.25;
+      min-height: 0;
+    }
+    .why b{ color: var(--text); }
+    .why ul{ margin: 0; padding-left: 1.2em; }
+    .why li{ margin: .25em 0; }
+
+    .iataGrid{
+      z-index:1;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(8px, .7vw, 14px) clamp(18px, 1.2vw, 30px);
+      align-content:start;
+      min-height: 0;
+      flex: 1;
+      overflow:hidden;
+      padding-top: 2px;
+    }
+    .iata{
+      font-size: var(--fzIata);
+      font-weight: 900;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      white-space:nowrap;
+      line-height: 1.05;
+    }
+    .iata.base{
+      color: var(--wizzMagenta);
+      text-shadow: 0 0 14px rgba(255,46,166,.28);
+    }
+    .iata.out{
+      color: #dfeaff;
+      text-shadow: 0 0 12px rgba(62,246,255,.12);
+    }
+    .more{
+      font-size: clamp(14px, .9vw, 22px);
+      color: var(--muted);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    /* Keep footer safely inside view */
+    @media (max-height: 900px){
+      :root{ --fzBig: clamp(110px, 10vw, 220px); }
     }
   </style>
 </head>
 <body>
-  <div class="wrap" id="root" style="--modeColor: var(--push); --modeGlow: rgba(62,246,255,.22); --deg: 0deg;">
+  <div class="wrap" id="root" style="--modeColor: var(--wizzMagenta); --modeGlow: rgba(255,46,166,.22);">
     <div class="topbar">
       <div class="brand">
         <img src="/assets/brand/wizzair-logo.png" alt="Wizz Air" onerror="this.style.display='none'"/>
         <div class="title">DISRUPTION THERMOSTAT</div>
-        <div class="pill" id="modePill">PUSH</div>
+        <div class="pill mode" id="modePill">PUSH</div>
       </div>
-      <div class="meta">
+      <div class="pills">
         <div class="pill" id="tsPill">TS: —</div>
-        <div>Generated: <span id="genAt">—</span> UTC</div>
+        <div class="pill data ok" id="dataPill">DATA: —</div>
+        <div class="pill">Generated: <span id="genAt">—</span> UTC</div>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="panel">
-        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-        <div class="h">
-          <div class="k">Network Stress Index</div>
-          <div class="s">0–100</div>
-        </div>
-        <div class="gaugeWrap">
-          <div class="gauge">
-            <div class="arc" id="arc"></div>
-            <div class="center">
-              <div class="nsi" id="nsi">—</div>
-              <div class="mode"><span class="dot"></span><span id="mode">—</span></div>
-              <div class="sub" id="trend">Trend: —</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="content">
+      <div class="bracket tl"></div><div class="bracket tr"></div><div class="bracket bl"></div><div class="bracket br"></div>
 
-      <div class="panel">
-        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-        <div class="h">
-          <div class="k">WHY this mode</div>
-          <div class="s">Explainable</div>
-        </div>
-        <div class="reasons" id="reasons">
-          <div class="why">Top signals</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-        <div class="h">
-          <div class="k">Key counts</div>
-          <div class="s">NOW + FORECAST</div>
-        </div>
-        <div class="cards">
-          <div class="card">
-            <div class="pair">
-              <div>
-                <div class="lab">BASES IMPACTED</div>
-                <div class="val" id="bases">—</div>
-              </div>
-              <div style="text-align:right">
-                <div class="lab">NOW CRIT / HIGH</div>
-                <div class="val"><span id="nowCrit">—</span> / <span id="nowHigh">—</span></div>
-              </div>
-            </div>
-            <div class="iataRow" id="topNow"></div>
-          </div>
-
-          <div class="card">
-            <div class="pair">
-              <div>
-                <div class="lab">FORECAST CRITICAL</div>
-                <div class="val" id="tafCrit">—</div>
-              </div>
-              <div style="text-align:right">
-                <div class="lab">MET/TAF RETURNED</div>
-                <div class="val"><span id="metRet">—</span>/<span id="tafRet">—</span></div>
-              </div>
-            </div>
-            <div class="iataRow" id="topFct"></div>
-          </div>
-
-          <div class="card">
-            <div class="pair">
-              <div>
-                <div class="lab">DRIVERS</div>
-                <div class="val" id="drivers">—</div>
-              </div>
-              <div style="text-align:right">
-                <div class="lab">WATCHLIST</div>
-                <div class="val" id="watch">—</div>
-              </div>
-            </div>
-            <div class="small" id="errLine">Errors: —</div>
-          </div>
+      <div class="gaugeWrap">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ringBg" cx="100" cy="100" r="86"></circle>
+          <circle class="ringFg ringGlow" id="ring" cx="100" cy="100" r="86" transform="rotate(-90 100 100)"></circle>
+        </svg>
+        <div class="center">
+          <div class="nsiVal" id="nsi">—</div>
+          <div class="modeTxt" id="modeTxt">—</div>
+          <div class="sub" id="trend">Trend: —</div>
         </div>
       </div>
     </div>
 
-    <div class="foot">Auto-rendered (CI) • TV-optimized • single-screen decision aid</div>
+    <div class="footer">
+      <div class="card" id="basesCard">
+        <div class="cardHead">
+          <div class="cardTitle">
+            <!-- airport/base icon -->
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 20h18" stroke="currentColor" stroke-width="2" opacity=".9"/><path d="M12 3l8 8-8 2-8-2 8-8Z" stroke="currentColor" stroke-width="2"/><path d="M6 13v5m12-5v5" stroke="currentColor" stroke-width="2" opacity=".8"/></svg>
+            BASES IMPACTED
+          </div>
+          <div class="count" id="basesCount">—</div>
+        </div>
+        <div class="why">
+          <b>Only base-related alerts are shown.</b><br/>
+          NOW/FORECAST triggers are merged (any trigger).
+        </div>
+        <div class="iataGrid" id="basesGrid"></div>
+        <div class="more" id="basesMore"></div>
+      </div>
+
+      <div class="card" id="iceCard">
+        <div class="cardHead">
+          <div class="cardTitle">
+            <!-- snowflake / engine ice icon -->
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M12 2v20" stroke="currentColor" stroke-width="2" opacity=".9"/><path d="M4 7l16 10" stroke="currentColor" stroke-width="2" opacity=".8"/><path d="M20 7L4 17" stroke="currentColor" stroke-width="2" opacity=".8"/><path d="M7 4l2 3M15 4l-2 3M7 20l2-3M15 20l-2-3" stroke="currentColor" stroke-width="2" opacity=".7"/></svg>
+            ENG ICE OPS
+          </div>
+          <div class="count neutral" id="iceCount">—</div>
+        </div>
+        <div class="why" id="iceWhy">
+          Always shown (even if zero). Highlights bases in magenta.
+        </div>
+        <div class="iataGrid" id="iceGrid"></div>
+        <div class="more" id="iceMore"></div>
+      </div>
+    </div>
   </div>
 
-<script>
-  const $ = (id) => document.getElementById(id);
+  <script>
+    const $ = (id) => document.getElementById(id);
 
-  function icon(kind){
-    const common = 'fill="none" stroke="rgba(62,246,255,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
-    if(kind==="base") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>`;
-    if(kind==="now") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M12 2v6"/><path d="M12 16v6"/><path d="M4.9 4.9l4.2 4.2"/><path d="M14.9 14.9l4.2 4.2"/><path d="M2 12h6"/><path d="M16 12h6"/><path d="M4.9 19.1l4.2-4.2"/><path d="M14.9 9.1l4.2-4.2"/></svg>`;
-    if(kind==="fct") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>`;
-    if(kind==="drv") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M12 2v20"/><path d="M2 12h20"/><path d="M4 4l16 16"/><path d="M20 4L4 20"/></svg>`;
-    return `<svg class="ico" viewBox="0 0 24 24" ${common}><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16h.01"/></svg>`;
-  }
+    function setMode(mode, nsi){
+      const m = String(mode || "PUSH").toUpperCase();
+      const v = Number.isFinite(Number(nsi)) ? Number(nsi) : 0;
 
-  function setMode(mode, nsi){
-    const root = $("root");
-    let colorVar="--push", glow="rgba(62,246,255,.22)";
-    if(mode==="STABILIZE"){ colorVar="--stab"; glow="rgba(255,210,74,.22)"; }
-    if(mode==="PROTECT"){ colorVar="--prot"; glow="rgba(255,59,189,.22)"; }
-    root.style.setProperty("--modeColor", `var(${colorVar})`);
-    root.style.setProperty("--modeGlow", glow);
-    const deg = Math.max(0, Math.min(360, Math.round((nsi/100)*360)));
-    root.style.setProperty("--deg", `${deg}deg`);
-    $("mode").textContent = mode;
-    $("modePill").textContent = mode;
-  }
+      const root = $("root");
+      const pill = $("modePill");
+      const modeTxt = $("modeTxt");
 
-  function iataPills(el, arr){
-    el.innerHTML = "";
-    (arr||[]).slice(0,8).forEach(code=>{
-      const s = document.createElement("span");
-      s.className="iata";
-      s.textContent = code;
-      el.appendChild(s);
-    });
-  }
+      const colors = {
+        PUSH:      { c: getComputedStyle(document.documentElement).getPropertyValue("--cyan").trim(),   g: "rgba(62,246,255,.22)" },
+        STABILIZE: { c: getComputedStyle(document.documentElement).getPropertyValue("--amber").trim(),  g: "rgba(255,176,32,.18)" },
+        PROTECT:   { c: getComputedStyle(document.documentElement).getPropertyValue("--wizzMagenta").trim(), g: "rgba(255,46,166,.22)" },
+      };
+      const cfg = colors[m] || colors.PUSH;
 
-  function renderReasons(reasons){
-    const box = $("reasons");
-    box.innerHTML = `<div class="why">Top signals</div>`;
-    const items = (reasons||[]).slice(0,5);
-    const kinds = ["base","now","fct","drv","info"];
-    items.forEach((t,i)=>{
-      const div = document.createElement("div");
-      div.className="reason";
-      div.innerHTML = `${icon(kinds[i]||"info")}<div><div class="rtxt">${t}</div></div>`;
-      box.appendChild(div);
-    });
-  }
+      root.style.setProperty("--modeColor", cfg.c);
+      root.style.setProperty("--modeGlow", cfg.g);
 
-  async function load(){
-    try{
-      window.__RENDER_READY__ = false;
-      const r = await fetch(`/data/thermostat.json?ts=${Date.now()}`, { cache: "no-store" });
-      const d = await r.json();
+      pill.textContent = m;
+      modeTxt.textContent = m;
 
-      $("genAt").textContent = (d.generatedAt || "—").replace("Z","");
-      $("tsPill").textContent = `TS: ${(d.generatedAt || "—").slice(0,19)}Z`;
-      $("nsi").textContent = d.nsi ?? "—";
-      setMode(d.mode || "PUSH", Number(d.nsi||0));
-
-      const tr = d.trend || {};
-      $("trend").textContent = `Trend: ${tr.direction || "flat"}${typeof tr.delta==="number" ? ` (${tr.delta>0?"+":""}${tr.delta})` : ""}`;
-
-      const c = d.counts || {};
-      $("bases").innerHTML = renderIatas(d.bases?.impacted || [], 18);
-      $("nowCrit").textContent = c.nowCrit ?? "—";
-      $("nowHigh").textContent = c.nowHigh ?? "—";
-      $("tafCrit").textContent = c.tafCrit ?? "—";
-      $("metRet").textContent = c.metarReturned ?? "—";
-      $("tafRet").textContent = c.tafReturned ?? "—";
-      $("watch").textContent = c.watchlistAirports ?? "—";
-
-      const dr = d.drivers || {};
-      const parts = [];
-      if(dr.vis) parts.push(`VIS ${dr.vis}`);
-      if(dr.wind) parts.push(`WIND ${dr.wind}`);
-      if(dr.snow) parts.push(`SNOW ${dr.snow}`);
-      if(dr.icing) parts.push(`ICE ${dr.icing}`);
-      if(dr.ts) parts.push(`TS ${dr.ts}`);
-      $("drivers").textContent = parts.length ? parts.join(" · ") : "—";
-
-      const errs = (d.errors || []);
-      $("errLine").textContent = `Errors: ${errs.length ? errs.join(" | ").slice(0,140) : "—"}`;
-
-      iataPills($("topNow"), (d.top && d.top.now) ? d.top.now : []);
-      iataPills($("topFct"), (d.top && d.top.forecast) ? d.top.forecast : []);
-      renderReasons(d.reasons || []);
-
-      window.__RENDER_READY__ = true;
-    }catch(e){
-      $("errLine").textContent = `Errors: ${String(e && e.message ? e.message : e).slice(0,140)}`;
-      window.__RENDER_READY__ = true; // don't block CI render
+      // ring stroke
+      const ring = $("ring");
+      const r = 86;
+      const circumference = 2 * Math.PI * r;
+      ring.style.strokeDasharray = `${circumference}`;
+      const pct = Math.max(0, Math.min(100, v));
+      const offset = circumference * (1 - pct / 100);
+      ring.style.strokeDashoffset = `${offset}`;
     }
-  }
 
-  load();
-</script>
+    function clearNode(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+    function renderIataGrid(gridEl, moreEl, codes, baseSet, opts={}){
+      const all = Array.isArray(codes) ? codes.slice() : [];
+      const maxStart = opts.maxStart || 18;
+      const step = opts.step || 2;
+
+      let max = Math.min(maxStart, all.length);
+      let shown = all.slice(0, max);
+
+      const paint = (arr, remaining) => {
+        clearNode(gridEl);
+        for(const code of arr){
+          const span = document.createElement("div");
+          const isBase = baseSet && baseSet.has(code);
+          span.className = "iata " + (isBase ? "base" : (opts.forceBase ? "base" : "out"));
+          span.textContent = code;
+          gridEl.appendChild(span);
+        }
+        moreEl.textContent = remaining > 0 ? `+${remaining} more` : "";
+      };
+
+      // initial
+      paint(shown, all.length - shown.length);
+
+      // shrink until fits
+      for(let i=0; i<50; i++){
+        if(gridEl.scrollHeight <= gridEl.clientHeight + 1) break;
+        max = Math.max(0, max - step);
+        shown = all.slice(0, max);
+        paint(shown, all.length - shown.length);
+        if(max === 0) break;
+      }
+    }
+
+    function toBaseSetFromThermo(d){
+      // Prefer explicit lists if present; fallback: read base.txt? (not needed here)
+      const s = new Set();
+      const basesAny = (d.lists && d.lists.basesAny) ? d.lists.basesAny : [];
+      for(const x of basesAny) s.add(String(x).toUpperCase());
+      return s;
+    }
+
+    async function load(){
+      try{
+        window.__RENDER_READY__ = false;
+
+        const r = await fetch(`/data/thermostat.json?ts=${Date.now()}`, { cache: "no-store" });
+        if(!r.ok) throw new Error(`thermostat.json HTTP ${r.status}`);
+        const d = await r.json();
+
+        const genAt = (d.generatedAt || "—");
+        $("genAt").textContent = String(genAt).replace("Z","");
+        $("tsPill").textContent = `TS: ${String(genAt).slice(0,19)}Z`;
+
+        const nsi = (d.nsi ?? 0);
+        $("nsi").textContent = (nsi === 0 || nsi) ? nsi : "—";
+        setMode(d.mode || "PUSH", Number(nsi||0));
+
+        const tr = d.trend || {};
+        const deltaStr = (typeof tr.delta === "number") ? ` (${tr.delta>0?"+":""}${tr.delta})` : "";
+        $("trend").textContent = `Trend: ${tr.direction || "flat"}${deltaStr}`;
+
+        const c = d.counts || {};
+        const stations = (typeof c.watchlistAirports === "number") ? c.watchlistAirports : null;
+        const met = (typeof c.metarReturned === "number") ? c.metarReturned : null;
+        const taf = (typeof c.tafReturned === "number") ? c.tafReturned : null;
+        const ok = (stations && stations > 0);
+
+        const dp = $("dataPill");
+        dp.textContent = ok ? `DATA: OK (${stations})` : `DATA: MISSING`;
+        dp.classList.remove("ok","bad");
+        dp.classList.add(ok ? "ok" : "bad");
+        if(!ok && (d.errors && d.errors.length)){
+          dp.textContent = `DATA: ERROR`;
+        }
+
+        // Lists
+        const baseSet = new Set((Array.isArray(d.lists?.basesAny) ? d.lists.basesAny : []).map(x => String(x).toUpperCase()));
+        const basesAny = Array.isArray(d.lists?.basesAny) ? d.lists.basesAny.map(x => String(x).toUpperCase()) : [];
+        const iceAny   = Array.isArray(d.lists?.engIceOps) ? d.lists.engIceOps.map(x => String(x).toUpperCase()) : [];
+
+        $("basesCount").textContent = basesAny.length;
+        $("iceCount").textContent = iceAny.length;
+
+        // Render grids: bases force magenta; ice highlight bases
+        renderIataGrid($("basesGrid"), $("basesMore"), basesAny, baseSet, { maxStart: 20, forceBase: true });
+        renderIataGrid($("iceGrid"), $("iceMore"), iceAny, baseSet, { maxStart: 20, forceBase: false });
+
+        // If you want a simple reason line, keep it minimal
+        const iceWhy = $("iceWhy");
+        if(iceAny.length === 0){
+          iceWhy.textContent = "No ENG ICE OPS alerts.";
+        }else{
+          iceWhy.textContent = "ENG ICE OPS active at the following stations:";
+        }
+
+        window.__RENDER_READY__ = true;
+      }catch(e){
+        // Make failure obvious on the render (so you can spot pipeline breaks instantly)
+        $("dataPill").textContent = "DATA: ERROR";
+        $("dataPill").classList.remove("ok"); $("dataPill").classList.add("bad");
+        $("trend").textContent = `Error: ${String(e && e.message ? e.message : e).slice(0,120)}`;
+        $("basesCount").textContent = "—";
+        $("iceCount").textContent = "—";
+        window.__RENDER_READY__ = true;
+      }
+    }
+
+    load();
+  </script>
 </body>
 </html>

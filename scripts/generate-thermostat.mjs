@@ -81,6 +81,10 @@ function main(){
   const basesFct = stations.filter(s => isBase(s.iata, baseSet) && (Boolean(s.tafCrit) || Number(s.tafPri||0) >= 20)).map(s=>s.iata);
   const basesAny = uniq([...basesNow, ...basesFct]);
 
+  const engIceOpsAny = uniq(stations.filter(s => Boolean(s.engIceOps)).map(s => s.iata));
+  const engIceOpsBases = engIceOpsAny.filter(i => isBase(i, baseSet));
+  const engIceOpsOut = engIceOpsAny.filter(i => !isBase(i, baseSet));
+
   // Driver aggregation over impacted stations
   let dVis=0,dWind=0,dSnow=0,dIcing=0,dTs=0;
   const impacted = stations.filter(s => s.alert !== "OK" || Boolean(s.tafCrit) || Boolean(s.metCrit));
@@ -126,9 +130,9 @@ function main(){
 
   // Reasons (short bullets)
   const reasons = [];
-  reasons.push(`${basesAny.length} base(s) impacted`);
-  reasons.push(`NOW: ${nowCrit} CRIT / ${nowHigh} HIGH / ${nowMed} MED`);
-  reasons.push(`FORECAST: ${tafCrit} critical (TAF)`);
+  reasons.push(`Bases impacted: ${basesAny.length}`);
+  reasons.push(`ENG ICE OPS: ${engIceOpsAny.length}`);
+  reasons.push(`NOW: ${nowCrit} CRIT / ${nowHigh} HIGH`);
   if(topDrivers.length){
     const name = (k) => ({vis:"VIS/RVR+MINIMA", wind:"WIND/GUST", snow:"SNOW/CONTAM", icing:"ICING/ENG ICE", ts:"TS/CB"})[k] || k.toUpperCase();
     reasons.push(`Top drivers: ${topDrivers.map(name).join(", ")}`);
@@ -151,6 +155,7 @@ function main(){
       nowMed,
       metCrit,
       tafCrit,
+      engIceOpsCount: engIceOpsAny.length,
       watchlistAirports: Number(stats?.icaoCount || stations.length) || stations.length,
       metarReturned: Number(stats?.metarReturned || 0) || 0,
       tafReturned: Number(stats?.tafReturned || 0) || 0,
@@ -158,8 +163,15 @@ function main(){
       missingTaf: Number(stats?.missingTaf || 0) || 0,
     },
     top: { now: nowTop, forecast: fctTop },
-    bases: { impacted: basesAny },
     drivers: driverCounts,
+    lists: {
+      basesNow,
+      basesForecast: basesFct,
+      basesAny,
+      engIceOps: engIceOpsAny,
+      engIceOpsBases,
+      engIceOpsOut,
+    },
     reasons,
     errors: errors.slice(0, 10),
   };

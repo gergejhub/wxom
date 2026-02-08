@@ -26,7 +26,7 @@
 
   <script>
     const img = document.getElementById("img");
-    const pick = () => (window.innerWidth >= 3000 || window.devicePixelRatio >= 2) ? "4k" : "1080p";
+    const pick = () => (window.innerWidth >= 1600 ? "4k" : "1080p");
     const setSrc = () => {
       const v = pick();
       img.src = `assets/render/wxwi-thermostat-${v}.webp?ts=${Date.now()}`;
