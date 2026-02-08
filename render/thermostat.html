@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WXWI Disruption Thermostat</title>
+  <style>
+    :root{
+      --bg0:#050711;
+      --bg1:#070b1a;
+      --panel:rgba(10,16,40,.72);
+      --panel2:rgba(10,16,40,.45);
+      --stroke:rgba(120,235,255,.18);
+      --glowCyan:rgba(62,246,255,.22);
+      --glowMag:rgba(255,59,189,.18);
+      --txt:rgba(240,250,255,.92);
+      --mut:rgba(210,230,240,.62);
+
+      --push:#38f6ff;
+      --stab:#ffd24a;
+      --prot:#ff3bbd;
+    }
+
+    html,body{height:100%;margin:0}
+    body{
+      background:
+        radial-gradient(1200px 700px at 18% 12%, rgba(255,59,189,.20), transparent 55%),
+        radial-gradient(1200px 700px at 92% 18%, rgba(62,246,255,.18), transparent 55%),
+        radial-gradient(900px 520px at 65% 88%, rgba(141,78,255,.14), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg0));
+      color: var(--txt);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      letter-spacing:.02em;
+      overflow:hidden;
+    }
+
+    .wrap{position:relative; height:100%; padding:3.2vh 3.2vw;}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1.4vh 1.4vw;
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(12,18,46,.72), rgba(6,10,26,.58));
+      border:1px solid rgba(120,235,255,.14);
+      box-shadow: 0 0 0 1px rgba(255,59,189,.05) inset, 0 0 40px rgba(62,246,255,.08);
+    }
+    .brand{
+      display:flex; align-items:center; gap:14px;
+    }
+    .brand img{height:34px; filter: drop-shadow(0 0 16px rgba(255,59,189,.25)); opacity:.95}
+    .title{
+      font-size: clamp(18px, 1.55vw, 44px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing:.14em;
+      text-shadow: 0 0 18px rgba(62,246,255,.08);
+    }
+    .meta{
+      display:flex; gap:14px; align-items:center;
+      color: var(--mut);
+      font-size: clamp(11px, .82vw, 22px);
+    }
+    .pill{
+      padding:.55em .9em;
+      border-radius:999px;
+      border:1px solid rgba(120,235,255,.18);
+      background: rgba(12,18,46,.55);
+      box-shadow: 0 0 22px rgba(62,246,255,.06);
+      font-weight: 800;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+    }
+
+    .grid{
+      margin-top:2.2vh;
+      display:grid;
+      grid-template-columns: 1.0fr 1.35fr 1.0fr;
+      gap:2.0vw;
+      height: calc(100% - 84px - 2.2vh);
+      min-height:0;
+    }
+
+    .panel{
+      position:relative;
+      border-radius: 22px;
+      padding: 2.2vh 2.0vw;
+      background: linear-gradient(180deg, rgba(12,18,46,.68), rgba(6,10,26,.55));
+      border: 1px solid rgba(120,235,255,.14);
+      box-shadow:
+        0 0 0 1px rgba(255,59,189,.04) inset,
+        0 0 50px rgba(62,246,255,.07),
+        0 0 60px rgba(255,59,189,.05);
+      overflow:hidden;
+    }
+    .panel:before{
+      content:"";
+      position:absolute; inset:-2px;
+      border-radius: 22px;
+      background:
+        radial-gradient(900px 260px at 18% 10%, rgba(62,246,255,.10), transparent 60%),
+        radial-gradient(900px 260px at 80% 8%, rgba(255,59,189,.10), transparent 60%);
+      pointer-events:none;
+      filter: blur(0px);
+    }
+    .corner{
+      position:absolute; width:26px; height:26px;
+      border:2px solid rgba(62,246,255,.22);
+      filter: drop-shadow(0 0 10px rgba(62,246,255,.12));
+      opacity:.85;
+    }
+    .corner.tl{top:14px;left:14px;border-right:none;border-bottom:none;border-radius:10px 0 0 0}
+    .corner.tr{top:14px;right:14px;border-left:none;border-bottom:none;border-radius:0 10px 0 0}
+    .corner.bl{bottom:14px;left:14px;border-right:none;border-top:none;border-radius:0 0 0 10px}
+    .corner.br{bottom:14px;right:14px;border-left:none;border-top:none;border-radius:0 0 10px 0}
+
+    .h{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom: 1.2vh;
+    }
+    .h .k{font-weight:900; letter-spacing:.14em; text-transform:uppercase; font-size: clamp(14px, 1.1vw, 26px)}
+    .h .s{color:var(--mut); font-size: clamp(11px, .78vw, 18px); text-transform:uppercase; letter-spacing:.10em}
+
+    /* Gauge */
+    .gaugeWrap{
+      display:flex; align-items:center; justify-content:center;
+      height: 100%;
+      min-height:0;
+    }
+    .gauge{
+      width: min(34vw, 520px);
+      aspect-ratio: 1 / 1;
+      border-radius: 999px;
+      position: relative;
+      display:grid;
+      place-items:center;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(6,10,26,.35), rgba(6,10,26,.0) 60%),
+        conic-gradient(from -90deg, rgba(62,246,255,.20), rgba(255,210,74,.20), rgba(255,59,189,.20), rgba(62,246,255,.20));
+      box-shadow:
+        0 0 0 1px rgba(120,235,255,.10) inset,
+        0 0 55px rgba(62,246,255,.10),
+        0 0 55px rgba(255,59,189,.08);
+      overflow:hidden;
+    }
+    .gauge:before{
+      content:"";
+      position:absolute; inset:16px;
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,59,189,.12), transparent 55%),
+        radial-gradient(circle at 25% 20%, rgba(62,246,255,.12), transparent 50%),
+        linear-gradient(180deg, rgba(12,18,46,.70), rgba(6,10,26,.62));
+      border:1px solid rgba(120,235,255,.14);
+      box-shadow: 0 0 0 1px rgba(255,59,189,.04) inset;
+    }
+    .arc{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      mask: radial-gradient(circle at 50% 50%, transparent 63%, #000 64%);
+      -webkit-mask: radial-gradient(circle at 50% 50%, transparent 63%, #000 64%);
+      background: conic-gradient(from -90deg, var(--modeColor) 0deg, var(--modeColor) var(--deg), rgba(120,235,255,.10) var(--deg), rgba(120,235,255,.06) 360deg);
+      filter: drop-shadow(0 0 18px var(--modeGlow));
+      opacity:.95;
+    }
+    .center{
+      position:relative;
+      z-index:2;
+      text-align:center;
+      padding: 10px 18px;
+    }
+    .nsi{
+      font-weight: 1000;
+      letter-spacing:.08em;
+      font-size: clamp(44px, 5.6vw, 140px);
+      line-height: 1;
+      text-shadow: 0 0 26px rgba(62,246,255,.08);
+    }
+    .mode{
+      margin-top: 10px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:.55em 1.0em;
+      border-radius: 999px;
+      border: 1px solid rgba(120,235,255,.20);
+      background: rgba(10,16,40,.50);
+      box-shadow: 0 0 30px rgba(62,246,255,.06);
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-size: clamp(12px, .95vw, 24px);
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;background:var(--modeColor);
+      box-shadow: 0 0 18px var(--modeGlow);
+    }
+    .sub{
+      color: var(--mut);
+      margin-top: 10px;
+      font-size: clamp(11px, .85vw, 20px);
+    }
+
+    /* Reasons */
+    .reasons{
+      display:flex; flex-direction:column; gap:12px;
+      height: 100%; min-height:0;
+    }
+    .why{
+      color: var(--mut);
+      font-size: clamp(12px, .95vw, 20px);
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-weight:900;
+      margin-bottom: 8px;
+    }
+    .reason{
+      display:flex; gap:12px; align-items:flex-start;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(10,16,40,.35);
+      border: 1px solid rgba(120,235,255,.12);
+      box-shadow: 0 0 24px rgba(62,246,255,.05);
+    }
+    .ico{
+      width:22px;height:22px; flex:0 0 22px;
+      opacity:.95;
+      filter: drop-shadow(0 0 12px rgba(62,246,255,.10));
+    }
+    .rtxt{
+      font-size: clamp(14px, 1.12vw, 26px);
+      font-weight: 900;
+      letter-spacing:.06em;
+    }
+    .small{
+      margin-top: 6px;
+      font-size: clamp(11px, .82vw, 18px);
+      color: var(--mut);
+      font-weight: 700;
+      letter-spacing:.03em;
+    }
+
+    /* Stats cards */
+    .cards{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      height:100%; min-height:0;
+    }
+    .card{
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(10,16,40,.35);
+      border: 1px solid rgba(120,235,255,.12);
+      box-shadow: 0 0 26px rgba(255,59,189,.05);
+      overflow:hidden;
+    }
+    .card .lab{
+      color: var(--mut);
+      font-size: clamp(11px, .78vw, 18px);
+      text-transform: uppercase;
+      letter-spacing:.12em;
+      font-weight: 900;
+    }
+    .card .val{
+      margin-top: 6px;
+      font-size: clamp(22px, 2.3vw, 64px);
+      font-weight: 1000;
+      letter-spacing:.08em;
+    }
+    .pair{
+      display:flex; justify-content:space-between; gap:12px; align-items:baseline;
+    }
+    .iataRow{
+      margin-top: 8px;
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+    .iata{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-weight: 950;
+      letter-spacing:.10em;
+      font-size: clamp(12px, .95vw, 22px);
+      padding: .25em .45em;
+      border-radius: 10px;
+      border: 1px solid rgba(120,235,255,.14);
+      background: rgba(10,16,40,.25);
+      box-shadow: 0 0 18px rgba(62,246,255,.05);
+    }
+
+    /* Footer note */
+    .foot{
+      position:absolute; right: 3.2vw; bottom: 2.2vh;
+      color: rgba(210,230,240,.45);
+      font-size: clamp(10px, .70vw, 16px);
+      letter-spacing:.10em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="root" style="--modeColor: var(--push); --modeGlow: rgba(62,246,255,.22); --deg: 0deg;">
+    <div class="topbar">
+      <div class="brand">
+        <img src="/assets/brand/wizzair-logo.png" alt="Wizz Air" onerror="this.style.display='none'"/>
+        <div class="title">DISRUPTION THERMOSTAT</div>
+        <div class="pill" id="modePill">PUSH</div>
+      </div>
+      <div class="meta">
+        <div class="pill" id="tsPill">TS: —</div>
+        <div>Generated: <span id="genAt">—</span> UTC</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+        <div class="h">
+          <div class="k">Network Stress Index</div>
+          <div class="s">0–100</div>
+        </div>
+        <div class="gaugeWrap">
+          <div class="gauge">
+            <div class="arc" id="arc"></div>
+            <div class="center">
+              <div class="nsi" id="nsi">—</div>
+              <div class="mode"><span class="dot"></span><span id="mode">—</span></div>
+              <div class="sub" id="trend">Trend: —</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+        <div class="h">
+          <div class="k">WHY this mode</div>
+          <div class="s">Explainable</div>
+        </div>
+        <div class="reasons" id="reasons">
+          <div class="why">Top signals</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+        <div class="h">
+          <div class="k">Key counts</div>
+          <div class="s">NOW + FORECAST</div>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="pair">
+              <div>
+                <div class="lab">BASES IMPACTED</div>
+                <div class="val" id="bases">—</div>
+              </div>
+              <div style="text-align:right">
+                <div class="lab">NOW CRIT / HIGH</div>
+                <div class="val"><span id="nowCrit">—</span> / <span id="nowHigh">—</span></div>
+              </div>
+            </div>
+            <div class="iataRow" id="topNow"></div>
+          </div>
+
+          <div class="card">
+            <div class="pair">
+              <div>
+                <div class="lab">FORECAST CRITICAL</div>
+                <div class="val" id="tafCrit">—</div>
+              </div>
+              <div style="text-align:right">
+                <div class="lab">MET/TAF RETURNED</div>
+                <div class="val"><span id="metRet">—</span>/<span id="tafRet">—</span></div>
+              </div>
+            </div>
+            <div class="iataRow" id="topFct"></div>
+          </div>
+
+          <div class="card">
+            <div class="pair">
+              <div>
+                <div class="lab">DRIVERS</div>
+                <div class="val" id="drivers">—</div>
+              </div>
+              <div style="text-align:right">
+                <div class="lab">WATCHLIST</div>
+                <div class="val" id="watch">—</div>
+              </div>
+            </div>
+            <div class="small" id="errLine">Errors: —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">Auto-rendered (CI) • TV-optimized • single-screen decision aid</div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function icon(kind){
+    const common = 'fill="none" stroke="rgba(62,246,255,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+    if(kind==="base") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>`;
+    if(kind==="now") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M12 2v6"/><path d="M12 16v6"/><path d="M4.9 4.9l4.2 4.2"/><path d="M14.9 14.9l4.2 4.2"/><path d="M2 12h6"/><path d="M16 12h6"/><path d="M4.9 19.1l4.2-4.2"/><path d="M14.9 9.1l4.2-4.2"/></svg>`;
+    if(kind==="fct") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>`;
+    if(kind==="drv") return `<svg class="ico" viewBox="0 0 24 24" ${common}><path d="M12 2v20"/><path d="M2 12h20"/><path d="M4 4l16 16"/><path d="M20 4L4 20"/></svg>`;
+    return `<svg class="ico" viewBox="0 0 24 24" ${common}><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16h.01"/></svg>`;
+  }
+
+  function setMode(mode, nsi){
+    const root = $("root");
+    let colorVar="--push", glow="rgba(62,246,255,.22)";
+    if(mode==="STABILIZE"){ colorVar="--stab"; glow="rgba(255,210,74,.22)"; }
+    if(mode==="PROTECT"){ colorVar="--prot"; glow="rgba(255,59,189,.22)"; }
+    root.style.setProperty("--modeColor", `var(${colorVar})`);
+    root.style.setProperty("--modeGlow", glow);
+    const deg = Math.max(0, Math.min(360, Math.round((nsi/100)*360)));
+    root.style.setProperty("--deg", `${deg}deg`);
+    $("mode").textContent = mode;
+    $("modePill").textContent = mode;
+  }
+
+  function iataPills(el, arr){
+    el.innerHTML = "";
+    (arr||[]).slice(0,8).forEach(code=>{
+      const s = document.createElement("span");
+      s.className="iata";
+      s.textContent = code;
+      el.appendChild(s);
+    });
+  }
+
+  function renderReasons(reasons){
+    const box = $("reasons");
+    box.innerHTML = `<div class="why">Top signals</div>`;
+    const items = (reasons||[]).slice(0,5);
+    const kinds = ["base","now","fct","drv","info"];
+    items.forEach((t,i)=>{
+      const div = document.createElement("div");
+      div.className="reason";
+      div.innerHTML = `${icon(kinds[i]||"info")}<div><div class="rtxt">${t}</div></div>`;
+      box.appendChild(div);
+    });
+  }
+
+  async function load(){
+    try{
+      window.__RENDER_READY__ = false;
+      const r = await fetch(`/data/thermostat.json?ts=${Date.now()}`, { cache: "no-store" });
+      const d = await r.json();
+
+      $("genAt").textContent = (d.generatedAt || "—").replace("Z","");
+      $("tsPill").textContent = `TS: ${(d.generatedAt || "—").slice(0,19)}Z`;
+      $("nsi").textContent = d.nsi ?? "—";
+      setMode(d.mode || "PUSH", Number(d.nsi||0));
+
+      const tr = d.trend || {};
+      $("trend").textContent = `Trend: ${tr.direction || "flat"}${typeof tr.delta==="number" ? ` (${tr.delta>0?"+":""}${tr.delta})` : ""}`;
+
+      const c = d.counts || {};
+      $("bases").textContent = c.basesImpacted ?? "—";
+      $("nowCrit").textContent = c.nowCrit ?? "—";
+      $("nowHigh").textContent = c.nowHigh ?? "—";
+      $("tafCrit").textContent = c.tafCrit ?? "—";
+      $("metRet").textContent = c.metarReturned ?? "—";
+      $("tafRet").textContent = c.tafReturned ?? "—";
+      $("watch").textContent = c.watchlistAirports ?? "—";
+
+      const dr = d.drivers || {};
+      const parts = [];
+      if(dr.vis) parts.push(`VIS ${dr.vis}`);
+      if(dr.wind) parts.push(`WIND ${dr.wind}`);
+      if(dr.snow) parts.push(`SNOW ${dr.snow}`);
+      if(dr.icing) parts.push(`ICE ${dr.icing}`);
+      if(dr.ts) parts.push(`TS ${dr.ts}`);
+      $("drivers").textContent = parts.length ? parts.join(" · ") : "—";
+
+      const errs = (d.errors || []);
+      $("errLine").textContent = `Errors: ${errs.length ? errs.join(" | ").slice(0,140) : "—"}`;
+
+      iataPills($("topNow"), (d.top && d.top.now) ? d.top.now : []);
+      iataPills($("topFct"), (d.top && d.top.forecast) ? d.top.forecast : []);
+      renderReasons(d.reasons || []);
+
+      window.__RENDER_READY__ = true;
+    }catch(e){
+      $("errLine").textContent = `Errors: ${String(e && e.message ? e.message : e).slice(0,140)}`;
+      window.__RENDER_READY__ = true; // don't block CI render
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
