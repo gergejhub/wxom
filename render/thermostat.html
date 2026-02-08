@@ -458,7 +458,7 @@
       $("trend").textContent = `Trend: ${tr.direction || "flat"}${typeof tr.delta==="number" ? ` (${tr.delta>0?"+":""}${tr.delta})` : ""}`;
 
       const c = d.counts || {};
-      $("bases").textContent = c.basesImpacted ?? "—";
+      $("bases").innerHTML = renderIatas(d.bases?.impacted || [], 18);
       $("nowCrit").textContent = c.nowCrit ?? "—";
       $("nowHigh").textContent = c.nowHigh ?? "—";
       $("tafCrit").textContent = c.tafCrit ?? "—";

@@ -158,6 +158,7 @@ function main(){
       missingTaf: Number(stats?.missingTaf || 0) || 0,
     },
     top: { now: nowTop, forecast: fctTop },
+    bases: { impacted: basesAny },
     drivers: driverCounts,
     reasons,
     errors: errors.slice(0, 10),
