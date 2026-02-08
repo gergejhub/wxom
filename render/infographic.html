@@ -127,7 +127,12 @@
     }
     .srcTag.m{color: rgba(120,255,255,0.95); border-color: rgba(120,255,255,0.26); text-shadow:0 0 12px rgba(120,255,255,0.22);}
     .srcTag.t{color: rgba(186,140,255,0.95); border-color: rgba(186,140,255,0.26); text-shadow:0 0 12px rgba(186,140,255,0.22);}
-    .ico{width: 1.15em; height: 1.15em; filter: drop-shadow(0 0 10px rgba(45,246,255,0.22));}
+    
+    .srcTag.mt{color: rgba(235,255,255,0.92); border-color: rgba(255,255,255,0.14);
+      background: linear-gradient(90deg, rgba(120,255,255,0.16) 0 50%, rgba(186,140,255,0.16) 50% 100%);
+      text-shadow: 0 0 12px rgba(255,255,255,0.10);
+    }
+.ico{width: 1.15em; height: 1.15em; filter: drop-shadow(0 0 10px rgba(45,246,255,0.22));}
     .ico.mag{ filter: drop-shadow(0 0 10px rgba(255,44,171,0.22)); }
 
     .smallRow{display:flex;gap:1.1vw;flex-wrap:wrap;margin-top:0.9vw;}
@@ -198,7 +203,7 @@
 
         <div class="kpiBig">
           <div class="num" id="basesCount">—</div>
-          <div class="sub" id="basesSub">Only base-related alerts are shown. Showing main drivers per base (snow/vis/wind).</div>
+          <div class="sub" id="basesSub">Only base-related alerts are shown. Icons show non-dominant drivers per base (e.g. wind/snow).</div>
         </div>
 
         <div class="basesGrid" id="basesGrid"></div>
@@ -387,6 +392,15 @@
       icons.forEach(k=>{ if (driverCounts[k] !== undefined) driverCounts[k]++; });
     });
 
+    // If one driver dominates (e.g. VIS/MINIMA almost everywhere), don't repeat its icon per-base.
+    const totalImp = Math.max(1, impactedBases.length);
+    const dominantKey = (()=>{
+      const entries = Object.entries(driverCounts).sort((a,b)=>b[1]-a[1]);
+      if (!entries.length) return null;
+      const [k,v] = entries[0];
+      return (v / totalImp) >= 0.65 ? k : null;
+    })();
+
     // ENG ICE OPS across network
     const engStations = stations.filter(hasEngIce)
       .sort((a,b)=> (alertRank(b.alert)-alertRank(a.alert)) || String(a.iata).localeCompare(String(b.iata)));
@@ -410,11 +424,26 @@
 
     basesGrid.innerHTML = showBases.map(s=>{
       const iata = String(s.iata||"?").toUpperCase();
-      const keys = pickIconsForStation(s);
+
+      // Driver icons: show only *non-dominant* drivers to reduce clutter (e.g. hide VIS if it dominates).
+      let keys = pickIconsForStation(s);
+      if (dominantKey) keys = keys.filter(k => k !== dominantKey);
       const icons = keys.map(k => ICONS[k] ? ICONS[k]() : "").join("");
+
+      // Source tags: compact display (M, T, or MT combined)
       const srcs = pickSrcTagsForStation(s);
-      const srcHtml = srcs.length ? `<span class="srcTags">${srcs.map(x=>`<span class="srcTag ${x==='M'?'m':'t'}">${x}</span>`).join("")}</span>` : "";
-      return `<div class="iata base"><span>${iata}</span><span class="icons">${icons}</span>${srcHtml}</div>`;
+      let srcHtml = "";
+      if (srcs.length === 1){
+        const x = srcs[0];
+        srcHtml = `<span class="srcTags"><span class="srcTag ${x==='M'?'m':'t'}">${x}</span></span>`;
+      } else if (srcs.length >= 2){
+        srcHtml = `<span class="srcTags"><span class="srcTag mt">MT</span></span>`;
+      }
+
+      // Keep spacing stable if no icon is shown
+      const iconsHtml = icons ? `<span class="icons">${icons}</span>` : `<span class="icons" style="opacity:0; width:1.15em; height:1.15em;"></span>`;
+
+      return `<div class="iata base"><span>${iata}</span>${iconsHtml}${srcHtml}</div>`;
     }).join("");
 
     const baseExtra = Math.max(0, basesCount - showBases.length);
