@@ -260,8 +260,8 @@
   opacity:.95;
 }
 .ico{
-  width: clamp(18px, 1.15vw, 28px);
-  height: clamp(18px, 1.15vw, 28px);
+  width: clamp(22px, 1.4vw, 32px);
+  height: clamp(22px, 1.4vw, 32px);
   display:inline-grid;
   place-items:center;
   opacity:.98;
@@ -271,10 +271,6 @@
 .ico.snow{ color: rgba(62,246,255,.92); }
 .ico.vis{ color: rgba(170,120,255,.95); }
 .ico.wind{ color: rgba(255,176,32,.92); }
-.iata.base .ico{
-  background: rgba(255,46,166,.92);
-  filter: drop-shadow(0 0 10px rgba(255,46,166,.22));
-}
     .iata.base{
       color: var(--wizzMagenta);
       text-shadow: 0 0 14px rgba(255,46,166,.28);
@@ -407,9 +403,7 @@ function computeDialSize(){
   document.documentElement.style.setProperty("--dialSize", size + "px");
 }
 window.addEventListener("resize", () => { try{ computeDialSize(); }catch(e){} }, { passive:true });
-, () => { try{ computeDialSize(); }catch(e){} }, { passive:true });
-
-
+    window.addEventListener("load", () => { try{ computeDialSize(); }catch(e){} }, { once:true });
     function setMode(mode, nsi){
       const m = String(mode || "PUSH").toUpperCase();
       const v = Number.isFinite(Number(nsi)) ? Number(nsi) : 0;
@@ -510,11 +504,25 @@ if(tags.length){
       try{
         window.__RENDER_READY__ = false;
         computeDialSize();
-
-        const r = await fetch(`/data/thermostat.json?ts=${Date.now()}`, { cache: "no-store" });
-        if(!r.ok) throw new Error(`thermostat.json HTTP ${r.status}`);
-        const d = await r.json();
-
+        const d = await (async () => {
+          const paths = [
+            "/data/thermostat.json",
+            "../data/thermostat.json",
+            "data/thermostat.json",
+            "./data/thermostat.json",
+          ];
+          let lastErr;
+          for (const p of paths) {
+            try {
+              const rr = await fetch(`${p}?ts=${Date.now()}`, { cache: "no-store" });
+              if (!rr.ok) throw new Error(`thermostat.json HTTP ${rr.status} @ ${p}`);
+              return await rr.json();
+            } catch (e) {
+              lastErr = e;
+            }
+          }
+          throw lastErr || new Error("thermostat.json not found");
+        })();
         const genAt = (d.generatedAt || "—");
         $("genAt").textContent = String(genAt).replace("Z","");
         $("tsPill").textContent = `TS: ${String(genAt).slice(0,19)}Z`;
@@ -575,6 +583,7 @@ if(tags.length){
     }
 
     load();
+    setInterval(() => { if (document.visibilityState === 'visible') load(); }, 60000);
   </script>
 </body>
 </html>
