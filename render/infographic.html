@@ -1,1019 +1,453 @@
 <!doctype html>
-<html lang="en">
+<html lang="hu">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>Wizz Air Network Weather Status</title>
-<style>
-  :root{
-    --bg0:#040514;
-    --bg1:#090a26;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>WXWI TV Infographic</title>
+  <style>
+    :root{
+      --bg:#040510;
+      --panel:#071026;
+      --panel2:#08122a;
+      --stroke: rgba(0, 255, 255, 0.34);
+      --stroke2: rgba(0, 255, 255, 0.18);
+      --txt: rgba(240, 252, 255, 0.95);
+      --muted: rgba(170, 210, 220, 0.72);
+      --mag: #ff2cab; /* Wizz-ish magenta */
+      --cyan: #2df6ff;
+      --ok: #40ffcc;
+      --warn: #ffd26b;
+      --bad: #ff4f7d;
+    }
 
-    --wizz:#c6007e;
-    --wizz2:#ff4db8;
+    html,body{margin:0;height:100%;background:radial-gradient(1200px 700px at 15% 15%, rgba(255,44,171,0.12), transparent 55%),
+                                     radial-gradient(1200px 700px at 85% 30%, rgba(45,246,255,0.10), transparent 55%),
+                                     linear-gradient(180deg, #040510, #02030a 45%, #01020a);
+             color:var(--txt);
+             font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
 
-    --cyan:#3ef6ff;
-    --cyanA:rgba(62,246,255,.20);
-    --vio:#8f7bff;
-    --vioA:rgba(143,123,255,.22);
+    .wrap{box-sizing:border-box;width:100vw;height:100vh;padding:2.2vw;display:flex;flex-direction:column;gap:1.8vw;}
 
-    --txt:rgba(245,255,255,.96);
-    --muted:rgba(190,210,235,.78);
+    .hdr{display:flex;align-items:center;justify-content:space-between;gap:2vw;}
+    .brand{
+      display:flex;align-items:baseline;gap:1.2vw;
+      letter-spacing:0.14em;text-transform:uppercase;
+      font-weight:900;
+      font-size: clamp(28px, 2.35vw, 88px);
+      text-shadow: 0 0 22px rgba(45,246,255,0.12), 0 0 32px rgba(255,44,171,0.10);
+    }
+    .brand .wizz{color:var(--mag); text-shadow: 0 0 26px rgba(255,44,171,0.22);} 
+    .meta{
+      display:flex;flex-wrap:wrap;justify-content:flex-end;gap:0.8vw;align-items:center;
+      font-size: clamp(12px, 0.9vw, 28px);
+      color: var(--muted);
+    }
+    .pill{padding:0.35em 0.75em;border-radius:999px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.22);}
+    .pill.ok{border-color: rgba(64,255,204,0.35); color: rgba(160,255,230,0.92)}
+    .pill.bad{border-color: rgba(255,79,125,0.40); color: rgba(255,170,190,0.92)}
 
-    --crit:#ff3b7a;
-    --high:#ffd166;
-    --med:#7ac6ff;
-    --ok:#3dffcc;
+    .grid{flex:1;display:grid;grid-template-columns: 1.55fr 1fr;gap:1.8vw;min-height:0;}
 
-    --r:18px;
-    --safe:3vw;
-  }
+    .card{
+      position:relative;
+      border-radius:22px;
+      padding:1.35vw;
+      background:linear-gradient(180deg, rgba(8,18,42,0.86), rgba(7,16,38,0.70));
+      border:1px solid var(--stroke2);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.03),
+                  0 0 34px rgba(45,246,255,0.08),
+                  0 0 46px rgba(255,44,171,0.06);
+      overflow:hidden;
+      min-height:0;
+    }
 
-  html,body{height:100%; margin:0; color:var(--txt); overflow:hidden; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+    .card:before{
+      content:"";
+      position:absolute;inset:-1px;
+      border-radius:22px;
+      border:1px solid rgba(45,246,255,0.18);
+      filter: drop-shadow(0 0 16px rgba(45,246,255,0.10));
+      pointer-events:none;
+    }
 
-  body{
-    background:
-      radial-gradient(1100px 720px at 12% 8%, rgba(198,0,126,.30), transparent 62%),
-      radial-gradient(1100px 720px at 88% 10%, rgba(62,246,255,.20), transparent 64%),
-      radial-gradient(900px 650px at 55% 0%, rgba(143,123,255,.20), transparent 70%),
-      linear-gradient(180deg, var(--bg0), var(--bg1));
-  }
+    .titleRow{display:flex;align-items:center;justify-content:space-between;gap:1vw;margin-bottom:0.85vw;}
+    .title{
+      font-weight:900;letter-spacing:0.10em;text-transform:uppercase;
+      font-size: clamp(18px, 1.35vw, 52px);
+      color: rgba(235,255,255,0.98);
+    }
 
-  /* Circuit grid + scanlines + vignette (brighter than before) */
-  body:before{
-    content:"";
-    position:fixed; inset:0;
-    background:
-      linear-gradient(rgba(62,246,255,.07) 1px, transparent 1px) 0 0/72px 72px,
-      linear-gradient(90deg, rgba(62,246,255,.07) 1px, transparent 1px) 0 0/72px 72px,
-      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px) 0 0/1px 4px;
-    opacity:.65;
-    mask-image: radial-gradient(900px 620px at 50% 20%, rgba(0,0,0,.95), transparent 74%);
-    pointer-events:none;
-  }
-  body:after{
-    content:"";
-    position:fixed; inset:-12%;
-    background: radial-gradient(1300px 820px at 50% 35%, transparent 52%, rgba(0,0,0,.46) 86%);
-    pointer-events:none;
-    opacity:.50;
-  }
+    .kpiBig{
+      display:flex;align-items:baseline;justify-content:space-between;gap:1vw;
+      margin: 0.6vw 0 1.0vw;
+    }
+    .kpiBig .num{
+      font-weight:950;
+      font-size: clamp(42px, 4.6vw, 160px);
+      letter-spacing:0.02em;
+      color: var(--mag);
+      text-shadow: 0 0 26px rgba(255,44,171,0.24), 0 0 42px rgba(255,44,171,0.10);
+      line-height:0.95;
+    }
+    .kpiBig .sub{
+      font-size: clamp(12px, 0.85vw, 24px);
+      color: var(--muted);
+      line-height:1.25;
+      max-width: 46ch;
+      text-align:right;
+    }
 
-  .wrap{position:relative; width:100vw; height:100vh; padding:var(--safe); box-sizing:border-box; display:flex; flex-direction:column; gap:1.8vw;}
+    .basesGrid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.65vw 1.0vw;
+      margin-top: 0.6vw;
+      align-content:start;
+    }
+    @media (min-width: 2600px){
+      .basesGrid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    }
 
-  /* HUD corner brackets */
-  .brackets{
-    position:absolute; inset:14px; pointer-events:none; opacity:.72;
-    background:
-      linear-gradient(var(--cyanA), var(--cyanA)) 0 0/66px 2px no-repeat,
-      linear-gradient(var(--cyanA), var(--cyanA)) 0 0/2px 66px no-repeat,
-      linear-gradient(var(--cyanA), var(--cyanA)) 100% 0/66px 2px no-repeat,
-      linear-gradient(var(--cyanA), var(--cyanA)) 100% 0/2px 66px no-repeat,
-      linear-gradient(var(--cyanA), var(--cyanA)) 0 100%/66px 2px no-repeat,
-      linear-gradient(var(--cyanA), var(--cyanA)) 0 100%/2px 66px no-repeat,
-      linear-gradient(var(--cyanA), var(--cyanA)) 100% 100%/66px 2px no-repeat,
-      linear-gradient(var(--cyanA), var(--cyanA)) 100% 100%/2px 66px no-repeat;
-    filter: drop-shadow(0 0 18px rgba(62,246,255,.14)) drop-shadow(0 0 18px rgba(198,0,126,.10));
-  }
+    .iata{
+      display:flex;align-items:center;gap:0.5vw;
+      font-weight:900;
+      letter-spacing:0.14em;
+      text-transform:uppercase;
+      font-size: clamp(18px, 1.55vw, 58px);
+      color: rgba(255,255,255,0.92);
+    }
+    .iata.base{ color: var(--mag); text-shadow: 0 0 16px rgba(255,44,171,0.20); }
 
-  /* Header */
-  .hdr{
-    position:relative;
-    display:grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items:center;
-    gap:1.2vw;
-    padding:1.05vw 1.35vw;
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(18,28,72,.92), rgba(12,18,52,.70));
-    border:1px solid rgba(143,123,255,.26);
-    box-shadow:
-      0 0 0 1px rgba(62,246,255,.10),
-      0 0 78px rgba(143,123,255,.18),
-      0 0 68px rgba(198,0,126,.14);
-    overflow:hidden;
-  }
-  .hdr:before{
-    content:"";
-    position:absolute; inset:-4px;
-    border-radius: 22px;
-    border:2px solid rgba(62,246,255,.16);
-    opacity:.85;
-    pointer-events:none;
-    filter: drop-shadow(0 0 26px rgba(62,246,255,.14));
-  }
+    .icons{display:flex;gap:0.25vw;opacity:0.95;}
+    .ico{width: 1.15em; height: 1.15em; filter: drop-shadow(0 0 10px rgba(45,246,255,0.22));}
+    .ico.mag{ filter: drop-shadow(0 0 10px rgba(255,44,171,0.22)); }
 
-  .hdrL{display:flex; align-items:center; gap:1.1vw;}
-  .logo{
-    height: clamp(26px, 2.1vw, 70px);
-    filter: drop-shadow(0 0 22px rgba(198,0,126,.26));
-  }
-  .hdrTitle{
-    font-weight: 950;
-    letter-spacing:.14em;
-    text-transform: uppercase;
-    font-size: clamp(18px, 1.50vw, 56px);
-    text-shadow: 0 0 28px rgba(143,123,255,.22), 0 0 24px rgba(198,0,126,.18);
-    white-space:nowrap;
-  }
-  .stamp{
-    justify-self:center;
-    padding:.55em 1.0em;
-    border-radius: 12px;
-    border:1px solid rgba(62,246,255,.26);
-    background: rgba(0,0,0,.18);
-    box-shadow: inset 0 0 26px rgba(62,246,255,.10), 0 0 18px rgba(143,123,255,.10);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-weight: 950;
-    letter-spacing:.10em;
-    font-size: clamp(12px, .95vw, 28px);
-    color: rgba(235,255,255,.96);
-    white-space:nowrap;
-  }
-  .hdrR{justify-self:end; text-align:right; color: var(--muted); font-size: clamp(12px, .85vw, 26px); line-height:1.15;}
+    .smallRow{display:flex;gap:1.1vw;flex-wrap:wrap;margin-top:0.9vw;}
+    .chip{
+      display:flex;align-items:center;gap:0.55vw;
+      padding:0.45em 0.75em;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(0,0,0,0.20);
+      color: rgba(210,245,250,0.90);
+      font-size: clamp(12px, 0.9vw, 26px);
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+    }
+    .chip b{font-weight:950;color:rgba(255,255,255,0.96)}
 
-  /* Main columns */
-  .main{flex:1; min-height:0; display:grid; grid-template-columns: 1fr 1fr; gap:2.0vw;}
-  .col{
-    position:relative;
-    min-height:0;
-    display:flex; flex-direction:column; gap:1.25vw;
-    padding:1.15vw;
-    border-radius: 20px;
-    background: linear-gradient(180deg, rgba(16,24,66,.82), rgba(12,18,48,.58));
-    border:1px solid rgba(143,123,255,.24);
-    box-shadow:
-      0 0 0 1px rgba(62,246,255,.10),
-      0 0 76px rgba(143,123,255,.16),
-      0 0 66px rgba(198,0,126,.12);
-    overflow:hidden;
-  }
-  .col:before{
-    content:"";
-    position:absolute; inset:-5px;
-    border-radius: 24px;
-    border:2px solid rgba(62,246,255,.14);
-    opacity:.75;
-    pointer-events:none;
-    filter: drop-shadow(0 0 24px rgba(62,246,255,.12));
-  }
+    .rightCol{display:flex;flex-direction:column;gap:1.8vw;min-height:0;}
 
-  .colHdr{display:flex; align-items:baseline; justify-content:space-between; gap:1vw;}
-  .colHdr .h{font-weight:950; letter-spacing:.16em; text-transform:uppercase; font-size: clamp(16px, 1.12vw, 44px);}
-  .pill{
-    font-weight: 900; letter-spacing:.12em; text-transform: uppercase;
-    font-size: clamp(11px, .78vw, 22px);
-    padding:.35em .78em;
-    border-radius:999px;
-    border:1px solid rgba(62,246,255,.26);
-    background: rgba(0,0,0,.14);
-    color: rgba(225,250,255,.90);
-    white-space:nowrap;
-    box-shadow: 0 0 18px rgba(62,246,255,.08);
-  }
+    .engList{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65vw 1.0vw;
+      margin-top: 0.6vw;
+      align-content:start;
+    }
 
-  /* 2x2 sections */
-  .quad{
-    flex:1; min-height:0;
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: minmax(0,1fr) minmax(0,1fr);
-    gap:1.25vw;
-  }
+    .engNum{font-weight:950;font-size: clamp(42px, 4.0vw, 140px); color: rgba(255,255,255,0.92); line-height:0.95;}
+    .engNum.zero{color: rgba(210,240,250,0.40)}
 
-  .sec{
-    position:relative;
-    min-height:0;
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.08));
-    border:1px solid rgba(62,246,255,.18);
-    box-shadow:
-      inset 0 0 36px rgba(62,246,255,.12),
-      0 0 30px rgba(143,123,255,.12),
-      0 0 30px rgba(198,0,126,.10);
-    padding:1.0vw 1.05vw .9vw;
-    display:flex; flex-direction:column; gap:.75vw;
-    overflow:hidden;
-  }
-  .sec:after{
-    content:"";
-    position:absolute; inset:-35%;
-    background:
-      radial-gradient(circle at 30% 25%, rgba(198,0,126,.22), transparent 56%),
-      radial-gradient(circle at 70% 35%, rgba(143,123,255,.18), transparent 64%);
-    opacity:.34;
-    transform: rotate(6deg);
-    pointer-events:none;
-  }
+    .muted{color:var(--muted)}
 
-  /* Icons */
-  .ico{width:1.25em; height:1.25em; display:inline-flex; filter: drop-shadow(0 0 16px rgba(62,246,255,.16)); opacity:.98;}
-  .ico svg{width:100%; height:100%;}
+    .foot{
+      display:flex;justify-content:space-between;align-items:center;
+      color: rgba(160,200,210,0.55);
+      font-size: clamp(10px, 0.8vw, 22px);
+      letter-spacing:0.10em;
+      text-transform:uppercase;
+    }
 
-  .secHdr{
-    position:relative;
-    display:flex; align-items:baseline; justify-content:space-between; gap:.8vw;
-  }
-  .secHdr .t{
-    display:flex; align-items:center; gap:.55em;
-    font-weight: 950; letter-spacing:.12em; text-transform:uppercase;
-    font-size: clamp(12px, .86vw, 26px);
-    color: rgba(235,255,255,.92);
-  }
-  .secHdr .sub{
-    color: var(--muted);
-    font-size: clamp(10px, .7vw, 18px);
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    white-space:nowrap;
-  }
-
-  /* KPI tiles */
-  .kpis{position:relative; flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:1.0vw;}
-  .kpi{
-    position:relative;
-    min-height:0;
-    border-radius: 14px;
-    border:1px solid rgba(143,123,255,.22);
-    background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
-    padding:.85vw .90vw;
-    display:flex; flex-direction:column;
-    box-shadow: inset 0 0 22px rgba(143,123,255,.10), 0 0 18px rgba(62,246,255,.08);
-    overflow:hidden;
-  }
-  .kpi:before{
-    content:"";
-    position:absolute; inset:0;
-    border-radius: 14px;
-    pointer-events:none;
-    border:1px solid rgba(62,246,255,.16);
-    box-shadow: 0 0 18px rgba(62,246,255,.10), 0 0 18px rgba(198,0,126,.08);
-    opacity:.55;
-  }
-  .kpi .k{
-    position:relative;
-    color: var(--muted);
-    font-weight:900;
-    letter-spacing:.10em;
-    text-transform:uppercase;
-    font-size: clamp(10px, .70vw, 18px);
-    white-space:nowrap;
-  }
-  .kpi .v{
-    position:relative;
-    margin-top:.25vw;
-    font-weight: 950;
-    font-size: clamp(20px, 1.55vw, 62px);
-    line-height:1.0;
-    letter-spacing:.03em;
-    text-shadow: 0 0 22px rgba(62,246,255,.12);
-  }
-  .v.crit{color:var(--crit); text-shadow:0 0 30px rgba(255,59,122,.28);}
-  .v.high{color:var(--high); text-shadow:0 0 28px rgba(255,209,102,.20);}
-  .v.med{color:var(--med); text-shadow:0 0 28px rgba(122,198,255,.18);}
-  .v.ok{color:var(--ok); text-shadow:0 0 26px rgba(61,255,204,.16);}
-
-  /* Examples (always visible) */
-  .ex{
-    position:relative;
-    margin-top:.45vw;
-    display:flex;
-    flex-direction:column;
-    gap:.35vw;
-    min-height:0;
-    flex:1;
-  }
-  .ex .lbl{
-    font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    font-weight: 900;
-    letter-spacing:.10em;
-    text-transform: uppercase;
-    font-size: clamp(9px, .64vw, 16px);
-    color: rgba(190,210,235,.82);
-  }
-
-  /* Two-column code grid (no clipping: we limit by count, not height) */
-  .codes{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 1.2em;
-    row-gap: .30em;
-    align-content:start;
-  }
-  .code{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-weight: 950;
-    letter-spacing:.10em;
-    font-size: clamp(12px, .92vw, 30px);
-    color: rgba(240,255,255,.92);
-    white-space:nowrap;
-    text-shadow: 0 0 16px rgba(62,246,255,.12);
-  }
-  .code.b{
-    color: rgba(255,77,184,.98);
-    text-shadow: 0 0 20px rgba(198,0,126,.26), 0 0 16px rgba(62,246,255,.10);
-  }
-  .more{
-    grid-column: 1 / -1;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-weight: 950;
-    letter-spacing:.10em;
-    font-size: clamp(11px, .82vw, 24px);
-    color: rgba(190,210,235,.86);
-    opacity:.92;
-    text-shadow: 0 0 16px rgba(143,123,255,.10);
-  }
-
-  /* Big callout */
-  .bigCall{
-    position:relative;
-    border-radius: 14px;
-    border:1px solid rgba(62,246,255,.20);
-    background: rgba(0,0,0,.16);
-    padding:.75vw .85vw;
-    box-shadow: inset 0 0 26px rgba(62,246,255,.08);
-    display:flex; gap:1.0vw; align-items:baseline; justify-content:space-between;
-    overflow:hidden;
-  }
-  .bigCall .label{
-    color: var(--muted);
-    font-weight: 900;
-    letter-spacing:.10em;
-    text-transform: uppercase;
-    font-size: clamp(10px, .7vw, 18px);
-    white-space:nowrap;
-  }
-  .bigCall .names{
-    flex:1;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-weight: 950;
-    letter-spacing:.12em;
-    font-size: clamp(18px, 1.35vw, 50px);
-    text-align:right;
-    color: rgba(255,255,255,.92);
-    text-shadow: 0 0 22px rgba(198,0,126,.16);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-
-  /* Section-specific sizing */
-  .sec.vis .kpi .v{ font-size: clamp(22px, 1.75vw, 70px); }
-  .sec.vis .code{ font-size: clamp(13px, 1.02vw, 34px); }
-
-  .sec.severe .code{ font-size: clamp(13px, 1.02vw, 34px); }
-
-  .sec.ops .kpi .v{ font-size: clamp(18px, 1.30vw, 52px); }
-  .sec.ops .code{ font-size: clamp(11px, .82vw, 26px); }
-  .sec.ops{ padding-bottom:.65vw; }
-  .sec.ops .kpis{ margin-bottom:.25vw; }
-  .errors{
-    margin-top:auto;
-    color: rgba(190,210,235,.72);
-    font-size: clamp(10px, .72vw, 18px);
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    line-height:1.1;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .errors b{color:rgba(240,255,255,.92);}
-
-  .legend{
-    display:flex; justify-content:center; gap:1.4vw;
-    color: rgba(190,210,235,.72);
-    font-size: clamp(10px, .75vw, 18px);
-    letter-spacing:.08em;
-    text-transform:uppercase;
-  }
-  .tag{display:flex; align-items:center; gap:.6em;}
-  .dot{width:.85em; height:.85em; border-radius:999px;}
-  .dot.base{background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(255,255,255,.0) 55%), rgba(198,0,126,.92); box-shadow:0 0 18px rgba(198,0,126,.26);}
-  .dot.out{background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(255,255,255,.0) 55%), rgba(143,123,255,.92); box-shadow:0 0 18px rgba(143,123,255,.24);}
-</style>
+    /* subtle scanlines */
+    .scan:after{
+      content:"";
+      position:absolute;inset:0;
+      background: repeating-linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 1px, transparent 1px, transparent 7px);
+      opacity:0.08;
+      pointer-events:none;
+      mix-blend-mode: overlay;
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="hdr">
-    <div class="brackets"></div>
-    <div class="hdrL">
-      <img class="logo" src="/assets/brand/wizzair-logo.png" alt="Wizz Air"/>
-      <div class="hdrTitle">Wizz Air Network Weather Status</div>
+  <div class="wrap">
+    <div class="hdr">
+      <div class="brand"><span class="wizz">Wizz Air</span> <span>Weather – TV Info</span></div>
+      <div class="meta">
+        <span class="pill" id="ts">TS: …</span>
+        <span class="pill" id="gen">Generated: …</span>
+        <span class="pill" id="dataPill">DATA: …</span>
+      </div>
     </div>
-    <div class="stamp" id="stamp">TIMESTAMP: —</div>
-    <div class="hdrR">
-      <div><b>Generated:</b> <span id="genAt">—</span> UTC</div>
-      <div>4K TV infographic • auto-rendered</div>
+
+    <div class="grid">
+      <div class="card scan" id="basesCard">
+        <div class="titleRow">
+          <div class="title">Bases impacted</div>
+          <div class="muted" id="basesMeta">NOW+FORECAST (merged)</div>
+        </div>
+
+        <div class="kpiBig">
+          <div class="num" id="basesCount">—</div>
+          <div class="sub" id="basesSub">Only base-related alerts are shown. Showing main drivers per base (snow/vis/wind).</div>
+        </div>
+
+        <div class="basesGrid" id="basesGrid"></div>
+        <div class="muted" id="basesMore" style="margin-top:0.8vw; font-size: clamp(12px, 0.9vw, 26px);"></div>
+
+        <div class="smallRow" id="driversRow"></div>
+      </div>
+
+      <div class="rightCol">
+        <div class="card scan" id="engCard" style="flex:1;">
+          <div class="titleRow">
+            <div class="title">ENG ICE OPS</div>
+            <div class="muted" id="engMeta">Always shown</div>
+          </div>
+
+          <div class="kpiBig" style="margin-bottom:0.7vw;">
+            <div class="engNum" id="engCount">—</div>
+            <div class="sub" id="engSub">Engine anti‑ice operations flagged (by trigger label or computed condition).</div>
+          </div>
+
+          <div class="engList" id="engList"></div>
+          <div class="muted" id="engMore" style="margin-top:0.8vw; font-size: clamp(12px, 0.9vw, 26px);"></div>
+        </div>
+
+        <div class="card" style="padding:1.05vw;">
+          <div class="titleRow" style="margin-bottom:0.45vw;">
+            <div class="title" style="font-size: clamp(14px, 1.05vw, 40px);">Now vs Forecast</div>
+          </div>
+          <div class="smallRow" id="kpiRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>WXWI • TV INFO • auto-rendered</div>
+      <div id="note"></div>
     </div>
   </div>
-
-  <div class="main">
-
-    <!-- NOW -->
-    <div class="col">
-      <div class="brackets"></div>
-      <div class="colHdr">
-        <div class="h">Current status (NOW)</div>
-        <div class="pill">LIVE</div>
-      </div>
-
-      <div class="quad">
-
-        <!-- High impact NOW -->
-        <div class="sec">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 3 2.6 20.2c-.5.9.1 1.8 1.1 1.8h16.6c1 0 1.6-1 .1-1.8L12 3Z" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/>
-                  <path d="M12 8v6" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round"/>
-                  <circle cx="12" cy="17.5" r="1" fill="rgba(62,246,255,.95)"/>
-                </svg>
-              </span>
-              High impact alerts
-            </div>
-            <div class="sub">escalated / metar critical</div>
-          </div>
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Overall alert crit</div>
-              <div class="v crit" id="nowAlertCrit">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowAlertCritCodes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">METAR critical</div>
-              <div class="v crit" id="nowMetCrit">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowMetCritCodes"></div>
-              </div>
-            </div>
-          </div>
-          <div class="bigCall">
-            <div class="label">Top impacted</div>
-            <div class="names" id="nowTop2">—</div>
-          </div>
-        </div>
-
-        <!-- VIS NOW (bigger) -->
-        <div class="sec vis">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" stroke="rgba(62,246,255,.95)" stroke-width="1.8"/>
-                  <circle cx="12" cy="12" r="3.2" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/>
-                </svg>
-              </span>
-              Visibility & landing conditions
-            </div>
-            <div class="sub">RVR/VIS + minima</div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Very low VIS/RVR</div>
-              <div class="v high" id="nowVis300">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowVis300Codes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Below BEST minima</div>
-              <div class="v med" id="nowBelowBest">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowBelowBestCodes"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Below 2nd minima</div>
-              <div class="v med" id="nowBelowAlt">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowBelowAltCodes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Affected bases</div>
-              <div class="v med" id="nowBases">0</div>
-              <div class="ex">
-                <div class="lbl">Bases</div>
-                <div class="codes" id="nowBasesCodes"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SEVERE NOW -->
-        <div class="sec severe">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2v20M4 6l16 12M20 6 4 18" stroke="rgba(62,246,255,.95)" stroke-width="1.6" stroke-linecap="round"/>
-                  <path d="M7 4l2 3M17 4l-2 3M7 20l2-3M17 20l-2-3" stroke="rgba(255,77,184,.95)" stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
-              </span>
-              Severe weather events
-            </div>
-            <div class="sub">wind / snow / eng ice</div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Wind gusts ≥25kt</div>
-              <div class="v med" id="nowGust25">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowGust25Codes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Snow observed</div>
-              <div class="v high" id="nowSnow">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowSnowCodes"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">ENG ICE OPS</div>
-              <div class="v crit" id="nowEngIce">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowEngIceCodes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Icing risk (heur.)</div>
-              <div class="v high" id="nowIcingRisk">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowIcingRiskCodes"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- OPS NOW (smaller) -->
-        <div class="sec ops">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 13.5 12 6l8 7.5" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M6.5 12.8h11" stroke="rgba(255,77,184,.95)" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-              </span>
-              Operational advisories
-            </div>
-            <div class="sub">OM advisory</div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">TO PROHIB</div>
-              <div class="v crit" id="nowNoOps">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowNoOpsCodes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">LVTO</div>
-              <div class="v med" id="nowLvto">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="nowLvtoCodes"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="errors" id="errBoxNow"><b>Errors:</b> —</div>
-        </div>
-
-      </div>
-
-      <div class="legend">
-        <div class="tag"><span class="dot base"></span>Bases (pink glow)</div>
-        <div class="tag"><span class="dot out"></span>Outstations (purple glow)</div>
-      </div>
-    </div>
-
-    <!-- FORECAST -->
-    <div class="col">
-      <div class="brackets"></div>
-      <div class="colHdr">
-        <div class="h">Future outlook (FORECAST)</div>
-        <div class="pill">PREDICTIVE</div>
-      </div>
-
-      <div class="quad">
-
-        <!-- High impact TAF -->
-        <div class="sec">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 3 2.6 20.2c-.5.9.1 1.8 1.1 1.8h16.6c1 0 1.6-1 .1-1.8L12 3Z" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/>
-                  <path d="M12 8v6" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round"/>
-                  <circle cx="12" cy="17.5" r="1" fill="rgba(62,246,255,.95)"/>
-                </svg>
-              </span>
-              High impact alerts
-            </div>
-            <div class="sub">critical / taf score</div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Critical (TAF ≥70)</div>
-              <div class="v crit" id="tafCrit">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafCritCodes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Affected bases</div>
-              <div class="v med" id="tafBases">0</div>
-              <div class="ex">
-                <div class="lbl">Bases</div>
-                <div class="codes" id="tafBasesCodes"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bigCall">
-            <div class="label">Top impacted</div>
-            <div class="names" id="tafTop2">—</div>
-          </div>
-        </div>
-
-        <!-- VIS TAF (bigger) -->
-        <div class="sec vis">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" stroke="rgba(62,246,255,.95)" stroke-width="1.8"/>
-                  <circle cx="12" cy="12" r="3.2" stroke="rgba(255,77,184,.95)" stroke-width="1.8"/>
-                </svg>
-              </span>
-              Visibility & landing conditions
-            </div>
-            <div class="sub">RVR/VIS + minima</div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Very low VIS/RVR</div>
-              <div class="v high" id="tafVis300">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafVis300Codes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Below BEST minima</div>
-              <div class="v med" id="tafBelowBest">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafBelowBestCodes"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Below 2nd minima</div>
-              <div class="v med" id="tafBelowAlt">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafBelowAltCodes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Base airports impacted</div>
-              <div class="v med" id="tafBaseAny">0</div>
-              <div class="ex">
-                <div class="lbl">Bases</div>
-                <div class="codes" id="tafBaseAnyCodes"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SEVERE TAF -->
-        <div class="sec severe">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 8h10c2 0 3-1 3-2s-1-2-3-2" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M3 12h14c2 0 3 1 3 2s-1 2-3 2" stroke="rgba(143,123,255,.95)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M3 16h8" stroke="rgba(255,77,184,.95)" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-              </span>
-              Severe weather events
-            </div>
-            <div class="sub">wind / snow</div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Wind gusts ≥25kt</div>
-              <div class="v med" id="tafGust25">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafGust25Codes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">Snow forecast</div>
-              <div class="v high" id="tafSnow">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafSnowCodes"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- OPS TAF -->
-        <div class="sec ops">
-          <div class="brackets"></div>
-          <div class="secHdr">
-            <div class="t">
-              <span class="ico">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 13.5 12 6l8 7.5" stroke="rgba(62,246,255,.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M6.5 12.8h11" stroke="rgba(255,77,184,.95)" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-              </span>
-              Operational advisories
-            </div>
-            <div class="sub">OM advisory</div>
-          </div>
-
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">TO PROHIB (likely)</div>
-              <div class="v crit" id="tafNoOps">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafNoOpsCodes"></div>
-              </div>
-            </div>
-            <div class="kpi">
-              <div class="k">LVTO</div>
-              <div class="v med" id="tafLvto">0</div>
-              <div class="ex">
-                <div class="lbl">Examples</div>
-                <div class="codes" id="tafLvtoCodes"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="errors" id="errBox"><b>Errors:</b> —</div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</div>
 
 <script>
-(async () => {
-  const STATUS_URL = "/data/status.json";
-  const LATEST_URL = "/data/latest.json";
-  const BASE_URL   = "/base.txt";
-  const $ = (id) => document.getElementById(id);
+  const ICONS = {
+    snow: () => `\
+      <svg class="ico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\
+        <path d="M12 2v20M4 6l16 12M20 6L4 18" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()}" stroke-width="2" stroke-linecap="round"/>\
+        <path d="M7 4l2 3M17 4l-2 3M7 20l2-3M17 20l-2-3" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()}" stroke-width="2" stroke-linecap="round"/>\
+      </svg>` ,
+    vis: () => `\
+      <svg class="ico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\
+        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()}" stroke-width="2"/>\
+        <circle cx="12" cy="12" r="3" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()}" stroke-width="2"/>\
+      </svg>` ,
+    wind: () => `\
+      <svg class="ico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\
+        <path d="M3 8h10c2 0 2-3 0-3" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()}" stroke-width="2" stroke-linecap="round"/>\
+        <path d="M3 12h14c2 0 2 3 0 3" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()}" stroke-width="2" stroke-linecap="round"/>\
+        <path d="M3 16h8" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()}" stroke-width="2" stroke-linecap="round"/>\
+      </svg>`
+  };
+
+  function iconKeyFromTrigger(label){
+    const L = String(label||"").toUpperCase();
+    if (/ENG\s*ICE/.test(L)) return null;
+    if (/(SNOW|CONTAM|ICE|FZRA|FZDZ)/.test(L)) return "snow";
+    if (/(VIS|RVR|MINIMA|CEILING|LOW CLOUD|CIG)/.test(L)) return "vis";
+    if (/(WIND|GUST)/.test(L)) return "wind";
+    return null;
+  }
 
   function uniq(arr){ return Array.from(new Set(arr)); }
 
-  function toCode(s){
-    return (s?.iata || s?.ICAO || s?.icao || s?.code || "").toString().trim().toUpperCase();
+  async function fetchFirst(paths, type){
+    for (const p of paths){
+      try{
+        const r = await fetch(p, { cache: "no-store" });
+        if (!r.ok) continue;
+        if (type === "json") return await r.json();
+        return await r.text();
+      }catch(_){ }
+    }
+    return null;
   }
 
-  function safeArr(x){ return Array.isArray(x) ? x : []; }
-
-  function engIceOpsFlag(s){
-    return Boolean(
-      s?.engIceOpsCrit === true ||
-      s?.engIceOps === "CRIT" ||
-      s?.engIceOps?.crit === true ||
-      s?.engIceOps?.required === true ||
-      s?.engIceOps?.prohibited === true ||
-      s?.omMet?.engIceOps === true ||
-      s?.omMet?.engIceOpsProhib === true ||
-      s?.omMet?.engIceOpsCrit === true ||
-      s?.met?.engIceOps === true
-    );
+  function parseBaseTxt(t){
+    const set = new Set();
+    (t||"").split(/\r?\n/).forEach(l=>{
+      const s = l.trim().toUpperCase();
+      if (!s || s.startsWith("#")) return;
+      set.add(s);
+    });
+    return set;
   }
 
-  function isSnow(hzArr){
-    const set = new Set(safeArr(hzArr).map(x => String(x).toLowerCase()));
-    if (!set.size) return false;
-    return Array.from(set).some(x => x.includes("sn")) || ["sn","shsn","blsn","sg","snsq"].some(x => set.has(x));
-  }
-  function isIcingHaz(hzArr){
-    const set = new Set(safeArr(hzArr).map(x => String(x).toLowerCase()));
-    if (!set.size) return false;
-    return ["fzra","fzdz","ic","pl","sg"].some(x => set.has(x)) || Array.from(set).some(x => x.includes("fz"));
+  function alertRank(a){
+    if (a === "CRIT") return 3;
+    if (a === "HIGH") return 2;
+    if (a === "MED") return 1;
+    return 0;
   }
 
-  function alertFromScore(score){
-    const s = Number(score || 0);
-    return s >= 70 ? "CRIT" : s >= 45 ? "HIGH" : s >= 20 ? "MED" : "OK";
+  function hasEngIce(st){
+    if (st?.engIceOps) return true;
+    const tr = Array.isArray(st?.triggers) ? st.triggers : [];
+    return tr.some(t => /ENG\s*ICE/i.test(t?.label || ""));
   }
 
-  function topByPri(stations, field, n=2){
-    return stations
-      .map(s => ({ c: toCode(s), p: Number(s?.[field]||0) }))
-      .filter(x => x.c)
-      .sort((a,b)=>b.p-a.p)
-      .slice(0,n)
-      .map(x => x.c);
+  function pickIconsForStation(st){
+    const tr = Array.isArray(st?.triggers) ? st.triggers : [];
+    const keys = [];
+    for (const t of tr){
+      const k = iconKeyFromTrigger(t?.label);
+      if (k) keys.push(k);
+    }
+    // If no triggers array has category, fall back to heuristics
+    if (!keys.length){
+      const hz = st?.hazards || {};
+      if (hz?.snow || hz?.sn || hz?.contam) keys.push("snow");
+      if (st?.minimaNow || st?.visibility_m !== null) keys.push("vis");
+    }
+    // Prefer at most 2 icons
+    return uniq(keys).slice(0,2);
   }
 
-  function renderCodes(el, list, baseSet, n){
-    const codes = safeArr(list).map(x => String(x).trim().toUpperCase()).filter(Boolean);
-    if (!codes.length){
-      el.innerHTML = `<span class="code">—</span>`;
+  function fmtUtc(iso){
+    if (!iso) return "—";
+    try{ return new Date(iso).toISOString().replace(/\.\d{3}Z$/, "Z"); }catch{ return String(iso); }
+  }
+
+  function chip(label, val, tone){
+    const cls = tone === "bad" ? "bad" : (tone === "ok" ? "ok" : "");
+    return `<span class="chip ${cls}">${label}: <b>${val}</b></span>`;
+  }
+
+  async function main(){
+    const latest = await fetchFirst(["/data/latest.json","data/latest.json","../data/latest.json"], "json");
+    const baseTxt = await fetchFirst(["/base.txt","base.txt","../base.txt"], "text");
+
+    const dataPill = document.getElementById("dataPill");
+    const tsEl = document.getElementById("ts");
+    const genEl = document.getElementById("gen");
+    const noteEl = document.getElementById("note");
+
+    if (!latest || !Array.isArray(latest.stations)){
+      dataPill.textContent = "DATA: ERROR";
+      dataPill.classList.add("bad");
+      noteEl.textContent = "Could not load /data/latest.json";
+      window.__RENDER_READY__ = true;
       return;
     }
-    const u = uniq(codes);
-    const shown = u.slice(0, n);
-    const remain = u.length - shown.length;
 
-    el.innerHTML = shown.map(c => {
-      const cls = baseSet.has(c) ? "code b" : "code";
-      return `<span class="${cls}">${c}</span>`;
-    }).join("") + (remain>0 ? `<span class="more">+${remain} more</span>` : "");
+    const baseSet = parseBaseTxt(baseTxt || "");
+
+    const stations = latest.stations;
+    const genAt = latest.generatedAt || latest.stats?.generatedAt || null;
+
+    // KPIs
+    const metReturned = latest.stats?.metarReturned ?? (stations.filter(s=>!!s.metarRaw).length);
+    const tafReturned = latest.stats?.tafReturned ?? (stations.filter(s=>!!s.tafRaw).length);
+    const missM = latest.stats?.missingMetar ?? stations.filter(s=>!s.metarRaw).length;
+    const missT = latest.stats?.missingTaf ?? stations.filter(s=>!s.tafRaw).length;
+
+    // Base impacted (any alert)
+    const baseStations = stations.filter(s => !!s?.iata && baseSet.has(String(s.iata).toUpperCase()));
+    const impactedBases = baseStations
+      .filter(s => alertRank(s.alert) > 0 || (Array.isArray(s.triggers) && s.triggers.length))
+      .sort((a,b)=> (alertRank(b.alert)-alertRank(a.alert)) || String(a.iata).localeCompare(String(b.iata)));
+
+    // Drivers among impacted bases
+    const driverCounts = { snow:0, vis:0, wind:0 };
+    impactedBases.forEach(s=>{
+      const icons = pickIconsForStation(s);
+      icons.forEach(k=>{ if (driverCounts[k] !== undefined) driverCounts[k]++; });
+    });
+
+    // ENG ICE OPS across network
+    const engStations = stations.filter(hasEngIce)
+      .sort((a,b)=> (alertRank(b.alert)-alertRank(a.alert)) || String(a.iata).localeCompare(String(b.iata)));
+
+    // Render header
+    tsEl.textContent = `TS: ${fmtUtc(latest.generatedAt || latest.updatedAt || latest.ts)}`;
+    genEl.textContent = `Generated: ${fmtUtc(genAt)} UTC`;
+
+    dataPill.textContent = `DATA: OK (${latest.stats?.icaoCount ?? stations.length})`;
+    dataPill.classList.add("ok");
+
+    // Render BASES
+    const basesCount = impactedBases.length;
+    document.getElementById("basesCount").textContent = String(basesCount);
+
+    const basesGrid = document.getElementById("basesGrid");
+    const basesMore = document.getElementById("basesMore");
+
+    const MAX_BASES_SHOW = 45; // safe for 4K+1080 with 4-5 cols
+    const showBases = impactedBases.slice(0, MAX_BASES_SHOW);
+
+    basesGrid.innerHTML = showBases.map(s=>{
+      const iata = String(s.iata||"?").toUpperCase();
+      const keys = pickIconsForStation(s);
+      const icons = keys.map(k => ICONS[k] ? ICONS[k]() : "").join("");
+      return `<div class="iata base"><span>${iata}</span><span class="icons">${icons}</span></div>`;
+    }).join("");
+
+    const baseExtra = Math.max(0, basesCount - showBases.length);
+    basesMore.textContent = baseExtra ? `+${baseExtra} more` : "";
+
+    // Drivers row (only the important ones)
+    const driversRow = document.getElementById("driversRow");
+    driversRow.innerHTML = [
+      chip("Snow/Ice", driverCounts.snow, driverCounts.snow>0?"":""),
+      chip("Vis/Minima", driverCounts.vis, driverCounts.vis>0?"":""),
+      chip("Wind", driverCounts.wind, driverCounts.wind>0?"":"")
+    ].join(" ");
+
+    // Render ENG ICE OPS
+    const engCount = engStations.length;
+    const engCountEl = document.getElementById("engCount");
+    engCountEl.textContent = String(engCount);
+    if (engCount === 0) engCountEl.classList.add("zero");
+
+    const engList = document.getElementById("engList");
+    const engMore = document.getElementById("engMore");
+    const MAX_ENG_SHOW = 12;
+    const showEng = engStations.slice(0, MAX_ENG_SHOW);
+
+    engList.innerHTML = showEng.map(s=>{
+      const iata = String(s.iata||"?").toUpperCase();
+      const isBase = baseSet.has(iata);
+      return `<div class="iata ${isBase?"base":""}">${iata}</div>`;
+    }).join("");
+
+    const engExtra = Math.max(0, engCount - showEng.length);
+    engMore.textContent = engExtra ? `+${engExtra} more` : (engCount===0 ? "No ENG ICE OPS alerts." : "");
+
+    // Small Now vs Forecast KPIs (keep it minimal)
+    const kpiRow = document.getElementById("kpiRow");
+    const critNow = stations.filter(s=>s.alert==="CRIT").length;
+    const highNow = stations.filter(s=>s.alert==="HIGH").length;
+    const critFc = stations.filter(s=>s.tafCrit===true).length;
+    const metTaf = `${metReturned}/${tafReturned} (miss ${missM}/${missT})`;
+
+    kpiRow.innerHTML = [
+      chip("NOW CRIT/HIGH", `${critNow}/${highNow}`, (critNow>0?"bad":"")),
+      chip("FORECAST CRIT", `${critFc}`, (critFc>0?"warn":"")),
+      chip("METAR/TAF", metTaf, (missM+missT>0?"warn":"ok"))
+    ].join(" ");
+
+    noteEl.textContent = latest.errors && latest.errors.length ? `Errors: ${latest.errors.slice(0,2).join(" | ")}${latest.errors.length>2?" | …":""}` : "";
+
+    window.__RENDER_READY__ = true;
   }
 
-  // Fetch data
-  let status=null, latest=null, baseTxt="";
-  try { status = await (await fetch(STATUS_URL, {cache:"no-store"})).json(); } catch(e) { status=null; }
-  try { latest  = await (await fetch(LATEST_URL,  {cache:"no-store"})).json(); } catch(e) { latest=null; }
-  try { baseTxt = await (await fetch(BASE_URL,   {cache:"no-store"})).text(); } catch(e) { baseTxt=""; }
-
-  const bases = uniq(baseTxt.split(/\r?\n/).map(s=>s.trim().toUpperCase()).filter(Boolean));
-  const baseSet = new Set(bases);
-
-  const genAt = status?.generatedAt || latest?.generatedAt || "—";
-  $("genAt").textContent = genAt;
-  $("stamp").textContent = `TIMESTAMP: ${genAt !== "—" ? genAt : "—"}`;
-
-  const errs = safeArr(status?.errors).length ? status.errors : safeArr(latest?.errors);
-  $("errBox").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,6).join(" • ") : "—"}`;
-  $("errBoxNow").innerHTML = `<b>Errors:</b> ${errs.length ? errs.slice(0,2).join(" • ") : "—"}`;
-
-  // Stations can be either latest.stations or latest as array
-  const stations = Array.isArray(latest?.stations) ? latest.stations : (Array.isArray(latest) ? latest : []);
-
-  // Arrays
-  const nowAlertCrit=[], nowMetCrit=[], nowVis300=[], nowBelowBest=[], nowBelowAlt=[], nowGust25=[], nowSnow=[], nowLvto=[], nowNoOps=[], nowEngIce=[], nowIcingRisk=[];
-  const tafCrit=[], tafVis300=[], tafBelowBest=[], tafBelowAlt=[], tafGust25=[], tafSnow=[], tafLvto=[], tafNoOps=[];
-  const affectedBasesSet = new Set();
-  const tafImpactedBasesSet = new Set();
-
-  for (const s of stations){
-    const code = toCode(s);
-    if (!code) continue;
-
-    const metPri = Number(s.metPri || 0);
-    const tafPri = Number(s.tafPri || 0);
-
-    // Base impacted union (any alert)
-    if (baseSet.has(code) && (alertFromScore(metPri)!=="OK" || alertFromScore(tafPri)!=="OK")) affectedBasesSet.add(code);
-    if (baseSet.has(code) && alertFromScore(tafPri)!=="OK") tafImpactedBasesSet.add(code);
-
-    // NOW
-    if ((s.alert || "").toString().toUpperCase() === "CRIT") nowAlertCrit.push(code);
-    if (metPri >= 70 || s.metCrit === true) nowMetCrit.push(code);
-
-    const mVis = Number(s.met?.vis ?? 99999);
-    const mRvr = Number(s.met?.rvrMin ?? 99999);
-    if (Math.min(mVis, mRvr) < 300) nowVis300.push(code);
-
-    if (s.minimaNow?.belowBest === true) nowBelowBest.push(code);
-    if (s.minimaNow?.belowAlt === true) nowBelowAlt.push(code);
-
-    if (Number(s.met?.gustMax ?? 0) >= 25) nowGust25.push(code);
-    if (isSnow(s.met?.hz) || isSnow(s.hazards)) nowSnow.push(code);
-
-    if (s.omMet?.lvto === true) nowLvto.push(code);
-    if (s.omMet?.noOpsLikely === true) nowNoOps.push(code);
-
-    if (engIceOpsFlag(s)) nowEngIce.push(code);
-    if (isIcingHaz(s.met?.hz) || isIcingHaz(s.hazards)) nowIcingRisk.push(code);
-
-    // FORECAST
-    if (tafPri >= 70 || s.tafCrit === true) tafCrit.push(code);
-
-    const tVis = Number(s.taf?.vis ?? 99999);
-    const tRvr = Number(s.taf?.rvrMin ?? 99999);
-    if (Math.min(tVis, tRvr) < 300) tafVis300.push(code);
-
-    if (s.minimaTaf?.belowBest === true) tafBelowBest.push(code);
-    if (s.minimaTaf?.belowAlt === true) tafBelowAlt.push(code);
-
-    if (Number(s.taf?.gustMax ?? 0) >= 25) tafGust25.push(code);
-    if (isSnow(s.taf?.hz)) tafSnow.push(code);
-
-    if (s.omTaf?.lvto === true) tafLvto.push(code);
-    if (s.omTaf?.noOpsLikely === true) tafNoOps.push(code);
-  }
-
-  const affectedBases = Array.from(affectedBasesSet).sort();
-  const tafBases = Array.from(new Set(tafCrit.filter(c => baseSet.has(c)))).sort();
-  const tafImpactedBases = Array.from(tafImpactedBasesSet).sort();
-
-  // Counts
-  $("nowAlertCrit").textContent = String(nowAlertCrit.length);
-  $("nowMetCrit").textContent = String(nowMetCrit.length);
-  $("nowVis300").textContent = String(nowVis300.length);
-  $("nowBelowBest").textContent = String(nowBelowBest.length);
-  $("nowBelowAlt").textContent = String(nowBelowAlt.length);
-  $("nowBases").textContent = String(affectedBases.length);
-  $("nowGust25").textContent = String(nowGust25.length);
-  $("nowSnow").textContent = String(nowSnow.length);
-  $("nowEngIce").textContent = String(nowEngIce.length);
-  $("nowIcingRisk").textContent = String(nowIcingRisk.length);
-  $("nowNoOps").textContent = String(nowNoOps.length);
-  $("nowLvto").textContent = String(nowLvto.length);
-
-  $("tafCrit").textContent = String(tafCrit.length);
-  $("tafBases").textContent = String(tafBases.length);
-  $("tafVis300").textContent = String(tafVis300.length);
-  $("tafBelowBest").textContent = String(tafBelowBest.length);
-  $("tafBelowAlt").textContent = String(tafBelowAlt.length);
-  $("tafBaseAny").textContent = String(tafImpactedBases.length);
-  $("tafGust25").textContent = String(tafGust25.length);
-  $("tafSnow").textContent = String(tafSnow.length);
-  $("tafNoOps").textContent = String(tafNoOps.length);
-  $("tafLvto").textContent = String(tafLvto.length);
-
-  // Code grids (n tuned per section so NOTHING clips)
-  renderCodes($("nowAlertCritCodes"), nowAlertCrit, baseSet, 8);
-  renderCodes($("nowMetCritCodes"), nowMetCrit, baseSet, 8);
-
-  renderCodes($("nowVis300Codes"), nowVis300, baseSet, 14);
-  renderCodes($("nowBelowBestCodes"), nowBelowBest, baseSet, 14);
-  renderCodes($("nowBelowAltCodes"), nowBelowAlt, baseSet, 14);
-  renderCodes($("nowBasesCodes"), affectedBases, baseSet, 14);
-
-  renderCodes($("nowGust25Codes"), nowGust25, baseSet, 14);
-  renderCodes($("nowSnowCodes"), nowSnow, baseSet, 14);
-  renderCodes($("nowEngIceCodes"), nowEngIce, baseSet, 14);
-  renderCodes($("nowIcingRiskCodes"), nowIcingRisk, baseSet, 14);
-
-  renderCodes($("nowNoOpsCodes"), nowNoOps, baseSet, 10);
-  renderCodes($("nowLvtoCodes"), nowLvto, baseSet, 10);
-
-  renderCodes($("tafCritCodes"), tafCrit, baseSet, 10);
-  renderCodes($("tafBasesCodes"), tafBases, baseSet, 10);
-
-  renderCodes($("tafVis300Codes"), tafVis300, baseSet, 14);
-  renderCodes($("tafBelowBestCodes"), tafBelowBest, baseSet, 14);
-  renderCodes($("tafBelowAltCodes"), tafBelowAlt, baseSet, 14);
-  renderCodes($("tafBaseAnyCodes"), tafImpactedBases, baseSet, 14);
-
-  renderCodes($("tafGust25Codes"), tafGust25, baseSet, 14);
-  renderCodes($("tafSnowCodes"), tafSnow, baseSet, 14);
-
-  renderCodes($("tafNoOpsCodes"), tafNoOps, baseSet, 10);
-  renderCodes($("tafLvtoCodes"), tafLvto, baseSet, 10);
-
-  $("nowTop2").textContent = topByPri(stations, "metPri", 2).join("  ") || "—";
-  $("tafTop2").textContent = topByPri(stations, "tafPri", 2).join("  ") || "—";
-
-  window.__RENDER_READY__ = true;
-})();
+  main().catch(e=>{
+    const dataPill = document.getElementById("dataPill");
+    dataPill.textContent = "DATA: ERROR";
+    dataPill.classList.add("bad");
+    document.getElementById("note").textContent = String(e?.message || e);
+    window.__RENDER_READY__ = true;
+  });
 </script>
 </body>
 </html>
