@@ -119,6 +119,14 @@
     .iata.base{ color: var(--mag); text-shadow: 0 0 16px rgba(255,44,171,0.20); }
 
     .icons{display:flex;gap:0.25vw;opacity:0.95;}
+    .srcTags{display:flex;gap:0.22vw;margin-left:0.45vw;align-items:center;}
+    .srcTag{font-weight:900;letter-spacing:.08em;font-size:clamp(10px,0.72vw,18px);line-height:1;
+      border:1px solid rgba(180,220,230,0.18); padding:0.14em 0.44em; border-radius:999px;
+      background: rgba(10,16,28,0.45);
+      box-shadow: 0 0 18px rgba(120,255,255,0.06);
+    }
+    .srcTag.m{color: rgba(120,255,255,0.95); border-color: rgba(120,255,255,0.26); text-shadow:0 0 12px rgba(120,255,255,0.22);}
+    .srcTag.t{color: rgba(186,140,255,0.95); border-color: rgba(186,140,255,0.26); text-shadow:0 0 12px rgba(186,140,255,0.22);}
     .ico{width: 1.15em; height: 1.15em; filter: drop-shadow(0 0 10px rgba(45,246,255,0.22));}
     .ico.mag{ filter: drop-shadow(0 0 10px rgba(255,44,171,0.22)); }
 
@@ -185,7 +193,7 @@
       <div class="card scan" id="basesCard">
         <div class="titleRow">
           <div class="title">Bases impacted</div>
-          <div class="muted" id="basesMeta">NOW+FORECAST (merged)</div>
+          <div class="muted" id="basesMeta">M=METAR · T=TAF</div>
         </div>
 
         <div class="kpiBig">
@@ -313,6 +321,21 @@
     return uniq(keys).slice(0,2);
   }
 
+  function pickSrcTagsForStation(st){
+    const tr = Array.isArray(st?.triggers) ? st.triggers : [];
+    const set = new Set();
+    for (const t of tr){
+      const s = String(t?.src || "").trim().toUpperCase();
+      if (s === "M" || s === "METAR") set.add("M");
+      if (s === "T" || s === "TAF") set.add("T");
+    }
+    // Fallbacks from computed flags/scores
+    if (st?.metCrit || (typeof st?.metPri === "number" && st.metPri > 0)) set.add("M");
+    if (st?.tafCrit || (typeof st?.tafPri === "number" && st.tafPri > 0)) set.add("T");
+    // Stable order: M then T
+    return ["M","T"].filter(x => set.has(x));
+  }
+
   function fmtUtc(iso){
     if (!iso) return "—";
     try{ return new Date(iso).toISOString().replace(/\.\d{3}Z$/, "Z"); }catch{ return String(iso); }
@@ -389,7 +412,9 @@
       const iata = String(s.iata||"?").toUpperCase();
       const keys = pickIconsForStation(s);
       const icons = keys.map(k => ICONS[k] ? ICONS[k]() : "").join("");
-      return `<div class="iata base"><span>${iata}</span><span class="icons">${icons}</span></div>`;
+      const srcs = pickSrcTagsForStation(s);
+      const srcHtml = srcs.length ? `<span class="srcTags">${srcs.map(x=>`<span class="srcTag ${x==='M'?'m':'t'}">${x}</span>`).join("")}</span>` : "";
+      return `<div class="iata base"><span>${iata}</span><span class="icons">${icons}</span>${srcHtml}</div>`;
     }).join("");
 
     const baseExtra = Math.max(0, basesCount - showBases.length);
