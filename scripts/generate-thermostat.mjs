@@ -81,6 +81,22 @@ function main(){
   const basesFct = stations.filter(s => isBase(s.iata, baseSet) && (Boolean(s.tafCrit) || Number(s.tafPri||0) >= 20)).map(s=>s.iata);
   const basesAny = uniq([...basesNow, ...basesFct]);
 
+  // Per-base primary trigger tags (small TV-friendly icons)
+  const byIata = new Map(stations.map(s => [s.iata, s]));
+  const baseTags = {};
+  for(const iata of basesAny){
+    const s = byIata.get(iata);
+    if(!s) continue;
+    const d = classifyDrivers(s);
+    const tags = [];
+    if(d.snow) tags.push("snow");
+    if(d.vis) tags.push("vis");
+    if(d.wind) tags.push("wind");
+    // If none of the big-3, keep it silent (less clutter). You can re-enable:
+    // if(tags.length === 0 && d.icing) tags.push("ice");
+    baseTags[iata] = tags.slice(0, 2);
+  }
+
   const engIceOpsAny = uniq(stations.filter(s => Boolean(s.engIceOps)).map(s => s.iata));
   const engIceOpsBases = engIceOpsAny.filter(i => isBase(i, baseSet));
   const engIceOpsOut = engIceOpsAny.filter(i => !isBase(i, baseSet));
@@ -164,10 +180,12 @@ function main(){
     },
     top: { now: nowTop, forecast: fctTop },
     drivers: driverCounts,
+    details: { baseTags },
     lists: {
       basesNow,
       basesForecast: basesFct,
       basesAny,
+      baseTags,
       engIceOps: engIceOpsAny,
       engIceOpsBases,
       engIceOpsOut,

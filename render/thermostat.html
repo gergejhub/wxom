@@ -102,52 +102,20 @@
       pointer-events:none;
     }
 
-    /* neon corner brackets (thin L-shapes – no "square" blocks) */
-    .bracket{
-      position:absolute;
-      width:56px; height:56px;
-      border-radius: 0;
-      pointer-events:none;
-      opacity:.85;
-      filter: drop-shadow(0 0 14px var(--modeGlow));
-    }
-    .bracket.tl{
-      top:14px; left:14px;
-      background:
-        linear-gradient(to right, rgba(255,255,255,.22), rgba(255,255,255,.08)) 0 0 / 56px 2px no-repeat,
-        linear-gradient(to bottom, rgba(255,255,255,.22), rgba(255,255,255,.08)) 0 0 / 2px 56px no-repeat;
-    }
-    .bracket.tr{
-      top:14px; right:14px;
-      background:
-        linear-gradient(to left, rgba(255,255,255,.22), rgba(255,255,255,.08)) 100% 0 / 56px 2px no-repeat,
-        linear-gradient(to bottom, rgba(255,255,255,.22), rgba(255,255,255,.08)) 100% 0 / 2px 56px no-repeat;
-    }
-    .bracket.bl{
-      bottom:14px; left:14px;
-      background:
-        linear-gradient(to right, rgba(255,255,255,.22), rgba(255,255,255,.08)) 0 100% / 56px 2px no-repeat,
-        linear-gradient(to top, rgba(255,255,255,.22), rgba(255,255,255,.08)) 0 100% / 2px 56px no-repeat;
-    }
-    .bracket.br{
-      bottom:14px; right:14px;
-      background:
-        linear-gradient(to left, rgba(255,255,255,.22), rgba(255,255,255,.08)) 100% 100% / 56px 2px no-repeat,
-        linear-gradient(to top, rgba(255,255,255,.22), rgba(255,255,255,.08)) 100% 100% / 2px 56px no-repeat;
-    }
+    /* neon corner brackets */
+    .bracket{ position:absolute; width:56px; height:56px; border:2px solid rgba(255,255,255,.18); border-radius:12px; }
+    .bracket:before{ content:""; position:absolute; inset:-2px; border-radius:14px; box-shadow: 0 0 22px var(--modeGlow); }
+    .bracket.tl{ top:14px; left:14px; border-right:none; border-bottom:none; }
+    .bracket.tr{ top:14px; right:14px; border-left:none; border-bottom:none; }
+    .bracket.bl{ bottom:14px; left:14px; border-right:none; border-top:none; }
+    .bracket.br{ bottom:14px; right:14px; border-left:none; border-top:none; }
 
-    /*
-      IMPORTANT (TV): make the dial ALWAYS fully visible.
-      Previously width was tied to 78vh, which could exceed the middle panel height,
-      and the dial got clipped by overflow:hidden.
-      Here we size the dial from the AVAILABLE HEIGHT of the center panel.
-    */
     .gaugeWrap{
       position:relative; z-index:2;
       height: 100%;
-      width: auto;
-      max-width: 100%;
-      aspect-ratio: 1 / 1;
+      max-height: 100%;
+      width: min(100%, 78vh);
+      aspect-ratio:1 / 1;
       display:grid;
       place-items:center;
     }
@@ -186,7 +154,7 @@
 
     .footer{
       display:grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.65fr 1fr;
       gap: clamp(14px, 1.2vw, 28px);
       align-items:stretch;
       height: clamp(320px, 34vh, 860px);
@@ -251,7 +219,7 @@
     .iataGrid{
       z-index:1;
       display:grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: clamp(8px, .7vw, 14px) clamp(18px, 1.2vw, 30px);
       align-content:start;
       min-height: 0;
@@ -259,14 +227,46 @@
       overflow:hidden;
       padding-top: 2px;
     }
-    .iata{
-      font-size: var(--fzIata);
-      font-weight: 900;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      white-space:nowrap;
-      line-height: 1.05;
-    }
+    
+    #basesGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #iceGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 1600px){ #basesGrid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.iata{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: clamp(6px, .55vw, 14px);
+  font-size: var(--fzIata);
+  font-weight: 900;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  line-height: 1.05;
+  min-width: 0;
+}
+.iata .code{ min-width: 3.2ch; }
+.tags{
+  display:flex;
+  gap: clamp(6px, .45vw, 10px);
+  align-items:center;
+  flex: 0 0 auto;
+  opacity:.95;
+}
+.ico{
+  width: clamp(14px, .95vw, 22px);
+  height: clamp(14px, .95vw, 22px);
+  background: rgba(227,244,255,.92);
+  -webkit-mask: var(--mask) center / contain no-repeat;
+  mask: var(--mask) center / contain no-repeat;
+  filter: drop-shadow(0 0 8px rgba(62,246,255,.18));
+}
+.iata.base .ico{
+  background: rgba(255,46,166,.92);
+  filter: drop-shadow(0 0 10px rgba(255,46,166,.22));
+}
+.ico.snow{ --mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222.8%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M12%202v20%22/%3E%3Cpath%20d=%22M4.8%207l14.4%2010%22/%3E%3Cpath%20d=%22M19.2%207L4.8%2017%22/%3E%3Cpath%20d=%22M2%2012h20%22/%3E%3C/svg%3E"); }
+.ico.vis{ --mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22black%22%3E%3Cpath%20d=%22M12%205C6%205%202%2012%202%2012s4%207%2010%207%2010-7%2010-7-4-7-10-7z%22/%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%223%22%20fill=%22white%22/%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%222%22%20fill=%22black%22/%3E%3C/svg%3E"); }
+.ico.wind{ --mask: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%222.8%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M3%208h10a3%203%200%201%200-3-3%22/%3E%3Cpath%20d=%22M2%2012h15a3%203%200%201%201-3%203%22/%3E%3Cpath%20d=%22M3%2016h9a2%202%200%201%201-2%202%22/%3E%3C/svg%3E"); }
     .iata.base{
       color: var(--wizzMagenta);
       text-shadow: 0 0 14px rgba(255,46,166,.28);
@@ -392,37 +392,56 @@
     function clearNode(el){ while(el.firstChild) el.removeChild(el.firstChild); }
 
     function renderIataGrid(gridEl, moreEl, codes, baseSet, opts={}){
-      const all = Array.isArray(codes) ? codes.slice() : [];
-      const maxStart = opts.maxStart || 18;
-      const step = opts.step || 2;
+  const all = Array.isArray(codes) ? codes.map(x => String(x).toUpperCase()) : [];
+  const maxStart = opts.maxStart || 36;
+  const step = opts.step || 2;
+  const tagMap = opts.tagMap || null;
 
-      let max = Math.min(maxStart, all.length);
-      let shown = all.slice(0, max);
+  const mkIata = (code) => {
+    const el = document.createElement("div");
+    const isBase = baseSet && baseSet.has(code);
+    el.className = "iata " + (isBase ? "base" : (opts.forceBase ? "base" : "out"));
 
-      const paint = (arr, remaining) => {
-        clearNode(gridEl);
-        for(const code of arr){
-          const span = document.createElement("div");
-          const isBase = baseSet && baseSet.has(code);
-          span.className = "iata " + (isBase ? "base" : (opts.forceBase ? "base" : "out"));
-          span.textContent = code;
-          gridEl.appendChild(span);
-        }
-        moreEl.textContent = remaining > 0 ? `+${remaining} more` : "";
-      };
+    const codeEl = document.createElement("span");
+    codeEl.className = "code";
+    codeEl.textContent = code;
+    el.appendChild(codeEl);
 
-      // initial
-      paint(shown, all.length - shown.length);
-
-      // shrink until fits
-      for(let i=0; i<50; i++){
-        if(gridEl.scrollHeight <= gridEl.clientHeight + 1) break;
-        max = Math.max(0, max - step);
-        shown = all.slice(0, max);
-        paint(shown, all.length - shown.length);
-        if(max === 0) break;
+    const tags = tagMap && tagMap[code] ? tagMap[code] : [];
+    if(Array.isArray(tags) && tags.length){
+      const tWrap = document.createElement("span");
+      tWrap.className = "tags";
+      for(const t of tags.slice(0,2)){
+        const ico = document.createElement("span");
+        ico.className = "ico " + String(t);
+        ico.title = String(t).toUpperCase();
+        tWrap.appendChild(ico);
       }
+      el.appendChild(tWrap);
     }
+    return el;
+  };
+
+  const paint = (arr) => {
+    clearNode(gridEl);
+    for(const code of arr){
+      gridEl.appendChild(mkIata(code));
+    }
+  };
+
+  let max = Math.min(maxStart, all.length);
+  while(max > 0){
+    paint(all.slice(0, max));
+    // Prevent any cut-off: shrink until it fits in the card
+    if(gridEl.scrollHeight <= gridEl.clientHeight + 1) break;
+    max = Math.max(0, max - step);
+  }
+
+  const shown = all.slice(0, max);
+  const remaining = all.length - shown.length;
+  moreEl.textContent = remaining > 0 ? `+${remaining} more` : "";
+}
+
 
     function toBaseSetFromThermo(d){
       // Prefer explicit lists if present; fallback: read base.txt? (not needed here)
@@ -475,8 +494,8 @@
         $("iceCount").textContent = iceAny.length;
 
         // Render grids: bases force magenta; ice highlight bases
-        renderIataGrid($("basesGrid"), $("basesMore"), basesAny, baseSet, { maxStart: 20, forceBase: true });
-        renderIataGrid($("iceGrid"), $("iceMore"), iceAny, baseSet, { maxStart: 20, forceBase: false });
+        renderIataGrid($("basesGrid"), $("basesMore"), basesAny, baseSet, { maxStart: 48, step: 2, forceBase: true, tagMap: baseTags });
+        renderIataGrid($("iceGrid"), $("iceMore"), iceAny, baseSet, { maxStart: 18, step: 2, forceBase: false });
 
         // If you want a simple reason line, keep it minimal
         const iceWhy = $("iceWhy");
