@@ -1,12 +1,9 @@
-name: Pages
+name: pages
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Update METAR/TAF Dataset"]
-    types: [completed]
 
 permissions:
   contents: read
@@ -14,25 +11,15 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
 
       - name: Prepare dist
         shell: bash
@@ -41,50 +28,46 @@ jobs:
           rm -rf dist
           mkdir -p dist
 
-          # Core pages (MUST exist)
-          test -f index.html
+          # Core pages
           cp -f index.html dist/
 
-          # Optional top-level pages
-          if [ -f "alerts.html" ]; then cp -f alerts.html dist/; fi
-          if [ -f "map.html" ]; then cp -f map.html dist/; fi
-          if [ -f "tv.html" ]; then cp -f tv.html dist/; fi
-          if [ -f "thermostat.html" ]; then cp -f thermostat.html dist/; fi
+          # Optional pages (copy if exist)
+          for f in alerts.html map.html tv.html thermostat.html; do
+            if [ -f "$f" ]; then cp -f "$f" dist/; fi
+          done
 
-          # Static folders (copy only if they exist)
-          if [ -d "assets" ]; then cp -R assets dist/assets; fi
-          if [ -d "1030" ]; then cp -R 1030 dist/1030; fi
-          if [ -d "stat" ]; then cp -R stat dist/stat; fi
-          if [ -d "config" ]; then cp -R config dist/config; fi
-          if [ -d "data" ]; then cp -R data dist/data; fi
+          # Static folders (copy if exist)
+          for d in assets data render scripts css js; do
+            if [ -d "$d" ]; then cp -R "$d" dist/; fi
+          done
 
-          # Optional root files
-          if [ -f "favicon.ico" ]; then cp -f favicon.ico dist/; fi
-          if [ -f "robots.txt" ]; then cp -f robots.txt dist/; fi
-          if [ -f "base.txt" ]; then cp -f base.txt dist/; fi
+          # Plain text configs (copy if exist)
+          for f in base.txt; do
+            if [ -f "$f" ]; then cp -f "$f" dist/; fi
+          done
 
-          echo "---- DIST TREE (top 200 files) ----"
-          find dist -type f | head -n 200
+          # Safety: never publish node_modules
+          rm -rf dist/node_modules || true
 
-          # Sanity checks
-          test -f dist/index.html
-          if [ -d "dist/1030" ]; then test -f dist/1030/index.html; fi
-          if [ -f "alerts.html" ]; then test -f dist/alerts.html; fi
+          echo "== Dist tree (top 3 levels) =="
+          find dist -maxdepth 3 -type f | sort | sed -n '1,220p'
 
-          if [ -d "dist/stat" ]; then
-            test -f dist/stat/index.html
-            test -f dist/stat/app.js
-          fi
-
-          if [ -d "dist/assets" ]; then
-            test -f dist/assets/app.js
-          fi
-
-      - name: Upload artifact
+      # IMPORTANT: upload exactly ONE Pages artifact with a UNIQUE name
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          name: pages-dist
           path: dist
 
-      - name: Deploy
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-dist
