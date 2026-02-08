@@ -154,7 +154,7 @@
 
     .footer{
       display:grid;
-      grid-template-columns: 1.65fr 1fr;
+      grid-template-columns: 2.2fr .8fr;
       gap: clamp(14px, 1.2vw, 28px);
       align-items:stretch;
       height: clamp(320px, 34vh, 860px);
@@ -228,7 +228,14 @@
       padding-top: 2px;
     }
     
+    
+    /* Per-panel column tuning for TV readability */
     #basesGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #iceGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 1500px){
+      #basesGrid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+#basesGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
     #iceGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     @media (max-width: 1600px){ #basesGrid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .iata{
@@ -494,8 +501,9 @@
         $("iceCount").textContent = iceAny.length;
 
         // Render grids: bases force magenta; ice highlight bases
-        renderIataGrid($("basesGrid"), $("basesMore"), basesAny, baseSet, { maxStart: 48, step: 2, forceBase: true, tagMap: baseTags });
-        renderIataGrid($("iceGrid"), $("iceMore"), iceAny, baseSet, { maxStart: 18, step: 2, forceBase: false });
+                const baseTags = (d?.lists?.baseTags || d?.details?.baseTags || d?.details?.baseTags || {});
+        renderIataGrid($("basesGrid"), $("basesMore"), basesAny, baseSet, { maxStart: 120, step: 4, forceBase: true, tagMap: baseTags });
+                renderIataGrid($("iceGrid"), $("iceMore"), iceAny, baseSet, { maxStart: 16, step: 2, forceBase: false });
 
         // If you want a simple reason line, keep it minimal
         const iceWhy = $("iceWhy");
