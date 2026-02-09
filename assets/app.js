@@ -62,6 +62,10 @@ let tafPanelOpen = (lsGet(TAF_PANEL_KEY, "0") === "1"); // default collapsed
 let prevMetarObsByIcao = new Map(); // ICAO -> "DDHHMMZ"
 let prevSignalSets = null; // previous tile sets for TV toast/flash
 
+// Status polling (fast UI reaction to new dataset) ------------------------
+let lastStatusGeneratedAt = null;
+let statusPollInFlight = false;
+
 
 function detectDeviceClass(){
   const w = window.innerWidth || 1200;
@@ -2727,14 +2731,22 @@ function applyDataFromLatest(data){
 }
 
 
-async function updateDatasetTile(){
+
+async function fetchStatusNoStore(){
+  const res = await fetch("data/status.json?cb=" + Date.now(), {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+async function updateDatasetTile(status=null){
   const stateEl = document.getElementById("tileDatasetState");
   const subEl = document.getElementById("tileDatasetSub");
   if (!stateEl || !subEl) return;
   try{
-    const res = await fetch("data/status.json?cb=" + Date.now(), {cache:"no-store"});
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const s = await res.json();
+    const s = status || await fetchStatusNoStore();
     const gen = s && s.generatedAt ? new Date(s.generatedAt) : null;
     if (!gen || Number.isNaN(gen.getTime())) throw new Error("Invalid generatedAt");
     const mins = Math.floor((Date.now() - gen.getTime())/60000);
@@ -2744,6 +2756,31 @@ async function updateDatasetTile(){
   }catch(e){
     stateEl.textContent = "—";
     subEl.textContent = "Last update: —";
+  }
+}
+
+
+async function pollStatusAndMaybeRefresh(){
+  if (statusPollInFlight) return;
+  statusPollInFlight = true;
+  try{
+    const s = await fetchStatusNoStore();
+    const genStr = (s && s.generatedAt) ? String(s.generatedAt) : null;
+
+    // Update dataset tile immediately from the same payload (no double fetch).
+    await updateDatasetTile(s);
+
+    // Trigger a data refresh ASAP when the dataset changes.
+    if (genStr && lastStatusGeneratedAt && genStr !== lastStatusGeneratedAt){
+      await refreshData(false);
+    }
+
+    if (genStr) lastStatusGeneratedAt = genStr;
+  }catch(e){
+    // Keep UI stable; updateDatasetTile handles its own error state.
+    try{ await updateDatasetTile(null); }catch{}
+  }finally{
+    statusPollInFlight = false;
   }
 }
 
@@ -2757,7 +2794,7 @@ async function refreshData(force=false){
     await fetchRoles();
     await fetchRunways();
 
-    const res = await fetch("data/latest.json?cb=" + Date.now(), {cache:"no-store"});
+    const res = await fetch("data/latest.json?cb=" + Date.now(), {cache:"no-store", headers:{ "Cache-Control":"no-cache", "Pragma":"no-cache" }});
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
@@ -3113,8 +3150,9 @@ $("drawerClose")
   // Also keep the Quick View drawer age fields ticking if it's open.
   setInterval(()=>{ updateAgesInPlace(); refreshDrawerAges(); }, 60_000);
 
-  // Poll for new data (generatedAt change) every 60 seconds. Reads only GitHub Pages CDN, not AWC.
-  setInterval(()=>{ refreshData(false); }, 60_000);
+  // Poll dataset status frequently so wall displays react within ~10s to a new build.
+  // Full dataset refresh happens only when generatedAt changes (normally every 5 minutes).
+  setInterval(()=>{ pollStatusAndMaybeRefresh(); }, 10_000);
 
   // If the tab becomes visible again, force a refresh so ages don't look frozen.
   document.addEventListener("visibilitychange", ()=>{
@@ -3123,7 +3161,8 @@ $("drawerClose")
 }
 
 bind();
-updateDatasetTile();
+// Prime status + start with an immediate load
+pollStatusAndMaybeRefresh();
 load();
 
 updateTopHeight();

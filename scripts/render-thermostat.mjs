@@ -18,8 +18,11 @@ const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..");
 
 const OUT_DIR = path.join(ROOT, "assets", "render");
-const OUT_4K = path.join(OUT_DIR, "wxwi-thermostat-4k.webp");
-const OUT_1080 = path.join(OUT_DIR, "wxwi-thermostat-1080p.webp");
+const OUT_4K_WEBP = path.join(OUT_DIR, "wxwi-thermostat-4k.webp");
+const OUT_1080_WEBP = path.join(OUT_DIR, "wxwi-thermostat-1080p.webp");
+const OUT_4K_PNG = path.join(OUT_DIR, "wxwi-thermostat-4k.png");
+const OUT_1080_PNG = path.join(OUT_DIR, "wxwi-thermostat-1080p.png");
+const OUT_STATUS = path.join(OUT_DIR, "wxwi-thermostat.status.json");
 
 const PAGE_PATH = path.join(ROOT, "render", "thermostat.html");
 const PAGE_URL_PATH = "/render/thermostat.html";
@@ -103,7 +106,7 @@ async function tryWaitForRenderReady(page) {
   }
 }
 
-async function shot(page, outPath, viewport, quality) {
+async function shotPair(page, viewport, outWebp, outPng, webpQuality) {
   await page.setViewport({ width: viewport.w, height: viewport.h, deviceScaleFactor: 1 });
 
   // Reload to let CSS media queries/layout settle for this viewport
@@ -115,7 +118,8 @@ async function shot(page, outPath, viewport, quality) {
   await tryWaitForRenderReady(page);
   await delay(SETTLE_MS);
 
-  await page.screenshot({ path: outPath, type: "webp", quality, fullPage: false });
+  await page.screenshot({ path: outWebp, type: "webp", quality: webpQuality, fullPage: false });
+  await page.screenshot({ path: outPng, type: "png", fullPage: false });
 }
 
 async function main() {
@@ -151,11 +155,27 @@ async function main() {
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT_MS });
 
-    await shot(page, OUT_4K, { w: 3840, h: 2160 }, 92);
-    await shot(page, OUT_1080, { w: 1920, h: 1080 }, 90);
+    await shotPair(page, { w: 3840, h: 2160 }, OUT_4K_WEBP, OUT_4K_PNG, 92);
+    await shotPair(page, { w: 1920, h: 1080 }, OUT_1080_WEBP, OUT_1080_PNG, 90);
 
-    console.log(`[RENDER OK] assets/render/wxwi-thermostat-4k.webp`);
-    console.log(`[RENDER OK] assets/render/wxwi-thermostat-1080p.webp`);
+    // Status file for wall screens (lets them swap immediately on new renders)
+    const dataStatusPath = path.join(ROOT, "data", "status.json");
+    let sourceGeneratedAt = null;
+    try{
+      if (fs.existsSync(dataStatusPath)){
+        const j = JSON.parse(fs.readFileSync(dataStatusPath, "utf8"));
+        sourceGeneratedAt = j && j.generatedAt ? String(j.generatedAt) : null;
+      }
+    }catch{}
+    fs.writeFileSync(OUT_STATUS, JSON.stringify({
+      renderedAt: new Date().toISOString(),
+      sourceGeneratedAt,
+      note: "thermostat"
+    }, null, 2));
+
+    console.log(`[RENDER OK] assets/render/wxwi-thermostat-4k.webp (+png)`);
+    console.log(`[RENDER OK] assets/render/wxwi-thermostat-1080p.webp (+png)`);
+    console.log(`[RENDER OK] assets/render/wxwi-thermostat.status.json`);
   } catch (e) {
     console.error(`[RENDER ERROR] ${e?.name || "Error"}: ${e?.message || String(e)}`);
     try {

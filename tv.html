@@ -3,30 +3,165 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>TV Infographic</title>
+  <title>WXWI TV Dashboard</title>
   <style>
-    html,body{ margin:0; height:100%; background:#000; }
-    img{ width:100vw; height:100vh; object-fit:contain; display:block; }
+    :root{ --fg: rgba(230,240,255,.72); --bg: #000; }
+    html,body{ margin:0; height:100%; background:var(--bg); overflow:hidden; }
+    body{ display:grid; place-items:center; }
+    img{
+      width:100vw;
+      height:100vh;
+      object-fit:contain;
+      display:block;
+      background:#000;
+      image-rendering:auto;
+    }
+    /* Small, non-intrusive status line for OCC wall displays */
+    .osd{
+      position:fixed;
+      left:14px;
+      bottom:12px;
+      color:var(--fg);
+      font: 600 13px/1.25 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      text-shadow: 0 0 18px rgba(0,0,0,.85);
+      user-select:none;
+      pointer-events:none;
+      opacity:.85;
+      white-space:nowrap;
+    }
+    .osd b{ font-weight:800; }
+    .osd .bad{ color: rgba(255,170,170,.92); }
   </style>
 </head>
 <body>
-  <picture>
-    <source id="src4k" srcset="assets/render/wxwi-dashboard-4k.webp" type="image/webp">
-    <img id="img" src="assets/render/wxwi-dashboard-1080p.webp" alt="WXWI TV Infographic">
-  </picture>
+  <img id="img" alt="WXWI TV Dashboard" />
+  <div id="osd" class="osd">LOADING…</div>
 
   <script>
-    const src4k = document.getElementById('src4k');
-    const img = document.getElementById('img');
-    const base4k = src4k.getAttribute('srcset');
-    const base1080 = img.getAttribute('src');
-    function bust(){
-      const t = Date.now();
-      src4k.setAttribute('srcset', base4k + '?t=' + t);
-      img.setAttribute('src', base1080 + '?t=' + t);
+    const img = document.getElementById("img");
+    const osd = document.getElementById("osd");
+
+    const ASSETS = {
+      "1080p": { webp: "assets/render/wxwi-dashboard-1080p.webp", png: "assets/render/wxwi-dashboard-1080p.png" },
+      "4k":    { webp: "assets/render/wxwi-dashboard-4k.webp",    png: "assets/render/wxwi-dashboard-4k.png" },
+    };
+
+    const STATUS_URL = "assets/render/wxwi-dashboard.status.json";
+    const POLL_MS = 10_000;   // UI should react within ~10 seconds
+    const FALLBACK_BUST_MS = 60_000; // safety net in case status cannot be read
+
+    const fetchNoStore = async (url) => {
+      const res = await fetch(url, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    };
+
+    const pickRes = () => {
+      // Prefer 4K on true 4K panels; Samsung UE55AU7102 is 3840x2160.
+      const w = window.innerWidth || 1920;
+      const dpr = window.devicePixelRatio || 1;
+      return (w * dpr >= 2560) ? "4k" : "1080p";
+    };
+
+    const withV = (base, v) => base + "?v=" + encodeURIComponent(String(v));
+
+    let lastRenderedAt = null;
+    let fallbackTimer = null;
+
+    async function swapTo(versionToken){
+      const res = pickRes();
+      const webp = ASSETS[res].webp;
+      const png  = ASSETS[res].png;
+
+      const tryUrl = withV(webp, versionToken);
+
+      // Preload first to avoid flicker on TV panels.
+      await new Promise((resolve) => {
+        const probe = new Image();
+        probe.onload = () => resolve(true);
+        probe.onerror = () => resolve(false);
+        probe.src = tryUrl;
+      }).then((ok) => {
+        if (ok){
+          img.src = tryUrl;
+        }else{
+          img.src = withV(png, versionToken);
+        }
+      });
     }
-    bust();
-    setInterval(bust, 60_000);
+
+    function renderOsd({renderedAt, sourceGeneratedAt, note}){
+      const parts = [];
+      parts.push("TV DASHBOARD");
+      if (sourceGeneratedAt){
+        const d = new Date(sourceGeneratedAt);
+        const mins = Math.floor((Date.now() - d.getTime())/60000);
+        const stale = mins >= 20;
+        parts.push("DATA");
+        parts.push((stale ? "<b class='bad'>" : "<b>") + mins + "m</b>");
+      }
+      if (renderedAt){
+        const d = new Date(renderedAt);
+        const mins = Math.floor((Date.now() - d.getTime())/60000);
+        const stale = mins >= 20;
+        parts.push("RENDER");
+        parts.push((stale ? "<b class='bad'>" : "<b>") + mins + "m</b>");
+      }
+      if (note) parts.push(note);
+      osd.innerHTML = parts.join(" • ");
+    }
+
+    async function poll(){
+      try{
+        const s = await fetchNoStore(STATUS_URL + "?cb=" + Date.now());
+        const renderedAt = s && s.renderedAt ? String(s.renderedAt) : null;
+
+        // First run: always swap once.
+        const changed = !lastRenderedAt || (renderedAt && renderedAt !== lastRenderedAt);
+
+        if (renderedAt) lastRenderedAt = renderedAt;
+
+        renderOsd({
+          renderedAt: s.renderedAt || null,
+          sourceGeneratedAt: s.sourceGeneratedAt || null,
+          note: s.note || null
+        });
+
+        if (changed){
+          await swapTo(renderedAt || Date.now());
+        }
+
+        // keep the fallback timer alive
+        if (fallbackTimer){
+          clearInterval(fallbackTimer);
+          fallbackTimer = null;
+        }
+      }catch(e){
+        // If status can't be fetched (offline TV / captive portal / proxy issues), keep forcing busts.
+        osd.innerHTML = "TV DASHBOARD • <b class='bad'>STATUS UNAVAILABLE</b>";
+        if (!fallbackTimer){
+          fallbackTimer = setInterval(() => {
+            swapTo(Date.now());
+          }, FALLBACK_BUST_MS);
+        }
+      }
+    }
+
+    // First paint
+    poll();
+    setInterval(poll, POLL_MS);
+
+    // Re-evaluate resolution on resize (some TVs change viewport after boot / overscan)
+    let rz;
+    window.addEventListener("resize", () => {
+      clearTimeout(rz);
+      rz = setTimeout(() => swapTo(lastRenderedAt || Date.now()), 300);
+    });
   </script>
 </body>
 </html>
