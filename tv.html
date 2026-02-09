@@ -144,6 +144,9 @@
       }catch(e){
         // If status can't be fetched (offline TV / captive portal / proxy issues), keep forcing busts.
         osd.innerHTML = "TV DASHBOARD • <b class='bad'>STATUS UNAVAILABLE</b>";
+        // Show an image immediately even if the status file is missing/blocked.
+        // (Some TVs will otherwise stay blank until the fallback timer fires.)
+        try{ await swapTo(Date.now()); }catch{}
         if (!fallbackTimer){
           fallbackTimer = setInterval(() => {
             swapTo(Date.now());
