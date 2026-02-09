@@ -1,0 +1,71 @@
+name: Render TV Assets (infographic + thermostat)
+
+on:
+  # Rendering is significantly heavier than the data refresh.
+  # Keep this on a slower cadence to avoid overlapping runs and cancellations.
+  schedule:
+    - cron: "7,22,37,52 * * * *"  # every 15 minutes (offset)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: render-assets
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PUPPETEER_CACHE_DIR: ~/.cache/puppeteer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Speed-ups: cache npm + puppeteer browser downloads.
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Restore puppeteer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-puppeteer-
+
+      - name: Install deps (puppeteer)
+        run: npm install --no-audit --no-fund
+
+      - name: Render TV infographic (4K + 1080p)
+        run: node scripts/render-infographic.mjs
+
+      - name: Render Thermostat (4K + 1080p)
+        run: node scripts/render-thermostat.mjs
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp
+            git add assets/render/wxwi-thermostat-4k.webp assets/render/wxwi-thermostat-1080p.webp
+            git commit -m "Render TV assets"
+            git push
+          else
+            echo "No changes to commit."
+          fi

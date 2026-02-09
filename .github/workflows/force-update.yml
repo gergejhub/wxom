@@ -1,4 +1,4 @@
-name: Force Dataset Refresh (30m)
+name: Force Dataset Refresh (30m, fast)
 
 on:
   schedule:
@@ -12,7 +12,8 @@ permissions:
 
 concurrency:
   group: dataset
-  cancel-in-progress: true
+  # See update.yml for rationale.
+  cancel-in-progress: false
 
 jobs:
   force_update:
@@ -29,9 +30,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install deps (puppeteer)
-        run: npm install --no-audit --no-fund
-
       - name: Force update data (3 retries)
         run: |
           set -e
@@ -45,14 +43,8 @@ jobs:
             sleep 20
           done
 
-      - name: Render TV infographic (4K + 1080p)
-        run: node scripts/render-infographic.mjs
-
       - name: Generate Thermostat data
         run: node scripts/generate-thermostat.mjs
-
-      - name: Render Thermostat (4K +1080p)
-        run: node scripts/render-thermostat.mjs
 
       - name: Write force heartbeat
         run: |
@@ -70,11 +62,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain)" ]; then
-            git add data/latest.json data/status.json data/runways.json data/iata_map.json data/schema_debug.json data/management_brief.json data/changes.json data/force_heartbeat.json
-            git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp
             git add data/thermostat.json
-            git add assets/render/wxwi-thermostat-4k.webp assets/render/wxwi-thermostat-1080p.webp
-            git commit -m "Force refresh dataset + TV infographic + thermostat"
+            git add data/latest.json data/status.json data/runways.json data/iata_map.json data/schema_debug.json data/management_brief.json data/changes.json data/force_heartbeat.json
+            git commit -m "Force refresh dataset + thermostat"
             git push
           else
             echo "No changes to commit."

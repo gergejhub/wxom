@@ -1,4 +1,4 @@
-name: Update METAR/TAF Dataset
+name: Update METAR/TAF Dataset (fast)
 
 on:
   schedule:
@@ -10,7 +10,12 @@ permissions:
 
 concurrency:
   group: dataset
-  cancel-in-progress: true
+  # IMPORTANT:
+  # This workflow is scheduled at the minimum interval (5 min).
+  # If a run takes longer than the schedule interval and we cancel in-progress runs,
+  # the workflow can get into a state where it never finishes and never commits new data.
+  # Keep the currently-running job alive; GitHub will cancel any older *pending* run.
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -27,31 +32,23 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install deps (puppeteer)
-        run: npm install --no-audit --no-fund
-
+      # Data refresh must be quick and reliable (every 5 min).
+      # Rendering assets via puppeteer is moved to a separate workflow (render.yml)
+      # so that dataset refresh keeps working even if rendering is slow or fails.
       - name: Update data
         run: node scripts/update-data.mjs
 
-      - name: Render TV infographic (4K + 1080p)
-        run: node scripts/render-infographic.mjs
-
       - name: Generate Thermostat data
         run: node scripts/generate-thermostat.mjs
-
-      - name: Render Thermostat (4K +1080p)
-        run: node scripts/render-thermostat.mjs
 
       - name: Commit & push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain)" ]; then
-            git add data/latest.json data/status.json data/runways.json data/iata_map.json data/schema_debug.json data/management_brief.json data/changes.json
-            git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp
             git add data/thermostat.json
-            git add assets/render/wxwi-thermostat-4k.webp assets/render/wxwi-thermostat-1080p.webp
-            git commit -m "Update dataset + TV infographic + thermostat"
+            git add data/latest.json data/status.json data/runways.json data/iata_map.json data/schema_debug.json data/management_brief.json data/changes.json
+            git commit -m "Update dataset + thermostat"
             git push
           else
             echo "No changes to commit."
