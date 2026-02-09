@@ -14,12 +14,16 @@ concurrency:
   group: render-assets
   cancel-in-progress: true
 
+env:
+  # IMPORTANT: puppeteer does NOT expand "~" in env vars.
+  # It must be an absolute path, otherwise install fails with:
+  # "Target directory is expected to be absolute".
+  PUPPETEER_CACHE_DIR: ${{ github.workspace }}/.cache/puppeteer
+
 jobs:
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      PUPPETEER_CACHE_DIR: ~/.cache/puppeteer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +34,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Prepare puppeteer cache dir
+        run: mkdir -p "${{ env.PUPPETEER_CACHE_DIR }}"
 
       # Speed-ups: cache npm + puppeteer browser downloads.
       - name: Restore npm cache
@@ -43,7 +50,7 @@ jobs:
       - name: Restore puppeteer cache
         uses: actions/cache@v4
         with:
-          path: ~/.cache/puppeteer
+          path: ${{ env.PUPPETEER_CACHE_DIR }}
           key: ${{ runner.os }}-puppeteer-${{ hashFiles('package.json') }}
           restore-keys: |
             ${{ runner.os }}-puppeteer-
