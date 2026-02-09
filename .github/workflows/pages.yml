@@ -3,6 +3,20 @@ name: pages
 on:
   push:
     branches: [ main ]
+  # IMPORTANT:
+  # Commits made by GitHub Actions using GITHUB_TOKEN do not reliably trigger
+  # other workflows via "push" (to prevent infinite loops). Our dataset/render
+  # workflows commit updates; therefore Pages must also be triggered via
+  # workflow_run and/or schedule to ensure the site actually redeploys.
+  workflow_run:
+    workflows:
+      - Update METAR/TAF Dataset (fast)
+      - Force Dataset Refresh (30m, fast)
+      - Render TV Assets (infographic + thermostat)
+    types:
+      - completed
+  schedule:
+    - cron: "*/10 * * * *"  # safety net: redeploy at least every 10 minutes
   workflow_dispatch:
 
 permissions:
@@ -16,10 +30,15 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Always deploy the latest default-branch state.
+          # workflow_run events can reference the pre-commit SHA of the triggering run.
+          ref: main
 
       - name: Prepare dist
         shell: bash
@@ -37,7 +56,7 @@ jobs:
           done
 
           # Static folders (copy if exist)
-          for d in assets data render scripts css js; do
+          for d in assets data render scripts stat css js; do
             if [ -d "$d" ]; then cp -R "$d" dist/; fi
           done
 
@@ -60,6 +79,7 @@ jobs:
           path: dist
 
   deploy:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     needs: build
     runs-on: ubuntu-latest
     environment:

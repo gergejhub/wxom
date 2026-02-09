@@ -56,7 +56,8 @@ jobs:
             ${{ runner.os }}-puppeteer-
 
       - name: Install deps (puppeteer)
-        run: npm install --no-audit --no-fund
+        # Avoid generating an untracked package-lock.json in CI.
+        run: npm install --no-audit --no-fund --no-package-lock
 
       - name: Render TV infographic (4K + 1080p)
         run: node scripts/render-infographic.mjs
@@ -68,11 +69,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain)" ]; then
-            git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp
-            git add assets/render/wxwi-thermostat-4k.webp assets/render/wxwi-thermostat-1080p.webp
-            git commit -m "Render TV assets"
-            git push
-          else
-            echo "No changes to commit."
+          # Only consider render outputs. Other untracked/modified files (e.g. caches)
+          # must not make the workflow fail.
+          git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp || true
+          git add assets/render/wxwi-thermostat-4k.webp assets/render/wxwi-thermostat-1080p.webp || true
+
+          if git diff --cached --quiet; then
+            echo "No render changes to commit."
+            exit 0
           fi
+
+          git commit -m "Render TV assets"
+          git push
