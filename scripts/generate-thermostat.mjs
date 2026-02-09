@@ -36,16 +36,24 @@ function classifyDrivers(st){
   // Uses triggers first; falls back to hazards / vis / ceiling fields.
   const triggers = safeArr(st?.triggers);
   const labels = triggers.map(t => safeStr(t?.label).toUpperCase());
+  // In latest.json, hazards is typically an array of short tokens (e.g. "sn", "br", "fg").
+  // Normalize to uppercase for regex matching.
   const hazards = safeArr(st?.hazards).map(h => safeStr(h).toUpperCase());
 
   const has = (re) => labels.some(l => re.test(l)) || hazards.some(h => re.test(h));
 
+  // VIS bucket: include explicit triggers and common low-vis phenomena tokens.
+  // The dashboard treats BR/FG/FZFG as part of the visibility pain surface as well.
   const vis = has(/\bVIS\b|RVR|CIG|CEIL|MINIMA|LVP|LOW\s*VIS|LOW\s*CIG|BELOW/i)
+           || has(/\bBR\b|\bFG\b|\bFZFG\b/i)
            || (Number(st?.worst_visibility_m) > 0 && Number(st?.worst_visibility_m) < 1500)
            || (Number(st?.ceiling_ft) > 0 && Number(st?.ceiling_ft) < 1500);
 
-  const wind = has(/WIND|GUST|LLWS|WS\b/i);
-  const snow = has(/SNOW|BLSN|BLOWING\s*SNOW|RWY\s*CONTAM|SLUSH|BRAKING/i);
+  const wind = has(/WIND|GUST|XWIND|LLWS|WS\b/i);
+  // SNOW/ICE bucket: latest.json uses short tokens like "SN" in triggers/hazards.
+  // Include "SN" and other snow/contamination/ice-related codes seen in METAR/TAF.
+  const snow = has(/\bSN\b|\bSHSN\b|\bBLSN\b|SNOW|CONTAM|RWY\s*CONTAM|SLUSH|BRAK/i)
+            || has(/\bPL\b|\bGS\b|\bSG\b|\bGR\b|\bFZRA\b|\bFZDZ\b|ICE|ICING|FREEZ/i);
   const icing = has(/ICE|ICING|FZRA|FZDZ|FREEZ/i) || Boolean(st?.engIceOps);
   const ts = has(/\bTS\b|THUNDER|CB\b/i);
 
@@ -76,9 +84,31 @@ function main(){
   const metCrit = stations.filter(s => Boolean(s.metCrit)).length;
   const tafCrit = stations.filter(s => Boolean(s.tafCrit)).length;
 
-  // Bases impacted (any non-OK now or any forecast critical)
-  const basesNow = stations.filter(s => isBase(s.iata, baseSet) && (s.alert !== "OK" || Boolean(s.metCrit))).map(s=>s.iata);
-  const basesFct = stations.filter(s => isBase(s.iata, baseSet) && (Boolean(s.tafCrit) || Number(s.tafPri||0) >= 20)).map(s=>s.iata);
+  // Bases impacted
+  // Align this with the dashboard/TV Info notion of "impacted"...
+  // (e.g. a base with only "COLD CORR" should still be listed).
+  const hasTrigSrc = (s, re) => safeArr(s?.triggers).some(t => re.test(String(t?.src || "").toUpperCase()));
+  const hasAnyTrig = (s) => safeArr(s?.triggers).length > 0;
+
+  const basesNow = stations
+    .filter(s => isBase(s.iata, baseSet) && (
+      s.alert !== "OK" ||
+      Boolean(s.metCrit) ||
+      Number(s.metPri || 0) > 0 ||
+      hasTrigSrc(s, /^M/) ||
+      // some triggers are not classified by src but still matter
+      hasAnyTrig(s)
+    ))
+    .map(s => s.iata);
+
+  const basesFct = stations
+    .filter(s => isBase(s.iata, baseSet) && (
+      Boolean(s.tafCrit) ||
+      Number(s.tafPri || 0) > 0 ||
+      hasTrigSrc(s, /^T/)
+    ))
+    .map(s => s.iata);
+
   const basesAny = uniq([...basesNow, ...basesFct]);
 
   // Per-base primary trigger tags (small TV-friendly icons)

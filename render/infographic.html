@@ -266,9 +266,11 @@
   function iconKeyFromTrigger(label){
     const L = String(label||"").toUpperCase();
     if (/ENG\s*ICE/.test(L)) return null;
-    if (/(SNOW|CONTAM|ICE|FZRA|FZDZ)/.test(L)) return "snow";
+    // Snow/ice bucket: the dashboard uses short wx tokens like "SN".
+    // Include common precipitation/ice codes so TV matches the main dashboard.
+    if (/(\bSN\b|\bSHSN\b|\bBLSN\b|SNOW|CONTAM|ICE|FZRA|FZDZ|\bPL\b|\bGS\b|\bSG\b|\bGR\b)/.test(L)) return "snow";
     if (/(VIS|RVR|MINIMA|CEILING|LOW CLOUD|CIG)/.test(L)) return "vis";
-    if (/(WIND|GUST)/.test(L)) return "wind";
+    if (/(WIND|GUST|XWIND)/.test(L)) return "wind";
     return null;
   }
 
@@ -316,11 +318,14 @@
       const k = iconKeyFromTrigger(t?.label);
       if (k) keys.push(k);
     }
-    // If no triggers array has category, fall back to heuristics
+    // If no triggers array has category, fall back to hazards / fields.
+    // NOTE: latest.json uses hazards as an array of short tokens (e.g. ["br","sn"]).
     if (!keys.length){
-      const hz = st?.hazards || {};
-      if (hz?.snow || hz?.sn || hz?.contam) keys.push("snow");
-      if (st?.minimaNow || st?.visibility_m !== null) keys.push("vis");
+      const hzArr = Array.isArray(st?.hazards) ? st.hazards.map(x=>String(x).toUpperCase()) : [];
+      const hzHas = (re)=>hzArr.some(h=>re.test(h));
+      if (hzHas(/\bSN\b|\bSHSN\b|\bBLSN\b|SNOW|CONTAM|ICE|FZRA|FZDZ|\bPL\b|\bGS\b|\bSG\b|\bGR\b/)) keys.push("snow");
+      if (hzHas(/\bBR\b|\bFG\b|\bFZFG\b/) || st?.minimaNow || st?.worst_visibility_m != null || st?.visibility_m != null || st?.ceiling_ft != null) keys.push("vis");
+      if (st?.xwind || st?.wind || st?.gustMaxKt || st?.windGustKt) keys.push("wind");
     }
     // Prefer at most 2 icons
     return uniq(keys).slice(0,2);
