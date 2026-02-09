@@ -1,18 +1,25 @@
 name: Render TV Assets (infographic + thermostat)
 
 on:
-  # Rendering is significantly heavier than the data refresh.
-  # Keep this on a slower cadence to avoid overlapping runs and cancellations.
+  # Main trigger: render right after the data update workflow finishes.
+  # (Pushes created by github-actions via GITHUB_TOKEN do not reliably trigger other workflows.)
+  workflow_run:
+    workflows: ["Update METAR/TAF Dataset (fast)"]
+    types: [completed]
+
+  # Fallback schedule (in case workflow_run is paused by GitHub on inactive repos)
   schedule:
-    - cron: "7,22,37,52 * * * *"  # every 15 minutes (offset)
+    - cron: "*/30 * * * *"
+
   workflow_dispatch:
 
 permissions:
+
   contents: write
 
 concurrency:
   group: render-assets
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   # IMPORTANT: puppeteer does NOT expand "~" in env vars.
@@ -22,6 +29,7 @@ env:
 
 jobs:
   render:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -71,8 +79,12 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Only consider render outputs. Other untracked/modified files (e.g. caches)
           # must not make the workflow fail.
-          git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp || true
-          git add assets/render/wxwi-thermostat-4k.webp assets/render/wxwi-thermostat-1080p.webp || true
+          git add assets/render/wxwi-dashboard-4k.webp assets/render/wxwi-dashboard-1080p.webp \
+                 assets/render/wxwi-dashboard-4k.png assets/render/wxwi-dashboard-1080p.png \
+                 assets/render/wxwi-dashboard.status.json || true
+          git add assets/render/wxwi-thermostat-4k.webp assets/render/wxwi-thermostat-1080p.webp \
+                 assets/render/wxwi-thermostat-4k.png assets/render/wxwi-thermostat-1080p.png \
+                 assets/render/wxwi-thermostat.status.json || true
 
           if git diff --cached --quiet; then
             echo "No render changes to commit."
