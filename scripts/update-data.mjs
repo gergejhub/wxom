@@ -139,146 +139,55 @@ function parseTempC(raw){
   return v.startsWith("M") ? -n : n;
 }
 
-function parseVisibilityMeters(raw){
-  // Robust token-based parse:
-  // - ignores time ranges like 3012/3112 (TAF) and RVR groups like R27/0600
-  // - supports US-style SM tokens including split form: "1 1/2SM"
-  const rawStr = rawToString(raw);
-  if (!rawStr) return null;
+function _parseVisibilityMeters(tok){
+  const t = String(tok||"").trim().toUpperCase();
+  if (!t) return null;
 
-  if (/\bCAVOK\b/i.test(rawStr)) return 10000;
+  if (t === "CAVOK") return 10000;
 
-  const toks = String(rawStr).trim().split(/\s+/);
+  // ICAO 4-digit meters, optionally with suffix like NDV (e.g. 9999NDV)
+  const m4 = t.match(/^(\d{4})(?:[A-Z]{1,4})?$/);
+  if (m4){
+    const v = parseInt(m4[1],10);
+    if (!Number.isNaN(v)) return v === 9999 ? 10000 : v;
+  }
 
-  let best = null;
-  const add = (m)=>{ if (m == null) return; best = (best==null) ? m : Math.min(best, m); };
+  // Statute miles forms:
+  // - P6SM (plus)
+  // - 2SM, 2.5SM, M1SM (less than)
+  // - 1/2SM, M1/4SM
+  const mp = t.match(/^P(\d+)SM$/);
+  if (mp){
+    const n = parseInt(mp[1],10);
+    if (Number.isFinite(n)) return Math.round(n * 1609.34);
+  }
 
-  for (let idx=0; idx<toks.length; idx++){
-    const t0 = toks[idx].trim().toUpperCase();
-    if (!t0) continue;
-
-    // Split statute miles: e.g. "1 1/2SM" or "2 M1/4SM"
-    if (/^\d+$/.test(t0) && idx+1 < toks.length){
-      const t1 = toks[idx+1].trim().toUpperCase();
-      if (/^M?\d+\/\d+SM$/.test(t1)){
-        const whole = parseInt(t0,10);
-        const frac = t1.replace(/^M/,'').slice(0,-2);
-        const [a,b] = frac.split('/').map(Number);
-        if (Number.isFinite(whole) && Number.isFinite(a) && Number.isFinite(b) && b !== 0){
-          add(Math.round((whole + (a/b))*1609.34));
-          idx++; // consume fraction token
-          continue;
-        }
-      }
-    }
-
-    // US fractional statute miles (single token): e.g. 1/2SM, M1/4SM
-    if (/^M?\d+\/\d+SM$/.test(t0)){
-      const frac = t0.replace(/^M/,"").slice(0,-2);
-      const [a,b] = frac.split("/").map(Number);
-      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
-        add(Math.round((a/b)*1609.34));
-      }
-      continue;
-    }
-
-    // Ignore validity/time ranges (TAF) and RVR groups
-    if (/^\d{4}\/\d{4}$/.test(t0)) continue;
-    if (/^R\d{2}[LRC]?\//.test(t0)) continue;
-    if (t0.includes("/")) continue;
-
-    // ICAO vis tokens: 0400, 9999, also with suffix like 9999NDV
-    if (/^\d{4}(?:[A-Z]{1,4})?$/.test(t0)){
-      const v = parseInt(t0.slice(0,4),10);
-      if (!Number.isNaN(v)) add(v === 9999 ? 10000 : v);
-      continue;
-    }
-
-    // Whole statute miles tokens: P6SM, 2SM, M1SM
-    if (/^P\d+SM$/.test(t0)){
-      const n = parseInt(t0.slice(1,-2),10);
-      if (Number.isFinite(n)) add(Math.round(n*1609.34));
-      continue;
-    }
-    if (/^M?\d+SM$/.test(t0)){
-      const n = parseInt(t0.replace(/^M/,"").slice(0,-2),10);
-      if (Number.isFinite(n)) add(Math.round(n*1609.34));
-      continue;
+  const mfrac = t.match(/^M?(\d+)\/(\d+)SM$/);
+  if (mfrac){
+    const a = parseInt(mfrac[1],10);
+    const b = parseInt(mfrac[2],10);
+    if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+      return Math.round((a/b) * 1609.34);
     }
   }
 
-  return best;
-}
-
-function extractAllVisibilityMetersFromTAF(raw){
-  const rawStr = rawToString(raw);
-  if (!rawStr) return [];
-  const out = [];
-
-  if (/\bCAVOK\b/i.test(rawStr)) out.push(10000);
-
-  const toks = String(rawStr).trim().split(/\s+/);
-  for (let idx=0; idx<toks.length; idx++){
-    const t0 = toks[idx].trim().toUpperCase();
-    if (!t0) continue;
-
-    // Split statute miles: "1 1/2SM"
-    if (/^\d+$/.test(t0) && idx+1 < toks.length){
-      const t1 = toks[idx+1].trim().toUpperCase();
-      if (/^M?\d+\/\d+SM$/.test(t1)){
-        const whole = parseInt(t0,10);
-        const frac = t1.replace(/^M/,"").slice(0,-2);
-        const [a,b] = frac.split("/").map(Number);
-        if (Number.isFinite(whole) && Number.isFinite(a) && Number.isFinite(b) && b !== 0){
-          out.push(Math.round((whole + (a/b))*1609.34));
-          idx++;
-          continue;
-        }
-      }
-    }
-
-    // Fractional statute miles token: 1/2SM, M1/4SM
-    if (/^M?\d+\/\d+SM$/.test(t0)){
-      const frac = t0.replace(/^M/,"").slice(0,-2);
-      const [a,b] = frac.split("/").map(Number);
-      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0){
-        out.push(Math.round((a/b)*1609.34));
-      }
-      continue;
-    }
-
-    // Ignore validity/time ranges and RVR groups
-    if (/^\d{4}\/\d{4}$/.test(t0)) continue;
-    if (/^R\d{2}[LRC]?\//.test(t0)) continue;
-    if (t0.includes("/")) continue;
-
-    if (/^\d{4}(?:[A-Z]{1,4})?$/.test(t0)){
-      const v = parseInt(t0.slice(0,4),10);
-      if (!Number.isNaN(v)) out.push(v === 9999 ? 10000 : v);
-      continue;
-    }
-
-    if (/^P\d+SM$/.test(t0)){
-      const n = parseInt(t0.slice(1,-2),10);
-      if (Number.isFinite(n)) out.push(Math.round(n*1609.34));
-      continue;
-    }
-    if (/^M?\d+SM$/.test(t0)){
-      const n = parseInt(t0.replace(/^M/,"").slice(0,-2),10);
-      if (Number.isFinite(n)) out.push(Math.round(n*1609.34));
-      continue;
-    }
+  const mwhole = t.match(/^M?(\d+(?:\.\d+)?)SM$/);
+  if (mwhole){
+    const mi = parseFloat(mwhole[1]);
+    if (Number.isFinite(mi)) return Math.round(mi * 1609.34);
   }
-  return out;
+
+  return null;
 }
 
 function extractRvrMeters(raw){
-  const s = rawToString(raw);
-  if (!s) return [];
+  const s = String(raw||"");
+  const vals = [];
+  if (!s) return vals;
+
   // Accept common ICAO format and US-style optional FT suffix.
   // Examples: R29/1000N, R06/0600V1000U, R27/P1500U, R09/M0050N, R11/1200FT
   const re = /\bR\d{2}[LRC]?\/([PM]?)(\d{4})(?:V([PM]?)(\d{4}))?([UDN])?(FT)?\b/g;
-  const vals = [];
   let m;
   while ((m = re.exec(String(s).toUpperCase())) !== null){
     const isFt = !!m[6];
@@ -286,22 +195,24 @@ function extractRvrMeters(raw){
 
     const v1 = parseInt(m[2],10);
     if (!Number.isNaN(v1)) vals.push(toMeters(v1));
+
     if (m[4]){
       const v2 = parseInt(m[4],10);
       if (!Number.isNaN(v2)) vals.push(toMeters(v2));
     }
   }
+
   return vals;
 }
 
 function hazardFlags(raw){
   // Token-aware hazards aligned with frontend parsing.
-  const rawStr = rawToString(raw);
-  if (!rawStr) return { ts:false, cb:false, fg:false, fzfg:false, br:false, sn:false, blsn:false, ra:false, va:false };
+  const upAll = String(raw||"").toUpperCase();
+  if (!upAll.trim()){
+    return { ts:false, cb:false, fg:false, fzfg:false, br:false, sn:false, blsn:false, ra:false, va:false };
+  }
 
-  const upAll = String(rawStr).toUpperCase();
-
-  // Strip leading meta tokens + ICAO to prevent substring matches inside airport identifiers.
+  // Strip leading meta tokens + ICAO to prevent substring matches inside identifiers.
   const toksAll = upAll.split(/\s+/).map(t=>t.trim()).filter(Boolean);
   let i = 0;
   const headerSkip = new Set(["METAR","SPECI","TAF","AUTO","COR","AMD","CNL","NIL"]);
@@ -311,9 +222,10 @@ function hazardFlags(raw){
 
   const coreText = toks.join(" ");
 
+  // Weather tokens are typically short and alpha-only (optionally prefixed + or -).
   const wxToks = toks.filter(t=>{
     if (!t) return false;
-    if (t.includes("/")) return false;                 // time groups, RVR, validity
+    if (t.includes('/')) return false;                 // time groups, RVR, temps
     if (/[0-9]/.test(t)) return false;                 // numeric groups
     if (/KT$/.test(t) || /MPS$/.test(t)) return false; // wind
     if (t.length > 12) return false;
@@ -332,7 +244,7 @@ function hazardFlags(raw){
   const ts = hasWxRe(/^(?:\+|\-)?TS/) || hasWxRe(/^VCTS/);
 
   const fzfg = /\bFZFG\b/.test(coreText);
-  const fg = ( /\bFG\b/.test(coreText) || hasWx("FG") ) && !fzfg; // keep fzfg separate
+  const fg = ((/\bFG\b/.test(coreText) || hasWx("FG")) && !fzfg);
   const br = /\bBR\b/.test(coreText) || hasWx("BR");
   const blsn = /\bBLSN\b/.test(coreText) || hasWx("BLSN");
 
@@ -344,33 +256,29 @@ function hazardFlags(raw){
   return { ts, cb, fg, fzfg, br, sn, blsn, ra, va };
 }
 
-function extractGustKt(raw){
-  const s = rawToString(raw);
-  if (!s) return [];
-  const out = [];
+function gustMaxKt(raw){
+  const s = String(raw||"");
+  if (!s) return null;
+
+  // METAR/TAF: 18015G25KT, VRB05G25KT, etc. (take maximum)
   const re = /\b(?:\d{3}|VRB)\d{2,3}G(\d{2,3})KT\b/g;
-  let m;
+  let m, best = null;
   while ((m = re.exec(String(s).toUpperCase())) !== null){
     const g = parseInt(m[1],10);
-    if (!Number.isNaN(g)) out.push(g);
+    if (!Number.isNaN(g)) best = (best==null) ? g : Math.max(best, g);
   }
-  return out;
-}
-
-function gustMaxKt(raw){
-  const vals = extractGustKt(raw);
-  return vals.length ? Math.max(...vals) : null;
+  return best;
 }
 
 function ceilingFt(raw){
-  const s = rawToString(raw);
+  const s = String(raw||"").toUpperCase();
   if (!s) return null;
-  const up = String(s).toUpperCase();
-  if (/\bCAVOK\b/.test(up)) return 5000;
+  if (/\bCAVOK\b/.test(s)) return 5000;
+
   // Find lowest BKN/OVC/VV layer (allow CB/TCU suffix: BKN020CB)
   const re = /\b(BKN|OVC|VV)(\d{3})(?:CB|TCU)?\b/g;
   let m, best = null;
-  while ((m = re.exec(up)) !== null){
+  while ((m = re.exec(s)) !== null){
     const ft = parseInt(m[2],10) * 100;
     if (Number.isNaN(ft)) continue;
     if (best===null || ft < best) best = ft;
@@ -378,11 +286,190 @@ function ceilingFt(raw){
   return best;
 }
 
-// Best-effort token string for highlighting visibility in raw text.
+function parseVisibilityMeters(tok){ return _parseVisibilityMeters(tok); }
+
+function parseVisibilityBestMeters(raw){
+  const s = String(raw||"");
+  if (!s.trim()) return null;
+
+  if (/\bCAVOK\b/i.test(s)) return 10000;
+
+  const toks = s.trim().split(/\s+/).filter(Boolean);
+  let best = null;
+  const add = (m)=>{ if (m == null) return; best = (best==null) ? m : Math.min(best, m); };
+
+  for (let i=0; i<toks.length; i++){
+    const t0 = toks[i].trim().toUpperCase();
+    if (!t0) continue;
+
+    // Split statute miles: e.g. "1 1/2SM"
+    if (/^\d+$/.test(t0) && i+1 < toks.length){
+      const t1 = toks[i+1].trim().toUpperCase();
+      if (/^M?\d+\/\d+SM$/.test(t1)){
+        const whole = parseInt(t0,10);
+        const m = t1.match(/^M?(\d+)\/(\d+)SM$/);
+        if (m){
+          const a = parseInt(m[1],10);
+          const b = parseInt(m[2],10);
+          if (Number.isFinite(whole) && Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+            add(Math.round((whole + (a/b)) * 1609.34));
+            i++; // consume t1
+            continue;
+          }
+        }
+      }
+    }
+
+    // Ignore validity/time ranges, temps, RVR groups.
+    if (t0.includes('/')) continue;
+    if (/^R\d{2}[LRC]?\//.test(t0)) continue;
+
+    add(_parseVisibilityMeters(t0));
+  }
+
+  return best;
+}
+
+function extractAllVisibilityMetersFromTAF(raw){
+  const s = String(raw||"");
+  const out = [];
+  if (!s.trim()) return out;
+
+  if (/\bCAVOK\b/i.test(s)) out.push(10000);
+
+  const toks = s.trim().split(/\s+/).filter(Boolean);
+
+  for (let i=0; i<toks.length; i++){
+    const t0 = toks[i].trim().toUpperCase();
+    if (!t0) continue;
+
+    // Split statute miles: e.g. "1 1/2SM"
+    if (/^\d+$/.test(t0) && i+1 < toks.length){
+      const t1 = toks[i+1].trim().toUpperCase();
+      if (/^M?\d+\/\d+SM$/.test(t1)){
+        const whole = parseInt(t0,10);
+        const m = t1.match(/^M?(\d+)\/(\d+)SM$/);
+        if (m){
+          const a = parseInt(m[1],10);
+          const b = parseInt(m[2],10);
+          if (Number.isFinite(whole) && Number.isFinite(a) && Number.isFinite(b) && b !== 0){
+            out.push(Math.round((whole + (a/b)) * 1609.34));
+            i++; // consume t1
+            continue;
+          }
+        }
+      }
+    }
+
+    // Ignore validity/time ranges (TAF) and RVR groups.
+    if (/^\d{4}\/\d{4}$/.test(t0)) continue;
+    if (/^R\d{2}[LRC]?\//.test(t0)) continue;
+
+    const v = _parseVisibilityMeters(t0);
+    if (v !== null) out.push(v);
+  }
+
+  return out.filter(n=>Number.isFinite(n));
+}
+
+function scoreFromVis(vis){
+  if (vis===null || vis===undefined) return 0;
+  if (vis <= 150) return 80;
+  if (vis <= 175) return 72;
+  if (vis <= 250) return 60;
+  if (vis <= 300) return 52;
+  if (vis <= 500) return 40;
+  if (vis <= 550) return 32;
+  if (vis <= 800) return 20;
+  return 0;
+}
+function scoreFromCig(cig){
+  if (cig===null || cig===undefined) return 0;
+  if (cig < 200) return 70;
+  if (cig < 300) return 60;
+  if (cig < 500) return 45;
+  if (cig < 800) return 28;
+  if (cig < 1000) return 18;
+  return 0;
+}
+function scoreFromGust(g){
+  if (!g) return 0;
+  if (g >= 40) return 75;
+  if (g >= 30) return 55;
+  if (g >= 25) return 35;
+  return 0;
+}
+function scoreFromHazards(hz){
+  if (!hz) return 0;
+  if (hz.va) return 90;
+  if (hz.ts || hz.cb) return 55;
+  if (hz.fzfg) return 65;
+  if (hz.fg) return 35;
+  if (hz.sn || hz.blsn) return hz.blsn ? 90 : 40;
+  if (hz.ra) return 20;
+  if (hz.br) return 18;
+  return 0;
+}
+
+function computeScores(raw){
+  const s = String(raw||"").trim();
+  const hz = hazardFlags(s);
+  const tempC = parseTempC(s);
+  const gustMax = gustMaxKt(s);
+  const cig = ceilingFt(s);
+
+  // Visibility: robust token-based scan (supports split SM, M1/4SM, P6SM, 9999NDV, etc.)
+  const vis = parseVisibilityBestMeters(s);
+
+  const rvr = extractRvrMeters(s);
+  const rvrMin = rvr.length ? Math.min(...rvr) : null;
+
+  const score = Math.max(
+    scoreFromVis(vis),
+    scoreFromCig(cig),
+    scoreFromGust(gustMax),
+    scoreFromHazards(hz)
+  );
+
+  return { raw:s, hz, tempC, gustMax, vis, cig, rvrMin, score };
+}
+
+function windPillarAlert(met, taf){
+  const g = Math.max(met.gustMax ?? 0, taf.gustMax ?? 0);
+  if (!g) return "OK";
+  if (g >= 40) return "CRIT";
+  if (g >= 30) return "HIGH";
+  if (g >= 25) return "MED";
+  return "OK";
+}
+function snowPillarAlert(st, met, taf, worstVis, rvrMinAll, cigAll){
+  const hasSnow = !!(met.hz.sn || taf.hz.sn);
+  const hasBlSn = !!(met.hz.blsn || taf.hz.blsn);
+  if (!hasSnow && !hasBlSn) return "OK";
+  if (hasBlSn) return "CRIT";
+  const vis = worstVis;
+  const rvr = rvrMinAll;
+  const cig = cigAll;
+  if ((vis !== null && vis <= 500) || (rvr !== null && rvr <= 300) || (cig !== null && cig < 500)) return "CRIT";
+  if ((vis !== null && vis <= 800) || (rvr !== null && rvr <= 500) || (cig !== null && cig < 1000)) return "HIGH";
+  return "MED";
+}
+
+function snippetAround(raw, token, radius=28){
+  const s = String(raw||"");
+  const i = s.toUpperCase().indexOf(String(token||"").toUpperCase());
+  if (i < 0) return "";
+  const a = Math.max(0, i-radius);
+  const b = Math.min(s.length, i+String(token).length+radius);
+  const pref = a>0 ? "…" : "";
+  const suf = b<s.length ? "…" : "";
+  return pref + s.slice(a,b).trim() + suf;
+}
+
 function visTokenForMeters(raw){
-  const s = rawToString(raw);
+  const s = String(raw||"");
   if (!s) return null;
-  const up = String(s).toUpperCase();
+  const up = s.toUpperCase();
 
   const mCavok = up.match(/\bCAVOK\b/);
   if (mCavok) return "CAVOK";
@@ -391,7 +478,7 @@ function visTokenForMeters(raw){
   const mSplit = up.match(/\b\d+\s+M?\d+\/\d+SM\b/);
   if (mSplit) return mSplit[0].replace(/\s+/g, " ").trim();
 
-  // Single-token SM
+  // Single-token SM: P6SM, 2SM, M1/4SM, 1/2SM
   const mSm = up.match(/\b(?:P\d+SM|M?\d+(?:\.\d+)?SM|M?\d+\/\d+SM)\b/);
   if (mSm) return mSm[0];
 
