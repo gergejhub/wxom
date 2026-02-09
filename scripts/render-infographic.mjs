@@ -56,8 +56,14 @@ function download(url, outFile) {
 
 async function ensureLogo() {
   ensureDir(LOGO_DIR);
-  if (fs.existsSync(LOGO_PATH) && fs.statSync(LOGO_PATH).size > 10_000) return;
-  console.log(`[LOGO] downloading to assets/brand/wizzair-logo.png`);
+  // IMPORTANT: never mutate tracked assets in CI.
+  // The repo ships with a logo at assets/brand/wizzair-logo.png.
+  // Earlier versions tried to "upgrade" small logos by downloading a larger one,
+  // which dirtied the working tree and could break the commit step.
+  if (fs.existsSync(LOGO_PATH) && fs.statSync(LOGO_PATH).size > 0) return;
+
+  // Only attempt download if the file is missing.
+  console.log(`[LOGO] missing; downloading to assets/brand/wizzair-logo.png`);
   try {
     await download(LOGO_URL, LOGO_PATH);
   } catch (e) {
