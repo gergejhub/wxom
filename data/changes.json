@@ -1,6 +1,139 @@
 {
-  "generatedAt": "2026-02-19T06:04:49.467Z",
+  "generatedAt": "2026-02-19T06:15:29.768Z",
   "events": [
+    {
+      "ts": "2026-02-19T06:15:29.768Z",
+      "icao": "LRBC",
+      "type": "CHANGE",
+      "changes": {
+        "minimaTaf": {
+          "from": {
+            "belowBest": true,
+            "belowAlt": true,
+            "onlyBest": false,
+            "effVis": 300,
+            "cig": 5000
+          },
+          "to": {
+            "belowBest": true,
+            "belowAlt": true,
+            "onlyBest": false,
+            "effVis": 4000,
+            "cig": 100
+          }
+        },
+        "triggers": {
+          "from": [
+            {
+              "label": "LVP (<400)",
+              "cls": "tag--warn",
+              "src": "T"
+            },
+            {
+              "label": "RVR REQ (<800)",
+              "cls": "tag--warn",
+              "src": "T"
+            },
+            {
+              "label": "MINIMA LIMIT",
+              "cls": "tag--warn",
+              "src": "M",
+              "tip": "METAR minima LIMIT (ALT) · CIG 300<330"
+            },
+            {
+              "label": "MINIMA CRIT",
+              "cls": "tag--stop",
+              "src": "T",
+              "tip": "TAF minima CRIT (BEST) · VIS/RVR 300<550"
+            },
+            {
+              "label": "COLD CORR",
+              "cls": "tag--warn",
+              "src": "M"
+            },
+            {
+              "label": "VIS≤800",
+              "cls": "tag--vis",
+              "src": "T"
+            },
+            {
+              "label": "CIG<500",
+              "cls": "tag--cig",
+              "src": "M"
+            },
+            {
+              "label": "FZFG",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "MT"
+            }
+          ],
+          "to": [
+            {
+              "label": "MINIMA LIMIT",
+              "cls": "tag--warn",
+              "src": "M",
+              "tip": "METAR minima LIMIT (ALT) · CIG 300<330"
+            },
+            {
+              "label": "MINIMA CRIT",
+              "cls": "tag--stop",
+              "src": "T",
+              "tip": "TAF minima CRIT (BEST) · CIG 100<200"
+            },
+            {
+              "label": "COLD CORR",
+              "cls": "tag--warn",
+              "src": "M"
+            },
+            {
+              "label": "CIG<500",
+              "cls": "tag--cig",
+              "src": "MT"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "MT"
+            }
+          ]
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "MINIMA LIMIT",
+          "cls": "tag--warn",
+          "src": "M",
+          "tip": "METAR minima LIMIT (ALT) · CIG 300<330"
+        },
+        {
+          "label": "MINIMA CRIT",
+          "cls": "tag--stop",
+          "src": "T",
+          "tip": "TAF minima CRIT (BEST) · CIG 100<200"
+        },
+        {
+          "label": "COLD CORR",
+          "cls": "tag--warn",
+          "src": "M"
+        },
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "MT"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
     {
       "ts": "2026-02-19T06:04:49.467Z",
       "icao": "LFBD",
@@ -12651,133 +12784,6 @@
           "label": "SN",
           "cls": "tag--wx",
           "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-02-19T04:58:28.958Z",
-      "icao": "ENGM",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 450,
-            "cig": 200
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 550,
-            "cig": 200
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "LVTO (<550)",
-              "cls": "tag--lvto",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "COLD CORR",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "MT"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "MT"
-            },
-            {
-              "label": "FZFG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "M"
-            }
-          ],
-          "to": [
-            {
-              "label": "LVTO (<550)",
-              "cls": "tag--lvto",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "COLD CORR",
-              "cls": "tag--warn",
-              "src": "M"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "MT"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "MT"
-            },
-            {
-              "label": "FZFG",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "LVTO (<550)",
-          "cls": "tag--lvto",
-          "src": "T"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "COLD CORR",
-          "cls": "tag--warn",
-          "src": "M"
-        },
-        {
-          "label": "VIS≤800",
-          "cls": "tag--vis",
-          "src": "MT"
-        },
-        {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "MT"
-        },
-        {
-          "label": "FZFG",
-          "cls": "tag--wx",
-          "src": "MT"
         }
       ]
     }
