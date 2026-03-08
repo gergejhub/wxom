@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T11:28:17.116Z",
+  "generatedAt": "2026-03-08T11:31:02.613Z",
   "stations": [
     {
       "icao": "BIKF",
@@ -1427,7 +1427,7 @@
       "lon": 9.157019,
       "updatedAt": "081120Z",
       "metarRaw": "METAR EKBI 081120Z VRB01KT 2500 BR OVC002 06/06 Q1028",
-      "tafRaw": "TAF EKBI 080827Z 0809/0909 13003KT 0200 FG VV002\n  BECMG 0809/0811 6000 NSW SCT004\n  TEMPO 0811/0813 2500 -RADZ BKN004\n  TEMPO 0821/0909 2000 BR",
+      "tafRaw": "TAF EKBI 081127Z 0812/0912 13003KT 2000 BR BKN002\n  BECMG 0812/0814 6000 NSW SCT004\n  TEMPO 0821/0909 2000 BR",
       "minima": {
         "best": {
           "cig_ft": 0,
@@ -1466,27 +1466,27 @@
         "score": 60
       },
       "taf": {
-        "raw": "TAF EKBI 080827Z 0809/0909 13003KT 0200 FG VV002\n  BECMG 0809/0811 6000 NSW SCT004\n  TEMPO 0811/0813 2500 -RADZ BKN004\n  TEMPO 0821/0909 2000 BR",
+        "raw": "TAF EKBI 081127Z 0812/0912 13003KT 2000 BR BKN002\n  BECMG 0812/0814 6000 NSW SCT004\n  TEMPO 0821/0909 2000 BR",
         "hz": {
           "ts": false,
           "cb": false,
-          "fg": true,
+          "fg": false,
           "fzfg": false,
           "br": true,
           "sn": false,
           "blsn": false,
-          "ra": true,
+          "ra": false,
           "va": false
         },
         "tempC": null,
         "gustMax": null,
-        "vis": 200,
+        "vis": 2000,
         "cig": 200,
         "rvrMin": null,
         "score": 60
       },
-      "worstVis": 200,
-      "tafWorstVis": 200,
+      "worstVis": 2000,
+      "tafWorstVis": 2000,
       "rvrMinAll": null,
       "cigAll": 200,
       "minimaNow": {
@@ -1498,47 +1498,22 @@
       },
       "minimaTaf": {
         "belowBest": false,
-        "belowAlt": true,
-        "onlyBest": true,
-        "effVis": 200,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 2000,
         "cig": 200
       },
       "minExplainMet": null,
-      "minExplainTaf": {
-        "mode": "LIMIT",
-        "basis": "ALT",
-        "tip": "TAF minima LIMIT (ALT) · VIS/RVR 200<300",
-        "reasons": [
-          {
-            "metric": "VIS/RVR",
-            "actual": 200,
-            "threshold": 300,
-            "basis": "ALT",
-            "token": "0809",
-            "snippet": "TAF EKBI 080827Z 0809/0909 13003KT 0200 FG VV002…"
-          }
-        ],
-        "tokens": [
-          {
-            "token": "0809",
-            "cls": "hlWarn"
-          }
-        ]
-      },
+      "minExplainTaf": null,
       "_minTokensM": [],
-      "_minTokensT": [
-        {
-          "token": "0809",
-          "cls": "hlWarn"
-        }
-      ],
+      "_minTokensT": [],
       "om": {
         "explain": {
           "src": "MT",
           "heavyMatches": [],
           "refVisType": "VIS",
-          "refVisValue": 200,
-          "worstVis": 200,
+          "refVisValue": 2000,
+          "worstVis": 2000,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -1576,11 +1551,11 @@
         "tsOrCb": false,
         "heavyPrecip": false,
         "va": false,
-        "lvto": true,
-        "lvp": true,
+        "lvto": false,
+        "lvp": false,
         "lvtoQualReq": false,
         "rvr125": false,
-        "rvrRequired": true,
+        "rvrRequired": false,
         "cat2Plus": false,
         "cat3Only": false,
         "cat3BelowMin": false,
@@ -1663,8 +1638,8 @@
           "src": "T",
           "heavyMatches": [],
           "refVisType": "VIS",
-          "refVisValue": 200,
-          "worstVis": 200,
+          "refVisValue": 2000,
+          "worstVis": 2000,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -1702,11 +1677,11 @@
         "tsOrCb": false,
         "heavyPrecip": false,
         "va": false,
-        "lvto": true,
-        "lvp": true,
+        "lvto": false,
+        "lvp": false,
         "lvtoQualReq": false,
         "rvr125": false,
-        "rvrRequired": true,
+        "rvrRequired": false,
         "cat2Plus": false,
         "cat3Only": false,
         "cat3BelowMin": false,
@@ -1731,55 +1706,22 @@
       "tafPri": 60,
       "triggers": [
         {
-          "label": "LVP (<400)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "MINIMA LIMIT",
-          "cls": "tag--warn",
-          "src": "T",
-          "tip": "TAF minima LIMIT (ALT) · VIS/RVR 200<300"
-        },
-        {
-          "label": "VIS≤800",
-          "cls": "tag--vis",
-          "src": "T"
-        },
-        {
           "label": "CIG<500",
           "cls": "tag--cig",
           "src": "MT"
         },
         {
-          "label": "FG",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
           "label": "BR",
           "cls": "tag--wx",
           "src": "MT"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
         }
       ],
       "visibility_m": 2500,
-      "taf_visibility_m": 200,
-      "worst_visibility_m": 200,
+      "taf_visibility_m": 2000,
+      "worst_visibility_m": 2000,
       "ceiling_ft": 200,
       "hazards": [
-        "br",
-        "fg",
-        "ra"
+        "br"
       ]
     },
     {
@@ -1788,8 +1730,8 @@
       "name": "Eindhoven Airport",
       "lat": 51.4500999451,
       "lon": 5.37452983856,
-      "updatedAt": "081055Z",
-      "metarRaw": "METAR EHEH 081055Z AUTO VRB02KT 3100 R03/P3000U BR SCT005 BKN006 09/08 Q1024 YLO BECMG 4000 RMK TREND REMOTE BY EHWX",
+      "updatedAt": "081125Z",
+      "metarRaw": "METAR EHEH 081125Z AUTO 19003KT 130V220 3900 BR NCD 10/08 Q1024 GRN BECMG 5000 NSW FEW007 RMK TREND REMOTE BY EHWX",
       "tafRaw": "TAF EHEH 080533Z 0806/0912 05004KT 0400 FG OVC001\n  BECMG 0808/0810 3000 BR BKN003\n  BECMG 0810/0812 6000 NSW NSC\n  PROB30 0902/0909 3000 BR",
       "minima": {
         "best": {
@@ -1809,7 +1751,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "METAR EHEH 081055Z AUTO VRB02KT 3100 R03/P3000U BR SCT005 BKN006 09/08 Q1024 YLO BECMG 4000 RMK TREND REMOTE BY EHWX",
+        "raw": "METAR EHEH 081125Z AUTO 19003KT 130V220 3900 BR NCD 10/08 Q1024 GRN BECMG 5000 NSW FEW007 RMK TREND REMOTE BY EHWX",
         "hz": {
           "ts": false,
           "cb": false,
@@ -1821,12 +1763,12 @@
           "ra": false,
           "va": false
         },
-        "tempC": 9,
+        "tempC": 10,
         "gustMax": null,
-        "vis": 3100,
-        "cig": 600,
-        "rvrMin": 3000,
-        "score": 28
+        "vis": 3900,
+        "cig": null,
+        "rvrMin": null,
+        "score": 18
       },
       "taf": {
         "raw": "TAF EHEH 080533Z 0806/0912 05004KT 0400 FG OVC001\n  BECMG 0808/0810 3000 BR BKN003\n  BECMG 0810/0812 6000 NSW NSC\n  PROB30 0902/0909 3000 BR",
@@ -1850,14 +1792,14 @@
       },
       "worstVis": 400,
       "tafWorstVis": 400,
-      "rvrMinAll": 3000,
+      "rvrMinAll": null,
       "cigAll": 100,
       "minimaNow": {
         "belowBest": false,
         "belowAlt": false,
         "onlyBest": false,
-        "effVis": 3000,
-        "cig": 600
+        "effVis": 3900,
+        "cig": null
       },
       "minimaTaf": {
         "belowBest": true,
@@ -1915,21 +1857,12 @@
         "explain": {
           "src": "MT",
           "heavyMatches": [],
-          "refVisType": "RVR",
-          "refVisValue": 3000,
+          "refVisType": "VIS",
+          "refVisValue": 400,
           "worstVis": 400,
-          "rvrMinAll": 3000,
-          "rvrGroups": [
-            {
-              "rwy": "03",
-              "q1": "P",
-              "v1": 3000,
-              "q2": "",
-              "v2": null,
-              "trend": "U"
-            }
-          ],
-          "rvrAny": true,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
           "visThresh800": 800,
           "lvtoThresh550": 550,
           "lvpThresh400": 400,
@@ -1938,25 +1871,25 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 9,
+          "tempC": 10,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": null,
-            "spd": 2,
+            "dir": 190,
+            "spd": 3,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 3
           },
           "xwind": {
             "available": true,
-            "xwindKt": null,
-            "limitKt": null,
-            "runwayHdg": null,
-            "runwayName": null,
-            "runwayWidthM": null,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 31,
+            "runwayName": "03/21",
+            "runwayWidthM": 45.1,
             "narrow": false
           }
         },
@@ -1964,44 +1897,35 @@
         "tsOrCb": false,
         "heavyPrecip": false,
         "va": false,
-        "lvto": false,
+        "lvto": true,
         "lvp": false,
         "lvtoQualReq": false,
         "rvr125": false,
-        "rvrRequired": false,
+        "rvrRequired": true,
         "cat2Plus": false,
         "cat3Only": false,
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": null,
-        "xwindLimitKt": null,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
-        "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 3,
+        "xwindWindDir": 190
       },
       "omMet": {
         "explain": {
           "src": "M",
           "heavyMatches": [],
-          "refVisType": "RVR",
-          "refVisValue": 3000,
-          "worstVis": 3100,
-          "rvrMinAll": 3000,
-          "rvrGroups": [
-            {
-              "rwy": "03",
-              "q1": "P",
-              "v1": 3000,
-              "q2": "",
-              "v2": null,
-              "trend": "U"
-            }
-          ],
-          "rvrAny": true,
+          "refVisType": "VIS",
+          "refVisValue": 3900,
+          "worstVis": 3900,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
           "visThresh800": 800,
           "lvtoThresh550": 550,
           "lvpThresh400": 400,
@@ -2010,25 +1934,25 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": 9,
+          "tempC": 10,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
             "evidence": []
           },
           "wind": {
-            "dir": null,
-            "spd": 2,
+            "dir": 190,
+            "spd": 3,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 3
           },
           "xwind": {
             "available": true,
-            "xwindKt": null,
-            "limitKt": null,
-            "runwayHdg": null,
-            "runwayName": null,
-            "runwayWidthM": null,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 31,
+            "runwayName": "03/21",
+            "runwayWidthM": 45.1,
             "narrow": false
           }
         },
@@ -2046,14 +1970,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": null,
-        "xwindLimitKt": null,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
-        "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 3,
+        "xwindWindDir": 190
       },
       "omTaf": {
         "explain": {
@@ -2124,7 +2048,7 @@
       "metCrit": false,
       "tafCrit": true,
       "critSrc": null,
-      "metPri": 28,
+      "metPri": 18,
       "tafPri": 70,
       "triggers": [
         {
@@ -2164,7 +2088,7 @@
           "src": "MT"
         }
       ],
-      "visibility_m": 3100,
+      "visibility_m": 3900,
       "taf_visibility_m": 400,
       "worst_visibility_m": 400,
       "ceiling_ft": 100,
@@ -12498,8 +12422,8 @@
       "name": "Priština Adem Jashari International Airport",
       "lat": 42.5728,
       "lon": 21.035801,
-      "updatedAt": null,
-      "metarRaw": "",
+      "updatedAt": "081130Z",
+      "metarRaw": "METAR BKPR 081130Z VRB02KT 9999 FEW040 15/05 Q1025 NOSIG",
       "tafRaw": "TAF BKPR 080530Z 0806/0906 VRB05KT 9999 BKN080\n  TEMPO 0806/0808 1200 BCFG\n  TEMPO 0904/0906 3000 BR",
       "minima": {
         "best": {
@@ -12519,7 +12443,7 @@
       },
       "_thinComputed": true,
       "met": {
-        "raw": "",
+        "raw": "METAR BKPR 081130Z VRB02KT 9999 FEW040 15/05 Q1025 NOSIG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -12531,9 +12455,9 @@
           "ra": false,
           "va": false
         },
-        "tempC": null,
+        "tempC": 15,
         "gustMax": null,
-        "vis": null,
+        "vis": 10000,
         "cig": null,
         "rvrMin": null,
         "score": 0
@@ -12566,7 +12490,7 @@
         "belowBest": false,
         "belowAlt": false,
         "onlyBest": false,
-        "effVis": null,
+        "effVis": 10000,
         "cig": null
       },
       "minimaTaf": {
@@ -12582,7 +12506,7 @@
       "_minTokensT": [],
       "om": {
         "explain": {
-          "src": "T",
+          "src": "MT",
           "heavyMatches": [],
           "refVisType": "VIS",
           "refVisValue": 1200,
@@ -12598,7 +12522,7 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": null,
+          "tempC": 15,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
@@ -12606,7 +12530,7 @@
           },
           "wind": {
             "dir": null,
-            "spd": 5,
+            "spd": 2,
             "gst": null,
             "usedSpd": null
           },
@@ -12645,11 +12569,11 @@
       },
       "omMet": {
         "explain": {
-          "src": "MT",
+          "src": "M",
           "heavyMatches": [],
-          "refVisType": null,
-          "refVisValue": null,
-          "worstVis": null,
+          "refVisType": "VIS",
+          "refVisValue": 10000,
+          "worstVis": 10000,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -12661,7 +12585,7 @@
           "cat2Thresh450": 450,
           "cat3Thresh200": 200,
           "cat3LowThresh75": 75,
-          "tempC": null,
+          "tempC": 15,
           "runwayCond": {
             "cond": "DRY",
             "rwyccEst": 6,
@@ -12669,7 +12593,7 @@
           },
           "wind": {
             "dir": null,
-            "spd": null,
+            "spd": 2,
             "gst": null,
             "usedSpd": null
           },
@@ -12789,7 +12713,7 @@
           "src": "T"
         }
       ],
-      "visibility_m": null,
+      "visibility_m": 10000,
       "taf_visibility_m": 1200,
       "worst_visibility_m": 1200,
       "ceiling_ft": 8000,
@@ -14034,7 +13958,7 @@
       "lon": 16.823359,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPPO 081100Z 13009KT CAVOK 15/M03 Q1030",
-      "tafRaw": "TAF EPPO 080530Z 0806/0906 10006KT CAVOK\n  TEMPO 0822/0906 2500 BR\n  PROB30\n  TEMPO 0901/0906 0600 FG",
+      "tafRaw": "TAF EPPO 081130Z 0812/0912 13008KT CAVOK\n  TEMPO 0900/0907 2500 BR\n  PROB30\n  TEMPO 0902/0906 0600 FG",
       "minima": {
         "best": {
           "cig_ft": 126,
@@ -14073,7 +13997,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPPO 080530Z 0806/0906 10006KT CAVOK\n  TEMPO 0822/0906 2500 BR\n  PROB30\n  TEMPO 0901/0906 0600 FG",
+        "raw": "TAF EPPO 081130Z 0812/0912 13008KT CAVOK\n  TEMPO 0900/0907 2500 BR\n  PROB30\n  TEMPO 0902/0906 0600 FG",
         "hz": {
           "ts": false,
           "cb": false,
@@ -14122,7 +14046,7 @@
             "threshold": 800,
             "basis": "ALT",
             "token": "CAVOK",
-            "snippet": "…O 080530Z 0806/0906 10006KT CAVOK\n  TEMPO 0822/0906 2500 BR…"
+            "snippet": "…O 081130Z 0812/0912 13008KT CAVOK\n  TEMPO 0900/0907 2500 BR…"
           }
         ],
         "tokens": [
@@ -14290,14 +14214,14 @@
             "evidence": []
           },
           "wind": {
-            "dir": 100,
-            "spd": 6,
+            "dir": 130,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 6
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": 1,
+            "xwindKt": 3,
             "limitKt": 38,
             "runwayHdg": 108,
             "runwayName": "10/28",
@@ -14319,14 +14243,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 1,
+        "xwindKt": 3,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 6,
-        "xwindWindDir": 100
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 130
       },
       "engIceOps": false,
       "severityScore": 29,
@@ -21947,7 +21871,7 @@
       "lon": 19.7848,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPKK 081100Z 07009KT CAVOK 10/M02 Q1030",
-      "tafRaw": "TAF EPKK 080830Z 0809/0909 06008KT CAVOK\n  TEMPO 0901/0906 3000 BR",
+      "tafRaw": "TAF EPKK 081130Z 0812/0912 06008KT CAVOK\n  PROB40\n  TEMPO 0901/0906 3000 BR",
       "minima": {
         "best": {
           "cig_ft": 230,
@@ -21986,7 +21910,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPKK 080830Z 0809/0909 06008KT CAVOK\n  TEMPO 0901/0906 3000 BR",
+        "raw": "TAF EPKK 081130Z 0812/0912 06008KT CAVOK\n  PROB40\n  TEMPO 0901/0906 3000 BR",
         "hz": {
           "ts": false,
           "cb": false,
@@ -22240,6 +22164,306 @@
       ]
     },
     {
+      "icao": "EPKT",
+      "iata": "KTW",
+      "name": "Katowice Wojciech Korfanty International Airport",
+      "lat": 50.476015,
+      "lon": 19.080705,
+      "updatedAt": "081100Z",
+      "metarRaw": "METAR EPKT 081100Z 09012KT CAVOK 14/M04 Q1030",
+      "tafRaw": "TAF EPKT 081130Z 0812/0912 10012KT CAVOK\n  PROB30\n  TEMPO 0900/0906 3000 BR\n  BECMG 0908/0911 18008KT",
+      "minima": {
+        "best": {
+          "cig_ft": 109,
+          "vis_m": 300
+        },
+        "alt": {
+          "cig_ft": 220,
+          "vis_m": 550
+        },
+        "wind": {
+          "threshold_kt": 29,
+          "use_gust": false,
+          "apply": true
+        },
+        "approach_category": null
+      },
+      "_thinComputed": true,
+      "met": {
+        "raw": "METAR EPKT 081100Z 09012KT CAVOK 14/M04 Q1030",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": false,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": 14,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 0
+      },
+      "taf": {
+        "raw": "TAF EPKT 081130Z 0812/0912 10012KT CAVOK\n  PROB30\n  TEMPO 0900/0906 3000 BR\n  BECMG 0908/0911 18008KT",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": true,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": null,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 18
+      },
+      "worstVis": 3000,
+      "tafWorstVis": 3000,
+      "rvrMinAll": null,
+      "cigAll": 5000,
+      "minimaNow": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 10000,
+        "cig": 5000
+      },
+      "minimaTaf": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 3000,
+        "cig": 5000
+      },
+      "minExplainMet": null,
+      "minExplainTaf": null,
+      "_minTokensM": [],
+      "_minTokensT": [],
+      "om": {
+        "explain": {
+          "src": "MT",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 14,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 90,
+            "spd": 12,
+            "gst": null,
+            "usedSpd": 12
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 0,
+            "limitKt": 38,
+            "runwayHdg": 90,
+            "runwayName": "08/26",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 0,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 12,
+        "xwindWindDir": 90
+      },
+      "omMet": {
+        "explain": {
+          "src": "M",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 10000,
+          "worstVis": 10000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 14,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 90,
+            "spd": 12,
+            "gst": null,
+            "usedSpd": 12
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 0,
+            "limitKt": 38,
+            "runwayHdg": 90,
+            "runwayName": "08/26",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 0,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 12,
+        "xwindWindDir": 90
+      },
+      "omTaf": {
+        "explain": {
+          "src": "T",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": null,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 100,
+            "spd": 12,
+            "gst": null,
+            "usedSpd": 12
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 2,
+            "limitKt": 38,
+            "runwayHdg": 90,
+            "runwayName": "08/26",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 2,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 12,
+        "xwindWindDir": 100
+      },
+      "engIceOps": false,
+      "severityScore": 15,
+      "alert": "OK",
+      "metCrit": false,
+      "tafCrit": false,
+      "critSrc": null,
+      "metPri": 0,
+      "tafPri": 18,
+      "triggers": [
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ],
+      "visibility_m": 10000,
+      "taf_visibility_m": 3000,
+      "worst_visibility_m": 3000,
+      "ceiling_ft": 5000,
+      "hazards": [
+        "br"
+      ]
+    },
+    {
       "icao": "EPLB",
       "iata": "LUZ",
       "name": "Lublin Airport",
@@ -22247,7 +22471,7 @@
       "lon": 22.713461,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPLB 081100Z 12004KT 080V160 CAVOK 12/01 Q1032",
-      "tafRaw": "TAF EPLB 080530Z 0806/0906 12004KT CAVOK\n  PROB40 0806/0807 3000 BR\n  TEMPO 0902/0906 2000 BR",
+      "tafRaw": "TAF EPLB 081130Z 0812/0912 13007KT CAVOK\n  TEMPO 0823/0907 2500 BR",
       "minima": {
         "best": {
           "cig_ft": 100,
@@ -22286,7 +22510,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPLB 080530Z 0806/0906 12004KT CAVOK\n  PROB40 0806/0807 3000 BR\n  TEMPO 0902/0906 2000 BR",
+        "raw": "TAF EPLB 081130Z 0812/0912 13007KT CAVOK\n  TEMPO 0823/0907 2500 BR",
         "hz": {
           "ts": false,
           "cb": false,
@@ -22305,8 +22529,8 @@
         "rvrMin": null,
         "score": 18
       },
-      "worstVis": 2000,
-      "tafWorstVis": 2000,
+      "worstVis": 2500,
+      "tafWorstVis": 2500,
       "rvrMinAll": null,
       "cigAll": 5000,
       "minimaNow": {
@@ -22320,7 +22544,7 @@
         "belowBest": false,
         "belowAlt": false,
         "onlyBest": false,
-        "effVis": 2000,
+        "effVis": 2500,
         "cig": 5000
       },
       "minExplainMet": null,
@@ -22332,8 +22556,8 @@
           "src": "MT",
           "heavyMatches": [],
           "refVisType": "VIS",
-          "refVisValue": 2000,
-          "worstVis": 2000,
+          "refVisValue": 2500,
+          "worstVis": 2500,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -22458,8 +22682,8 @@
           "src": "T",
           "heavyMatches": [],
           "refVisType": "VIS",
-          "refVisValue": 2000,
-          "worstVis": 2000,
+          "refVisValue": 2500,
+          "worstVis": 2500,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -22478,14 +22702,14 @@
             "evidence": []
           },
           "wind": {
-            "dir": 120,
-            "spd": 4,
+            "dir": 130,
+            "spd": 7,
             "gst": null,
-            "usedSpd": 4
+            "usedSpd": 7
           },
           "xwind": {
             "available": true,
-            "xwindKt": 3,
+            "xwindKt": 6,
             "limitKt": 38,
             "runwayHdg": 72,
             "runwayName": "07/25",
@@ -22507,14 +22731,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 3,
+        "xwindKt": 6,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 4,
-        "xwindWindDir": 120
+        "xwindUsedSpdKt": 7,
+        "xwindWindDir": 130
       },
       "engIceOps": false,
       "severityScore": 15,
@@ -22532,8 +22756,8 @@
         }
       ],
       "visibility_m": 10000,
-      "taf_visibility_m": 2000,
-      "worst_visibility_m": 2000,
+      "taf_visibility_m": 2500,
+      "worst_visibility_m": 2500,
       "ceiling_ft": 5000,
       "hazards": [
         "br"
@@ -22547,7 +22771,7 @@
       "lon": 20.6518,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPMO 081100Z 12005KT 100V170 CAVOK 12/M02 Q1032",
-      "tafRaw": "TAF EPMO 080530Z 0806/0906 08003KT CAVOK\n  PROB40 0806/0807 4000 BR\n  TEMPO 0822/0906 2000 BR BKN005",
+      "tafRaw": "TAF EPMO 081130Z 0812/0912 13006KT CAVOK\n  TEMPO 0822/0907 2500 BR",
       "minima": null,
       "_thinComputed": true,
       "met": {
@@ -22571,7 +22795,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPMO 080530Z 0806/0906 08003KT CAVOK\n  PROB40 0806/0807 4000 BR\n  TEMPO 0822/0906 2000 BR BKN005",
+        "raw": "TAF EPMO 081130Z 0812/0912 13006KT CAVOK\n  TEMPO 0822/0907 2500 BR",
         "hz": {
           "ts": false,
           "cb": false,
@@ -22590,8 +22814,8 @@
         "rvrMin": null,
         "score": 18
       },
-      "worstVis": 2000,
-      "tafWorstVis": 2000,
+      "worstVis": 2500,
+      "tafWorstVis": 2500,
       "rvrMinAll": null,
       "cigAll": 5000,
       "minimaNow": null,
@@ -22605,8 +22829,8 @@
           "src": "MT",
           "heavyMatches": [],
           "refVisType": "VIS",
-          "refVisValue": 2000,
-          "worstVis": 2000,
+          "refVisValue": 2500,
+          "worstVis": 2500,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -22731,8 +22955,8 @@
           "src": "T",
           "heavyMatches": [],
           "refVisType": "VIS",
-          "refVisValue": 2000,
-          "worstVis": 2000,
+          "refVisValue": 2500,
+          "worstVis": 2500,
           "rvrMinAll": null,
           "rvrGroups": [],
           "rvrAny": false,
@@ -22751,14 +22975,14 @@
             "evidence": []
           },
           "wind": {
-            "dir": 80,
-            "spd": 3,
+            "dir": 130,
+            "spd": 6,
             "gst": null,
-            "usedSpd": 3
+            "usedSpd": 6
           },
           "xwind": {
             "available": true,
-            "xwindKt": 0,
+            "xwindKt": 4,
             "limitKt": 20,
             "runwayHdg": 82,
             "runwayName": "08/26",
@@ -22780,14 +23004,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 0,
+        "xwindKt": 4,
         "xwindLimitKt": 20,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": true,
-        "xwindUsedSpdKt": 3,
-        "xwindWindDir": 80
+        "xwindUsedSpdKt": 6,
+        "xwindWindDir": 130
       },
       "engIceOps": false,
       "severityScore": 15,
@@ -22805,8 +23029,308 @@
         }
       ],
       "visibility_m": 10000,
-      "taf_visibility_m": 2000,
-      "worst_visibility_m": 2000,
+      "taf_visibility_m": 2500,
+      "worst_visibility_m": 2500,
+      "ceiling_ft": 5000,
+      "hazards": [
+        "br"
+      ]
+    },
+    {
+      "icao": "EPRZ",
+      "iata": "RZE",
+      "name": "Rzeszów-Jasionka Airport",
+      "lat": 50.109791,
+      "lon": 22.024155,
+      "updatedAt": "081100Z",
+      "metarRaw": "METAR EPRZ 081100Z 07007KT CAVOK 08/00 Q1031",
+      "tafRaw": "TAF EPRZ 081130Z 0812/0912 07008KT CAVOK\n  PROB40\n  TEMPO 0901/0906 3000 BR\n  BECMG 0908/0911 18010KT",
+      "minima": {
+        "best": {
+          "cig_ft": 112,
+          "vis_m": 300
+        },
+        "alt": {
+          "cig_ft": 200,
+          "vis_m": 550
+        },
+        "wind": {
+          "threshold_kt": 29,
+          "use_gust": false,
+          "apply": true
+        },
+        "approach_category": null
+      },
+      "_thinComputed": true,
+      "met": {
+        "raw": "METAR EPRZ 081100Z 07007KT CAVOK 08/00 Q1031",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": false,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": 8,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 0
+      },
+      "taf": {
+        "raw": "TAF EPRZ 081130Z 0812/0912 07008KT CAVOK\n  PROB40\n  TEMPO 0901/0906 3000 BR\n  BECMG 0908/0911 18010KT",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": true,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": null,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 18
+      },
+      "worstVis": 3000,
+      "tafWorstVis": 3000,
+      "rvrMinAll": null,
+      "cigAll": 5000,
+      "minimaNow": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 10000,
+        "cig": 5000
+      },
+      "minimaTaf": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 3000,
+        "cig": 5000
+      },
+      "minExplainMet": null,
+      "minExplainTaf": null,
+      "_minTokensM": [],
+      "_minTokensT": [],
+      "om": {
+        "explain": {
+          "src": "MT",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 8,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 70,
+            "spd": 7,
+            "gst": null,
+            "usedSpd": 7
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 81,
+            "runwayName": "09ES/27ES",
+            "runwayWidthM": 100,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 7,
+        "xwindWindDir": 70
+      },
+      "omMet": {
+        "explain": {
+          "src": "M",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 10000,
+          "worstVis": 10000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 8,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 70,
+            "spd": 7,
+            "gst": null,
+            "usedSpd": 7
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 81,
+            "runwayName": "09ES/27ES",
+            "runwayWidthM": 100,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 7,
+        "xwindWindDir": 70
+      },
+      "omTaf": {
+        "explain": {
+          "src": "T",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": null,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 70,
+            "spd": 8,
+            "gst": null,
+            "usedSpd": 8
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 2,
+            "limitKt": 38,
+            "runwayHdg": 81,
+            "runwayName": "09ES/27ES",
+            "runwayWidthM": 100,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 2,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 70
+      },
+      "engIceOps": false,
+      "severityScore": 15,
+      "alert": "OK",
+      "metCrit": false,
+      "tafCrit": false,
+      "critSrc": null,
+      "metPri": 0,
+      "tafPri": 18,
+      "triggers": [
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ],
+      "visibility_m": 10000,
+      "taf_visibility_m": 3000,
+      "worst_visibility_m": 3000,
       "ceiling_ft": 5000,
       "hazards": [
         "br"
@@ -22820,7 +23344,7 @@
       "lon": 20.9671,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPWA 081100Z 15007KT 100V170 CAVOK 12/M02 Q1033 NOSIG",
-      "tafRaw": "TAF EPWA 080830Z 0809/0909 12005KT CAVOK\n  PROB30 0900/0907 4000 BR",
+      "tafRaw": "TAF EPWA 081130Z 0812/0912 15008KT CAVOK\n  PROB30 0900/0906 4000 BR",
       "minima": {
         "best": {
           "cig_ft": 0,
@@ -22859,7 +23383,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPWA 080830Z 0809/0909 12005KT CAVOK\n  PROB30 0900/0907 4000 BR",
+        "raw": "TAF EPWA 081130Z 0812/0912 15008KT CAVOK\n  PROB30 0900/0906 4000 BR",
         "hz": {
           "ts": false,
           "cb": false,
@@ -23051,18 +23575,18 @@
             "evidence": []
           },
           "wind": {
-            "dir": 120,
-            "spd": 5,
+            "dir": 150,
+            "spd": 8,
             "gst": null,
-            "usedSpd": 5
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
             "xwindKt": 0,
             "limitKt": 38,
-            "runwayHdg": 115,
-            "runwayName": "11/29",
-            "runwayWidthM": 50,
+            "runwayHdg": 152,
+            "runwayName": "15/33",
+            "runwayWidthM": 59.7,
             "narrow": false
           }
         },
@@ -23086,8 +23610,8 @@
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 5,
-        "xwindWindDir": 120
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 150
       },
       "engIceOps": false,
       "severityScore": 15,
@@ -23120,7 +23644,7 @@
       "lon": 16.882096,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPWR 081100Z 13009KT CAVOK 12/M01 Q1030",
-      "tafRaw": "TAF EPWR 080830Z 0809/0909 14006KT CAVOK\n  TEMPO 0900/0906 4000 BR\n  PROB30\n  TEMPO 0902/0906 1200 BR",
+      "tafRaw": "TAF EPWR 081130Z 0812/0912 13009KT CAVOK\n  TEMPO 0900/0906 4000 BR\n  PROB30\n  TEMPO 0902/0906 1200 BR\n  BECMG 0909/0912 19010KT",
       "minima": {
         "best": {
           "cig_ft": 102,
@@ -23159,7 +23683,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPWR 080830Z 0809/0909 14006KT CAVOK\n  TEMPO 0900/0906 4000 BR\n  PROB30\n  TEMPO 0902/0906 1200 BR",
+        "raw": "TAF EPWR 081130Z 0812/0912 13009KT CAVOK\n  TEMPO 0900/0906 4000 BR\n  PROB30\n  TEMPO 0902/0906 1200 BR\n  BECMG 0909/0912 19010KT",
         "hz": {
           "ts": false,
           "cb": false,
@@ -23351,10 +23875,10 @@
             "evidence": []
           },
           "wind": {
-            "dir": 140,
-            "spd": 6,
+            "dir": 130,
+            "spd": 9,
             "gst": null,
-            "usedSpd": 6
+            "usedSpd": 9
           },
           "xwind": {
             "available": true,
@@ -23386,8 +23910,8 @@
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": true,
-        "xwindUsedSpdKt": 6,
-        "xwindWindDir": 140
+        "xwindUsedSpdKt": 9,
+        "xwindWindDir": 130
       },
       "engIceOps": false,
       "severityScore": 15,
@@ -26388,6 +26912,606 @@
         "xwindNarrow": null,
         "xwindUsedSpdKt": null,
         "xwindWindDir": null
+      },
+      "engIceOps": false,
+      "severityScore": 15,
+      "alert": "OK",
+      "metCrit": false,
+      "tafCrit": false,
+      "critSrc": null,
+      "metPri": 0,
+      "tafPri": 18,
+      "triggers": [
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ],
+      "visibility_m": 10000,
+      "taf_visibility_m": 3000,
+      "worst_visibility_m": 3000,
+      "ceiling_ft": 5000,
+      "hazards": [
+        "br"
+      ]
+    },
+    {
+      "icao": "LRBS",
+      "iata": "BBU",
+      "name": "Bucharest Băneasa Aurel Vlaicu International Airport",
+      "lat": 44.503133,
+      "lon": 26.102944,
+      "updatedAt": "081100Z",
+      "metarRaw": "METAR LRBS 081100Z 08010KT 040V150 CAVOK 12/01 Q1031 NOSIG",
+      "tafRaw": "TAF LRBS 081100Z 0812/0912 08010KT CAVOK\n  BECMG 0817/0819 VRB04KT\n  PROB30\n  TEMPO 0823/0903 3000 BR\n  BECMG 0909/0911 09010KT",
+      "minima": {
+        "best": {
+          "cig_ft": 100,
+          "vis_m": 350
+        },
+        "alt": {
+          "cig_ft": 200,
+          "vis_m": 550
+        },
+        "wind": {
+          "threshold_kt": 29,
+          "use_gust": false,
+          "apply": true
+        },
+        "approach_category": null
+      },
+      "_thinComputed": true,
+      "met": {
+        "raw": "METAR LRBS 081100Z 08010KT 040V150 CAVOK 12/01 Q1031 NOSIG",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": false,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": 12,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 0
+      },
+      "taf": {
+        "raw": "TAF LRBS 081100Z 0812/0912 08010KT CAVOK\n  BECMG 0817/0819 VRB04KT\n  PROB30\n  TEMPO 0823/0903 3000 BR\n  BECMG 0909/0911 09010KT",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": true,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": null,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 18
+      },
+      "worstVis": 3000,
+      "tafWorstVis": 3000,
+      "rvrMinAll": null,
+      "cigAll": 5000,
+      "minimaNow": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 10000,
+        "cig": 5000
+      },
+      "minimaTaf": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 3000,
+        "cig": 5000
+      },
+      "minExplainMet": null,
+      "minExplainTaf": null,
+      "_minTokensM": [],
+      "_minTokensT": [],
+      "om": {
+        "explain": {
+          "src": "MT",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 12,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 80,
+            "spd": 10,
+            "gst": null,
+            "usedSpd": 10
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 74,
+            "runwayName": "07/25",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 10,
+        "xwindWindDir": 80
+      },
+      "omMet": {
+        "explain": {
+          "src": "M",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 10000,
+          "worstVis": 10000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 12,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 80,
+            "spd": 10,
+            "gst": null,
+            "usedSpd": 10
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 74,
+            "runwayName": "07/25",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 10,
+        "xwindWindDir": 80
+      },
+      "omTaf": {
+        "explain": {
+          "src": "T",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": null,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 80,
+            "spd": 10,
+            "gst": null,
+            "usedSpd": 10
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 74,
+            "runwayName": "07/25",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 10,
+        "xwindWindDir": 80
+      },
+      "engIceOps": false,
+      "severityScore": 15,
+      "alert": "OK",
+      "metCrit": false,
+      "tafCrit": false,
+      "critSrc": null,
+      "metPri": 0,
+      "tafPri": 18,
+      "triggers": [
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ],
+      "visibility_m": 10000,
+      "taf_visibility_m": 3000,
+      "worst_visibility_m": 3000,
+      "ceiling_ft": 5000,
+      "hazards": [
+        "br"
+      ]
+    },
+    {
+      "icao": "LROP",
+      "iata": "OTP",
+      "name": "Bucharest Henri Coandă International Airport",
+      "lat": 44.571792,
+      "lon": 26.103285,
+      "updatedAt": "081100Z",
+      "metarRaw": "METAR LROP 081100Z 09009KT 060V120 CAVOK 12/M02 Q1031 NOSIG",
+      "tafRaw": "TAF LROP 081100Z 0812/0912 08010KT CAVOK\n  BECMG 0817/0819 VRB04KT\n  PROB30\n  TEMPO 0823/0903 3000 BR\n  BECMG 0909/0911 09010KT",
+      "minima": {
+        "best": {
+          "cig_ft": 50,
+          "vis_m": 200
+        },
+        "alt": {
+          "cig_ft": 100,
+          "vis_m": 300
+        },
+        "wind": {
+          "threshold_kt": 29,
+          "use_gust": false,
+          "apply": true
+        },
+        "approach_category": null
+      },
+      "_thinComputed": true,
+      "met": {
+        "raw": "METAR LROP 081100Z 09009KT 060V120 CAVOK 12/M02 Q1031 NOSIG",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": false,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": 12,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 0
+      },
+      "taf": {
+        "raw": "TAF LROP 081100Z 0812/0912 08010KT CAVOK\n  BECMG 0817/0819 VRB04KT\n  PROB30\n  TEMPO 0823/0903 3000 BR\n  BECMG 0909/0911 09010KT",
+        "hz": {
+          "ts": false,
+          "cb": false,
+          "fg": false,
+          "fzfg": false,
+          "br": true,
+          "sn": false,
+          "blsn": false,
+          "ra": false,
+          "va": false
+        },
+        "tempC": null,
+        "gustMax": null,
+        "vis": 10000,
+        "cig": 5000,
+        "rvrMin": null,
+        "score": 18
+      },
+      "worstVis": 3000,
+      "tafWorstVis": 3000,
+      "rvrMinAll": null,
+      "cigAll": 5000,
+      "minimaNow": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 10000,
+        "cig": 5000
+      },
+      "minimaTaf": {
+        "belowBest": false,
+        "belowAlt": false,
+        "onlyBest": false,
+        "effVis": 3000,
+        "cig": 5000
+      },
+      "minExplainMet": null,
+      "minExplainTaf": null,
+      "_minTokensM": [],
+      "_minTokensT": [],
+      "om": {
+        "explain": {
+          "src": "MT",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 12,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 90,
+            "spd": 9,
+            "gst": null,
+            "usedSpd": 9
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 84,
+            "runwayName": "08L/26R",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 9,
+        "xwindWindDir": 90
+      },
+      "omMet": {
+        "explain": {
+          "src": "M",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 10000,
+          "worstVis": 10000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": 12,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 90,
+            "spd": 9,
+            "gst": null,
+            "usedSpd": 9
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 84,
+            "runwayName": "08L/26R",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 9,
+        "xwindWindDir": 90
+      },
+      "omTaf": {
+        "explain": {
+          "src": "T",
+          "heavyMatches": [],
+          "refVisType": "VIS",
+          "refVisValue": 3000,
+          "worstVis": 3000,
+          "rvrMinAll": null,
+          "rvrGroups": [],
+          "rvrAny": false,
+          "visThresh800": 800,
+          "lvtoThresh550": 550,
+          "lvpThresh400": 400,
+          "lvtoQualThresh150": 150,
+          "rvrStopThresh125": 125,
+          "cat2Thresh450": 450,
+          "cat3Thresh200": 200,
+          "cat3LowThresh75": 75,
+          "tempC": null,
+          "runwayCond": {
+            "cond": "DRY",
+            "rwyccEst": 6,
+            "evidence": []
+          },
+          "wind": {
+            "dir": 80,
+            "spd": 10,
+            "gst": null,
+            "usedSpd": 10
+          },
+          "xwind": {
+            "available": true,
+            "xwindKt": 1,
+            "limitKt": 38,
+            "runwayHdg": 84,
+            "runwayName": "08L/26R",
+            "runwayWidthM": 45.1,
+            "narrow": false
+          }
+        },
+        "toProhib": false,
+        "tsOrCb": false,
+        "heavyPrecip": false,
+        "va": false,
+        "lvto": false,
+        "lvp": false,
+        "lvtoQualReq": false,
+        "rvr125": false,
+        "rvrRequired": false,
+        "cat2Plus": false,
+        "cat3Only": false,
+        "cat3BelowMin": false,
+        "coldcorr": false,
+        "xwindExceed": false,
+        "xwindKt": 1,
+        "xwindLimitKt": 38,
+        "xwindCond": "DRY",
+        "rwyccEst": 6,
+        "noOpsLikely": false,
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 10,
+        "xwindWindDir": 80
       },
       "engIceOps": false,
       "severityScore": 15,
@@ -29932,7 +31056,7 @@
       "lon": 12.656000137329,
       "updatedAt": "081120Z",
       "metarRaw": "METAR EKCH 081120Z AUTO 13008KT 9999 FEW091/// 08/03 Q1029 NOSIG",
-      "tafRaw": "TAF EKCH 080827Z 0809/0909 11005KT CAVOK",
+      "tafRaw": "TAF EKCH 081127Z 0812/0912 11005KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 0,
@@ -29971,7 +31095,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EKCH 080827Z 0809/0909 11005KT CAVOK",
+        "raw": "TAF EKCH 081127Z 0812/0912 11005KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -30808,7 +31932,7 @@
       "lon": 18.4662,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPGD 081100Z 19006KT 160V230 CAVOK 14/M05 Q1031",
-      "tafRaw": "TAF EPGD 080530Z 0806/0906 20005KT CAVOK",
+      "tafRaw": "TAF EPGD 081130Z 0812/0912 19006KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 0,
@@ -30847,7 +31971,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPGD 080530Z 0806/0906 20005KT CAVOK",
+        "raw": "TAF EPGD 081130Z 0812/0912 19006KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -31039,14 +32163,14 @@
             "evidence": []
           },
           "wind": {
-            "dir": 200,
-            "spd": 5,
+            "dir": 190,
+            "spd": 6,
             "gst": null,
-            "usedSpd": 5
+            "usedSpd": 6
           },
           "xwind": {
             "available": true,
-            "xwindKt": 5,
+            "xwindKt": 6,
             "limitKt": 38,
             "runwayHdg": 113,
             "runwayName": "11/29",
@@ -31068,306 +32192,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 5,
+        "xwindKt": 6,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 5,
-        "xwindWindDir": 200
-      },
-      "engIceOps": false,
-      "severityScore": 0,
-      "alert": "OK",
-      "metCrit": false,
-      "tafCrit": false,
-      "critSrc": null,
-      "metPri": 0,
-      "tafPri": 0,
-      "triggers": [],
-      "visibility_m": 10000,
-      "taf_visibility_m": 10000,
-      "worst_visibility_m": 10000,
-      "ceiling_ft": 5000,
-      "hazards": []
-    },
-    {
-      "icao": "EPKT",
-      "iata": "KTW",
-      "name": "Katowice Wojciech Korfanty International Airport",
-      "lat": 50.476015,
-      "lon": 19.080705,
-      "updatedAt": "081100Z",
-      "metarRaw": "METAR EPKT 081100Z 09012KT CAVOK 14/M04 Q1030",
-      "tafRaw": "TAF EPKT 080530Z 0806/0906 08004KT CAVOK\n  TEMPO 0808/0816 09014KT",
-      "minima": {
-        "best": {
-          "cig_ft": 109,
-          "vis_m": 300
-        },
-        "alt": {
-          "cig_ft": 220,
-          "vis_m": 550
-        },
-        "wind": {
-          "threshold_kt": 29,
-          "use_gust": false,
-          "apply": true
-        },
-        "approach_category": null
-      },
-      "_thinComputed": true,
-      "met": {
-        "raw": "METAR EPKT 081100Z 09012KT CAVOK 14/M04 Q1030",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": 14,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "taf": {
-        "raw": "TAF EPKT 080530Z 0806/0906 08004KT CAVOK\n  TEMPO 0808/0816 09014KT",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": null,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "worstVis": 10000,
-      "tafWorstVis": 10000,
-      "rvrMinAll": null,
-      "cigAll": 5000,
-      "minimaNow": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minimaTaf": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minExplainMet": null,
-      "minExplainTaf": null,
-      "_minTokensM": [],
-      "_minTokensT": [],
-      "om": {
-        "explain": {
-          "src": "MT",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 14,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 90,
-            "spd": 12,
-            "gst": null,
-            "usedSpd": 12
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 0,
-            "limitKt": 38,
-            "runwayHdg": 90,
-            "runwayName": "08/26",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 0,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 12,
-        "xwindWindDir": 90
-      },
-      "omMet": {
-        "explain": {
-          "src": "M",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 14,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 90,
-            "spd": 12,
-            "gst": null,
-            "usedSpd": 12
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 0,
-            "limitKt": 38,
-            "runwayHdg": 90,
-            "runwayName": "08/26",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 0,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 12,
-        "xwindWindDir": 90
-      },
-      "omTaf": {
-        "explain": {
-          "src": "T",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": null,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 80,
-            "spd": 4,
-            "gst": null,
-            "usedSpd": 4
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
-            "limitKt": 38,
-            "runwayHdg": 90,
-            "runwayName": "08/26",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 1,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 4,
-        "xwindWindDir": 80
+        "xwindUsedSpdKt": 6,
+        "xwindWindDir": 190
       },
       "engIceOps": false,
       "severityScore": 0,
@@ -31392,7 +32224,7 @@
       "lon": 21.214742,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPRA 081100Z 13006KT 100V170 CAVOK 11/M03 Q1032",
-      "tafRaw": "TAF EPRA 080830Z 0809/0818 VRB02KT CAVOK\n  BECMG 0810/0812 12010KT",
+      "tafRaw": "TAF EPRA 081130Z 0812/0821 12008KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 210,
@@ -31431,7 +32263,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPRA 080830Z 0809/0818 VRB02KT CAVOK\n  BECMG 0810/0812 12010KT",
+        "raw": "TAF EPRA 081130Z 0812/0821 12008KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -31623,184 +32455,18 @@
             "evidence": []
           },
           "wind": {
-            "dir": null,
-            "spd": 2,
+            "dir": 120,
+            "spd": 8,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": null,
-            "limitKt": null,
-            "runwayHdg": null,
-            "runwayName": null,
-            "runwayWidthM": null,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": null,
-        "xwindLimitKt": null,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
-      },
-      "engIceOps": false,
-      "severityScore": 0,
-      "alert": "OK",
-      "metCrit": false,
-      "tafCrit": false,
-      "critSrc": null,
-      "metPri": 0,
-      "tafPri": 0,
-      "triggers": [],
-      "visibility_m": 10000,
-      "taf_visibility_m": 10000,
-      "worst_visibility_m": 10000,
-      "ceiling_ft": 5000,
-      "hazards": []
-    },
-    {
-      "icao": "EPRZ",
-      "iata": "RZE",
-      "name": "Rzeszów-Jasionka Airport",
-      "lat": 50.109791,
-      "lon": 22.024155,
-      "updatedAt": "081100Z",
-      "metarRaw": "METAR EPRZ 081100Z 07007KT CAVOK 08/00 Q1031",
-      "tafRaw": "TAF EPRZ 080530Z 0806/0906 05002KT CAVOK\n  BECMG 0808/0811 10012KT",
-      "minima": {
-        "best": {
-          "cig_ft": 112,
-          "vis_m": 300
-        },
-        "alt": {
-          "cig_ft": 200,
-          "vis_m": 550
-        },
-        "wind": {
-          "threshold_kt": 29,
-          "use_gust": false,
-          "apply": true
-        },
-        "approach_category": null
-      },
-      "_thinComputed": true,
-      "met": {
-        "raw": "METAR EPRZ 081100Z 07007KT CAVOK 08/00 Q1031",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": 8,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "taf": {
-        "raw": "TAF EPRZ 080530Z 0806/0906 05002KT CAVOK\n  BECMG 0808/0811 10012KT",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": null,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "worstVis": 10000,
-      "tafWorstVis": 10000,
-      "rvrMinAll": null,
-      "cigAll": 5000,
-      "minimaNow": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minimaTaf": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minExplainMet": null,
-      "minExplainTaf": null,
-      "_minTokensM": [],
-      "_minTokensT": [],
-      "om": {
-        "explain": {
-          "src": "MT",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 8,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 70,
-            "spd": 7,
-            "gst": null,
-            "usedSpd": 7
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
+            "xwindKt": 6,
             "limitKt": 38,
-            "runwayHdg": 81,
-            "runwayName": "09ES/27ES",
-            "runwayWidthM": 100,
+            "runwayHdg": 75,
+            "runwayName": "07/25",
+            "runwayWidthM": 45.1,
             "narrow": false
           }
         },
@@ -31818,140 +32484,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 1,
+        "xwindKt": 6,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 7,
-        "xwindWindDir": 70
-      },
-      "omMet": {
-        "explain": {
-          "src": "M",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 8,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 70,
-            "spd": 7,
-            "gst": null,
-            "usedSpd": 7
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
-            "limitKt": 38,
-            "runwayHdg": 81,
-            "runwayName": "09ES/27ES",
-            "runwayWidthM": 100,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 1,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 7,
-        "xwindWindDir": 70
-      },
-      "omTaf": {
-        "explain": {
-          "src": "T",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": null,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 50,
-            "spd": 2,
-            "gst": null,
-            "usedSpd": 2
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
-            "limitKt": 20,
-            "runwayHdg": 91,
-            "runwayName": "09/27",
-            "runwayWidthM": 44.8,
-            "narrow": true
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 1,
-        "xwindLimitKt": 20,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": true,
-        "xwindUsedSpdKt": 2,
-        "xwindWindDir": 50
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 120
       },
       "engIceOps": false,
       "severityScore": 0,
@@ -31976,7 +32516,7 @@
       "lon": 14.9022,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPSC 081100Z 12010KT CAVOK 13/M01 Q1030",
-      "tafRaw": "TAF EPSC 080530Z 0806/0906 10005KT CAVOK",
+      "tafRaw": "TAF EPSC 081130Z 0812/0912 12010KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 210,
@@ -32015,7 +32555,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPSC 080530Z 0806/0906 10005KT CAVOK",
+        "raw": "TAF EPSC 081130Z 0812/0912 12010KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -32207,14 +32747,14 @@
             "evidence": []
           },
           "wind": {
-            "dir": 100,
-            "spd": 5,
+            "dir": 120,
+            "spd": 10,
             "gst": null,
-            "usedSpd": 5
+            "usedSpd": 10
           },
           "xwind": {
             "available": true,
-            "xwindKt": 3,
+            "xwindKt": 2,
             "limitKt": 38,
             "runwayHdg": 131,
             "runwayName": "13/31",
@@ -32236,14 +32776,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 3,
+        "xwindKt": 2,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 5,
-        "xwindWindDir": 100
+        "xwindUsedSpdKt": 10,
+        "xwindWindDir": 120
       },
       "engIceOps": false,
       "severityScore": 0,
@@ -32268,7 +32808,7 @@
       "lon": 20.9377,
       "updatedAt": "081100Z",
       "metarRaw": "METAR EPSY 081100Z VRB06KT CAVOK 13/M05 Q1032",
-      "tafRaw": "TAF EPSY 080830Z 0809/0818 VRB02KT CAVOK",
+      "tafRaw": "TAF EPSY 081130Z 0812/0821 VRB02KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 116,
@@ -32307,7 +32847,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF EPSY 080830Z 0809/0818 VRB02KT CAVOK",
+        "raw": "TAF EPSY 081130Z 0812/0821 VRB02KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -40709,7 +41249,7 @@
       "lon": 27.620833,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRIA 081100Z 01006KT 320V090 CAVOK 11/M01 Q1032",
-      "tafRaw": "TAF LRIA 080800Z 0809/0818 VRB04KT CAVOK",
+      "tafRaw": "TAF LRIA 081100Z 0812/0821 VRB04KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 200,
@@ -40748,7 +41288,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRIA 080800Z 0809/0818 VRB04KT CAVOK",
+        "raw": "TAF LRIA 081100Z 0812/0821 VRB04KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -41001,7 +41541,7 @@
       "lon": 26.910299,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRBC 081100Z 36008KT 320V030 CAVOK 12/M01 Q1031",
-      "tafRaw": "TAF LRBC 080800Z 0809/0818 VRB04KT CAVOK",
+      "tafRaw": "TAF LRBC 081100Z 0812/0821 VRB04KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 200,
@@ -41040,7 +41580,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRBC 080800Z 0809/0818 VRB04KT CAVOK",
+        "raw": "TAF LRBC 081100Z 0812/0821 VRB04KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -41286,298 +41826,6 @@
       "hazards": []
     },
     {
-      "icao": "LRBS",
-      "iata": "BBU",
-      "name": "Bucharest Băneasa Aurel Vlaicu International Airport",
-      "lat": 44.503133,
-      "lon": 26.102944,
-      "updatedAt": "081100Z",
-      "metarRaw": "METAR LRBS 081100Z 08010KT 040V150 CAVOK 12/01 Q1031 NOSIG",
-      "tafRaw": "TAF LRBS 080500Z 0806/0906 05006KT CAVOK",
-      "minima": {
-        "best": {
-          "cig_ft": 100,
-          "vis_m": 350
-        },
-        "alt": {
-          "cig_ft": 200,
-          "vis_m": 550
-        },
-        "wind": {
-          "threshold_kt": 29,
-          "use_gust": false,
-          "apply": true
-        },
-        "approach_category": null
-      },
-      "_thinComputed": true,
-      "met": {
-        "raw": "METAR LRBS 081100Z 08010KT 040V150 CAVOK 12/01 Q1031 NOSIG",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": 12,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "taf": {
-        "raw": "TAF LRBS 080500Z 0806/0906 05006KT CAVOK",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": null,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "worstVis": 10000,
-      "tafWorstVis": 10000,
-      "rvrMinAll": null,
-      "cigAll": 5000,
-      "minimaNow": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minimaTaf": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minExplainMet": null,
-      "minExplainTaf": null,
-      "_minTokensM": [],
-      "_minTokensT": [],
-      "om": {
-        "explain": {
-          "src": "MT",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 12,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 80,
-            "spd": 10,
-            "gst": null,
-            "usedSpd": 10
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
-            "limitKt": 38,
-            "runwayHdg": 74,
-            "runwayName": "07/25",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 1,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 10,
-        "xwindWindDir": 80
-      },
-      "omMet": {
-        "explain": {
-          "src": "M",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 12,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 80,
-            "spd": 10,
-            "gst": null,
-            "usedSpd": 10
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
-            "limitKt": 38,
-            "runwayHdg": 74,
-            "runwayName": "07/25",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 1,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 10,
-        "xwindWindDir": 80
-      },
-      "omTaf": {
-        "explain": {
-          "src": "T",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": null,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 50,
-            "spd": 6,
-            "gst": null,
-            "usedSpd": 6
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 2,
-            "limitKt": 38,
-            "runwayHdg": 74,
-            "runwayName": "07/25",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 2,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 6,
-        "xwindWindDir": 50
-      },
-      "engIceOps": false,
-      "severityScore": 0,
-      "alert": "OK",
-      "metCrit": false,
-      "tafCrit": false,
-      "critSrc": null,
-      "metPri": 0,
-      "tafPri": 0,
-      "triggers": [],
-      "visibility_m": 10000,
-      "taf_visibility_m": 10000,
-      "worst_visibility_m": 10000,
-      "ceiling_ft": 5000,
-      "hazards": []
-    },
-    {
       "icao": "LRBV",
       "iata": "GHV",
       "name": "Brașov-Ghimbav International Airport",
@@ -41585,7 +41833,7 @@
       "lon": 25.522871,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRBV 081100Z 07005KT 360V150 9999 FEW055 12/M03 Q1028",
-      "tafRaw": "TAF LRBV 080800Z 0809/0818 VRB04KT CAVOK\n  BECMG 0811/0813 07010KT",
+      "tafRaw": "TAF LRBV 081100Z 0812/0821 08008KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 200,
@@ -41624,7 +41872,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRBV 080800Z 0809/0818 VRB04KT CAVOK\n  BECMG 0811/0813 07010KT",
+        "raw": "TAF LRBV 081100Z 0812/0821 08008KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -41816,10 +42064,10 @@
             "evidence": []
           },
           "wind": {
-            "dir": null,
-            "spd": 4,
+            "dir": 80,
+            "spd": 8,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
@@ -41851,8 +42099,8 @@
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 80
       },
       "engIceOps": false,
       "severityScore": 0,
@@ -41877,7 +42125,7 @@
       "lon": 23.684292,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRCL 081100Z 10003KT 350V140 CAVOK 12/M01 Q1028",
-      "tafRaw": "TAF LRCL 080800Z 0809/0818 VRB04KT CAVOK",
+      "tafRaw": "TAF LRCL 081100Z 0812/0821 VRB04KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 114,
@@ -41916,7 +42164,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRCL 080800Z 0809/0818 VRB04KT CAVOK",
+        "raw": "TAF LRCL 081100Z 0812/0821 VRB04KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -42169,7 +42417,7 @@
       "lon": 23.888599,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRCV 081100Z 09010KT CAVOK 12/03 Q1030",
-      "tafRaw": "TAF LRCV 080800Z 0809/0818 05007KT CAVOK\n  BECMG 0809/0811 11010KT",
+      "tafRaw": "TAF LRCV 081100Z 0812/0821 08010KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 100,
@@ -42208,7 +42456,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRCV 080800Z 0809/0818 05007KT CAVOK\n  BECMG 0809/0811 11010KT",
+        "raw": "TAF LRCV 081100Z 0812/0821 08010KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -42400,14 +42648,14 @@
             "evidence": []
           },
           "wind": {
-            "dir": 50,
-            "spd": 7,
+            "dir": 80,
+            "spd": 10,
             "gst": null,
-            "usedSpd": 7
+            "usedSpd": 10
           },
           "xwind": {
             "available": true,
-            "xwindKt": 4,
+            "xwindKt": 2,
             "limitKt": 38,
             "runwayHdg": 89,
             "runwayName": "08/26",
@@ -42429,306 +42677,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 4,
+        "xwindKt": 2,
         "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": false,
-        "xwindUsedSpdKt": 7,
-        "xwindWindDir": 50
-      },
-      "engIceOps": false,
-      "severityScore": 0,
-      "alert": "OK",
-      "metCrit": false,
-      "tafCrit": false,
-      "critSrc": null,
-      "metPri": 0,
-      "tafPri": 0,
-      "triggers": [],
-      "visibility_m": 10000,
-      "taf_visibility_m": 10000,
-      "worst_visibility_m": 10000,
-      "ceiling_ft": 5000,
-      "hazards": []
-    },
-    {
-      "icao": "LROP",
-      "iata": "OTP",
-      "name": "Bucharest Henri Coandă International Airport",
-      "lat": 44.571792,
-      "lon": 26.103285,
-      "updatedAt": "081100Z",
-      "metarRaw": "METAR LROP 081100Z 09009KT 060V120 CAVOK 12/M02 Q1031 NOSIG",
-      "tafRaw": "TAF LROP 080500Z 0806/0906 05006KT CAVOK",
-      "minima": {
-        "best": {
-          "cig_ft": 50,
-          "vis_m": 200
-        },
-        "alt": {
-          "cig_ft": 100,
-          "vis_m": 300
-        },
-        "wind": {
-          "threshold_kt": 29,
-          "use_gust": false,
-          "apply": true
-        },
-        "approach_category": null
-      },
-      "_thinComputed": true,
-      "met": {
-        "raw": "METAR LROP 081100Z 09009KT 060V120 CAVOK 12/M02 Q1031 NOSIG",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": 12,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "taf": {
-        "raw": "TAF LROP 080500Z 0806/0906 05006KT CAVOK",
-        "hz": {
-          "ts": false,
-          "cb": false,
-          "fg": false,
-          "fzfg": false,
-          "br": false,
-          "sn": false,
-          "blsn": false,
-          "ra": false,
-          "va": false
-        },
-        "tempC": null,
-        "gustMax": null,
-        "vis": 10000,
-        "cig": 5000,
-        "rvrMin": null,
-        "score": 0
-      },
-      "worstVis": 10000,
-      "tafWorstVis": 10000,
-      "rvrMinAll": null,
-      "cigAll": 5000,
-      "minimaNow": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minimaTaf": {
-        "belowBest": false,
-        "belowAlt": false,
-        "onlyBest": false,
-        "effVis": 10000,
-        "cig": 5000
-      },
-      "minExplainMet": null,
-      "minExplainTaf": null,
-      "_minTokensM": [],
-      "_minTokensT": [],
-      "om": {
-        "explain": {
-          "src": "MT",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 12,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 90,
-            "spd": 9,
-            "gst": null,
-            "usedSpd": 9
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
-            "limitKt": 38,
-            "runwayHdg": 84,
-            "runwayName": "08L/26R",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 1,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 9,
-        "xwindWindDir": 90
-      },
-      "omMet": {
-        "explain": {
-          "src": "M",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": 12,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 90,
-            "spd": 9,
-            "gst": null,
-            "usedSpd": 9
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 1,
-            "limitKt": 38,
-            "runwayHdg": 84,
-            "runwayName": "08L/26R",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 1,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 9,
-        "xwindWindDir": 90
-      },
-      "omTaf": {
-        "explain": {
-          "src": "T",
-          "heavyMatches": [],
-          "refVisType": "VIS",
-          "refVisValue": 10000,
-          "worstVis": 10000,
-          "rvrMinAll": null,
-          "rvrGroups": [],
-          "rvrAny": false,
-          "visThresh800": 800,
-          "lvtoThresh550": 550,
-          "lvpThresh400": 400,
-          "lvtoQualThresh150": 150,
-          "rvrStopThresh125": 125,
-          "cat2Thresh450": 450,
-          "cat3Thresh200": 200,
-          "cat3LowThresh75": 75,
-          "tempC": null,
-          "runwayCond": {
-            "cond": "DRY",
-            "rwyccEst": 6,
-            "evidence": []
-          },
-          "wind": {
-            "dir": 50,
-            "spd": 6,
-            "gst": null,
-            "usedSpd": 6
-          },
-          "xwind": {
-            "available": true,
-            "xwindKt": 3,
-            "limitKt": 38,
-            "runwayHdg": 84,
-            "runwayName": "08L/26R",
-            "runwayWidthM": 45.1,
-            "narrow": false
-          }
-        },
-        "toProhib": false,
-        "tsOrCb": false,
-        "heavyPrecip": false,
-        "va": false,
-        "lvto": false,
-        "lvp": false,
-        "lvtoQualReq": false,
-        "rvr125": false,
-        "rvrRequired": false,
-        "cat2Plus": false,
-        "cat3Only": false,
-        "cat3BelowMin": false,
-        "coldcorr": false,
-        "xwindExceed": false,
-        "xwindKt": 3,
-        "xwindLimitKt": 38,
-        "xwindCond": "DRY",
-        "rwyccEst": 6,
-        "noOpsLikely": false,
-        "xwindNarrow": false,
-        "xwindUsedSpdKt": 6,
-        "xwindWindDir": 50
+        "xwindUsedSpdKt": 10,
+        "xwindWindDir": 80
       },
       "engIceOps": false,
       "severityScore": 0,
@@ -42753,7 +42709,7 @@
       "lon": 24.086666,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRSB 081100Z 10006KT 080V140 CAVOK 13/M00 Q1027",
-      "tafRaw": "TAF LRSB 080500Z 0806/0906 10008KT CAVOK",
+      "tafRaw": "TAF LRSB 081100Z 0812/0912 10008KT CAVOK\n  BECMG 0909/0911 13010KT",
       "minima": {
         "best": {
           "cig_ft": 142,
@@ -42792,7 +42748,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRSB 080500Z 0806/0906 10008KT CAVOK",
+        "raw": "TAF LRSB 081100Z 0812/0912 10008KT CAVOK\n  BECMG 0909/0911 13010KT",
         "hz": {
           "ts": false,
           "cb": false,
@@ -43045,7 +43001,7 @@
       "lon": 22.8857,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRSM 081100Z VRB03KT CAVOK 16/M01 Q1028",
-      "tafRaw": "TAF LRSM 080800Z 0809/0818 VRB04KT CAVOK",
+      "tafRaw": "TAF LRSM 081100Z 0812/0821 VRB04KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 121,
@@ -43084,7 +43040,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRSM 080800Z 0809/0818 VRB04KT CAVOK",
+        "raw": "TAF LRSM 081100Z 0812/0821 VRB04KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -43337,7 +43293,7 @@
       "lon": 26.35409927368164,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRSV 081100Z 04004KT 320V100 CAVOK 09/M02 Q1031",
-      "tafRaw": "TAF LRSV 080800Z 0809/0818 VRB04KT CAVOK",
+      "tafRaw": "TAF LRSV 081100Z 0812/0821 VRB04KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 100,
@@ -43376,7 +43332,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRSV 080800Z 0809/0818 VRB04KT CAVOK",
+        "raw": "TAF LRSV 081100Z 0812/0821 VRB04KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -43629,7 +43585,7 @@
       "lon": 24.4125,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRTM 081100Z VRB03KT CAVOK 15/00 Q1028",
-      "tafRaw": "TAF LRTM 080800Z 0809/0818 09008KT CAVOK",
+      "tafRaw": "TAF LRTM 081100Z 0812/0821 08008KT CAVOK",
       "minima": {
         "best": {
           "cig_ft": 100,
@@ -43668,7 +43624,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRTM 080800Z 0809/0818 09008KT CAVOK",
+        "raw": "TAF LRTM 081100Z 0812/0821 08008KT CAVOK",
         "hz": {
           "ts": false,
           "cb": false,
@@ -43860,14 +43816,14 @@
             "evidence": []
           },
           "wind": {
-            "dir": 90,
+            "dir": 80,
             "spd": 8,
             "gst": null,
             "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": 2,
+            "xwindKt": 1,
             "limitKt": 20,
             "runwayHdg": 74,
             "runwayName": "07/25",
@@ -43889,14 +43845,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": 2,
+        "xwindKt": 1,
         "xwindLimitKt": 20,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
         "xwindNarrow": true,
         "xwindUsedSpdKt": 8,
-        "xwindWindDir": 90
+        "xwindWindDir": 80
       },
       "engIceOps": false,
       "severityScore": 0,
@@ -43921,7 +43877,7 @@
       "lon": 21.3379,
       "updatedAt": "081100Z",
       "metarRaw": "METAR LRTR 081100Z 33008KT 280V350 CAVOK 16/03 Q1027",
-      "tafRaw": "TAF LRTR 080500Z 0806/0906 VRB04KT CAVOK\n  BECMG 0902/0904 10010KT",
+      "tafRaw": "TAF LRTR 081100Z 0812/0912 31008KT CAVOK\n  BECMG 0902/0904 10010KT\n  BECMG 0909/0911 16012KT",
       "minima": {
         "best": {
           "cig_ft": 0,
@@ -43960,7 +43916,7 @@
         "score": 0
       },
       "taf": {
-        "raw": "TAF LRTR 080500Z 0806/0906 VRB04KT CAVOK\n  BECMG 0902/0904 10010KT",
+        "raw": "TAF LRTR 081100Z 0812/0912 31008KT CAVOK\n  BECMG 0902/0904 10010KT\n  BECMG 0909/0911 16012KT",
         "hz": {
           "ts": false,
           "cb": false,
@@ -44152,18 +44108,18 @@
             "evidence": []
           },
           "wind": {
-            "dir": null,
-            "spd": 4,
+            "dir": 310,
+            "spd": 8,
             "gst": null,
-            "usedSpd": null
+            "usedSpd": 8
           },
           "xwind": {
             "available": true,
-            "xwindKt": null,
-            "limitKt": null,
-            "runwayHdg": null,
-            "runwayName": null,
-            "runwayWidthM": null,
+            "xwindKt": 3,
+            "limitKt": 38,
+            "runwayHdg": 110,
+            "runwayName": "11/29",
+            "runwayWidthM": 45.1,
             "narrow": false
           }
         },
@@ -44181,14 +44137,14 @@
         "cat3BelowMin": false,
         "coldcorr": false,
         "xwindExceed": false,
-        "xwindKt": null,
-        "xwindLimitKt": null,
+        "xwindKt": 3,
+        "xwindLimitKt": 38,
         "xwindCond": "DRY",
         "rwyccEst": 6,
         "noOpsLikely": false,
-        "xwindNarrow": null,
-        "xwindUsedSpdKt": null,
-        "xwindWindDir": null
+        "xwindNarrow": false,
+        "xwindUsedSpdKt": 8,
+        "xwindWindDir": 310
       },
       "engIceOps": false,
       "severityScore": 0,
@@ -48302,10 +48258,10 @@
   ],
   "stats": {
     "icaoCount": 159,
-    "metarReturned": 156,
+    "metarReturned": 157,
     "tafReturned": 156,
     "stationsWritten": 159,
-    "missingMetar": 3,
+    "missingMetar": 2,
     "missingTaf": 3
   },
   "errors": []
