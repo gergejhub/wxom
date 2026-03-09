@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-03-09T18:00:09.588Z",
+  "generatedAt": "2026-03-09T19:01:01.496Z",
   "headline20": "Critical operational constraints are flagged at 2 airports right now.",
-  "management45": "Critical operational constraints are flagged at 2 airports right now. No engine anti-ice operations are currently flagged. Across base airports: 5 high, 4 medium, 30 normal. Key bases needing attention include London Luton (LTN/EGGW), London Gatwick (LGW/EGKK) and Copernicus Wrocław (WRO/EPWR); plus 2 other bases. 4 additional base airports are at medium severity and should be monitored closely. At base airports, the dominant pattern is thunderstorm / convective risk, low cloud base and mist  — most notably around London Luton (LTN/EGGW), London Gatwick (LGW/EGKK) and Zvartnots (EVN/UDYZ). Network hotspots: Sandefjord Airport, Torp (TRF/ENTO), Almaty (ALA/UAAA). Primary drivers: low‑visibility takeoff restrictions, RVR limitations and very low visibility. Expected impact is reduced runway capacity with higher delay and diversion risk, especially where visibility/RVR and cloud base are very low. Since the last update, 4 airports changed status, led by Almaty (ALA/UAAA), Heydar Aliyev (GYD/UBBB), Priština Adem Jashari (PRN/BKPR) and 1 others.",
-  "detail90": "Critical operational constraints are flagged at 2 airports right now. Base airports (focus): London Luton (LTN/EGGW) — HIGH: mist; visibility down to 1.2 km, cloud base around 100 ft | London Gatwick (LGW/EGKK) — HIGH: fog; visibility down to 300 m, cloud base around 100 ft | Copernicus Wrocław (WRO/EPWR) — HIGH: thunderstorm / convective risk | Poznań-Ławica (POZ/EPPO) — HIGH: thunderstorm / convective risk | Zvartnots (EVN/UDYZ) — HIGH: cloud base around 0 ft. Worst affected now: Sandefjord Airport, Torp (TRF/ENTO) — CRIT: fog; cold-temperature performance penalties; visibility down to 100 m, RVR down to 400 m, cloud base around 0 ft (drivers: low-visibility procedures (reduced capacity), low-visibility takeoff restrictions, runway visual range (RVR) constraints) | Almaty (ALA/UAAA) — CRIT: freezing fog; snow; runway contamination risk (drivers: low-visibility takeoff restrictions, runway visual range (RVR) constraints, runway contamination / reduced braking). Changed since last run: Almaty (ALA/UAAA), Heydar Aliyev (GYD/UBBB), Priština Adem Jashari (PRN/BKPR), David the Builder Kutaisi (KUT/UGKO).",
+  "management45": "Critical operational constraints are flagged at 2 airports right now. Engine anti-ice operations are flagged at Sandefjord Airport, Torp (TRF/ENTO). Across base airports: 5 high, 4 medium, 30 normal. Key bases needing attention include London Luton (LTN/EGGW), London Gatwick (LGW/EGKK) and Copernicus Wrocław (WRO/EPWR); plus 2 other bases. 4 additional base airports are at medium severity and should be monitored closely. At base airports, the dominant pattern is thunderstorm / convective risk, low cloud base and mist  — most notably around London Luton (LTN/EGGW), London Gatwick (LGW/EGKK) and Copernicus Wrocław (WRO/EPWR). Network hotspots: Sandefjord Airport, Torp (TRF/ENTO), Almaty (ALA/UAAA). Primary drivers: low‑visibility takeoff restrictions, RVR limitations and very low visibility. Expected impact is reduced runway capacity with higher delay and diversion risk, especially where visibility/RVR and cloud base are very low. Since the last update, 12 airports changed status, led by Sandefjord Airport, Torp (TRF/ENTO), Almaty (ALA/UAAA), Oslo-Gardermoen (OSL/ENGM) and 9 others.",
+  "detail90": "Critical operational constraints are flagged at 2 airports right now. Base airports (focus): London Luton (LTN/EGGW) — HIGH: mist; visibility down to 1.2 km, cloud base around 100 ft | London Gatwick (LGW/EGKK) — HIGH: fog; visibility down to 300 m, cloud base around 100 ft | Copernicus Wrocław (WRO/EPWR) — HIGH: thunderstorm / convective risk | Poznań-Ławica (POZ/EPPO) — HIGH: thunderstorm / convective risk | Zvartnots (EVN/UDYZ) — HIGH: cloud base around 0 ft. Worst affected now: Sandefjord Airport, Torp (TRF/ENTO) — CRIT: freezing fog; freezing precipitation / icing risk; cold-temperature performance penalties (drivers: engine anti-ice operations, low-visibility procedures (reduced capacity), low-visibility takeoff restrictions) | Almaty (ALA/UAAA) — CRIT: freezing fog; snow; runway contamination risk (drivers: low-visibility takeoff restrictions, runway visual range (RVR) constraints, runway contamination / reduced braking). Changed since last run: Sandefjord Airport, Torp (TRF/ENTO), Almaty (ALA/UAAA), Oslo-Gardermoen (OSL/ENGM), Lennart Meri Tallinn (TLL/EETN), London Luton (LTN/EGGW), London Gatwick (LGW/EGKK), Keflavik (KEF/BIKF), Turku (TKU/EFTU), Bordeaux–Mérignac (BOD/LFBD), Heydar Aliyev (GYD/UBBB) and 2 others.",
   "base": [
     {
       "icao": "EGGW",
@@ -275,7 +275,7 @@
       "iata": "TGD",
       "name": "Podgorica Airport / Podgorica Golubovci Airbase",
       "alert": "OK",
-      "summary": "operational constraints flagged"
+      "summary": "cloud base around 0 ft"
     }
   ],
   "top": [
@@ -285,8 +285,13 @@
       "name": "Sandefjord Airport, Torp",
       "alert": "CRIT",
       "critSrc": "M",
-      "summary": "fog; cold-temperature performance penalties; visibility down to 100 m, RVR down to 400 m, cloud base around 0 ft",
+      "summary": "freezing fog; freezing precipitation / icing risk; cold-temperature performance penalties",
       "triggers": [
+        {
+          "label": "ENG ICE OPS",
+          "cls": "tag--eng",
+          "src": "M"
+        },
         {
           "label": "LVP (<400)",
           "cls": "tag--warn",
@@ -303,15 +308,10 @@
           "src": "T"
         },
         {
-          "label": "CAT2+ <450",
-          "cls": "tag--warn",
-          "src": "M"
-        },
-        {
           "label": "MINIMA CRIT",
           "cls": "tag--stop",
           "src": "M",
-          "tip": "METAR minima CRIT (BEST) · CIG 0<100; VIS/RVR 100<300"
+          "tip": "METAR minima CRIT (BEST) · VIS/RVR 100<300"
         },
         {
           "label": "MINIMA CRIT",
@@ -340,9 +340,14 @@
           "src": "MT"
         },
         {
+          "label": "FZFG",
+          "cls": "tag--wx",
+          "src": "M"
+        },
+        {
           "label": "FG",
           "cls": "tag--wx",
-          "src": "MT"
+          "src": "T"
         },
         {
           "label": "BR",
@@ -392,7 +397,7 @@
         {
           "label": "TS/CB",
           "cls": "tag--wx",
-          "src": "T"
+          "src": "MT"
         },
         {
           "label": "FZFG",
@@ -413,6 +418,46 @@
           "label": "RA",
           "cls": "tag--wx",
           "src": "T"
+        }
+      ]
+    },
+    {
+      "icao": "ENGM",
+      "iata": "OSL",
+      "name": "Oslo-Gardermoen International Airport",
+      "alert": "HIGH",
+      "critSrc": null,
+      "summary": "freezing fog; visibility down to 500 m, cloud base around 100 ft",
+      "triggers": [
+        {
+          "label": "LVTO (<550)",
+          "cls": "tag--lvto",
+          "src": "T"
+        },
+        {
+          "label": "RVR REQ (<800)",
+          "cls": "tag--warn",
+          "src": "T"
+        },
+        {
+          "label": "VIS≤800",
+          "cls": "tag--vis",
+          "src": "T"
+        },
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "MT"
+        },
+        {
+          "label": "FZFG",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "FG",
+          "cls": "tag--wx",
+          "src": "M"
         }
       ]
     },
@@ -458,7 +503,7 @@
         {
           "label": "BR",
           "cls": "tag--wx",
-          "src": "T"
+          "src": "MT"
         }
       ]
     },
@@ -579,41 +624,6 @@
       ]
     },
     {
-      "icao": "ENGM",
-      "iata": "OSL",
-      "name": "Oslo-Gardermoen International Airport",
-      "alert": "HIGH",
-      "critSrc": null,
-      "summary": "freezing fog; visibility down to 500 m, cloud base around 100 ft",
-      "triggers": [
-        {
-          "label": "LVTO (<550)",
-          "cls": "tag--lvto",
-          "src": "T"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "VIS≤800",
-          "cls": "tag--vis",
-          "src": "T"
-        },
-        {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "MT"
-        },
-        {
-          "label": "FZFG",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
       "icao": "BIKF",
       "iata": "KEF",
       "name": "Keflavik International Airport",
@@ -634,6 +644,21 @@
         {
           "label": "RA",
           "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "icao": "GCTS",
+      "iata": "TFS",
+      "name": "Tenerife Sur Airport",
+      "alert": "HIGH",
+      "critSrc": null,
+      "summary": "strong gusts risk; cloud base around 0 ft",
+      "triggers": [
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
           "src": "MT"
         }
       ]
@@ -644,7 +669,7 @@
       "name": "Turku Airport",
       "alert": "HIGH",
       "critSrc": null,
-      "summary": "freezing fog; cold-temperature performance penalties; visibility down to 600 m",
+      "summary": "freezing fog; visibility down to 600 m",
       "triggers": [
         {
           "label": "RVR REQ (<800)",
@@ -656,11 +681,6 @@
           "cls": "tag--warn",
           "src": "T",
           "tip": "TAF minima LIMIT (ALT) · VIS/RVR 600<650"
-        },
-        {
-          "label": "COLD CORR",
-          "cls": "tag--warn",
-          "src": "M"
         },
         {
           "label": "VIS≤800",
@@ -746,26 +766,6 @@
       ]
     },
     {
-      "icao": "LEXJ",
-      "iata": "SDR",
-      "name": "Seve Ballesteros-Santander Airport",
-      "alert": "HIGH",
-      "critSrc": null,
-      "summary": "visibility down to 1.5 km, cloud base around 500 ft",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "MT"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "MT"
-        }
-      ]
-    },
-    {
       "icao": "EPWR",
       "iata": "WRO",
       "name": "Copernicus Wrocław Airport",
@@ -842,6 +842,11 @@
           "label": "FG",
           "cls": "tag--wx",
           "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "M"
         }
       ]
     },
@@ -896,16 +901,56 @@
         {
           "label": "TS/CB",
           "cls": "tag--wx",
-          "src": "MT"
+          "src": "T"
         }
       ]
     }
   ],
   "changed": [
     {
+      "icao": "ENTO",
+      "type": "CHANGE",
+      "alert": "CRIT"
+    },
+    {
       "icao": "UAAA",
       "type": "CHANGE",
       "alert": "CRIT"
+    },
+    {
+      "icao": "ENGM",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
+      "icao": "EETN",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
+      "icao": "EGGW",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
+      "icao": "EGKK",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
+      "icao": "BIKF",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
+      "icao": "EFTU",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
+      "icao": "LFBD",
+      "type": "CHANGE",
+      "alert": "HIGH"
     },
     {
       "icao": "UBBB",
@@ -913,14 +958,14 @@
       "alert": "HIGH"
     },
     {
-      "icao": "BKPR",
+      "icao": "ENHD",
       "type": "CHANGE",
-      "alert": "OK"
+      "alert": "HIGH"
     },
     {
-      "icao": "UGKO",
+      "icao": "ENZV",
       "type": "CHANGE",
-      "alert": "OK"
+      "alert": "HIGH"
     }
   ]
 }
