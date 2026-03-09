@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-03-09T11:58:27.574Z",
-  "headline20": "Critical operational constraints are flagged at 1 airports right now.",
-  "management45": "Critical operational constraints are flagged at 1 airports right now. No engine anti-ice operations are currently flagged. Across base airports: 4 high, 7 medium, 28 normal. Key bases needing attention include London Luton (LTN/EGGW), Zvartnots (EVN/UDYZ) and Naples (NAP/LIRN); plus 1 other bases. 7 additional base airports are at medium severity and should be monitored closely. At base airports, the dominant pattern is thunderstorm / convective risk, mist and low cloud base  — most notably around London Luton (LTN/EGGW), Zvartnots (EVN/UDYZ) and Naples (NAP/LIRN). Network hotspots: Keflavik (KEF/BIKF). Primary drivers: mist. Expected impact is reduced runway capacity with higher delay and diversion risk, especially where visibility/RVR and cloud base are very low. Since the last update, 12 airports changed status, led by Keflavik (KEF/BIKF), Oslo-Gardermoen (OSL/ENGM), London Luton (LTN/EGGW) and 9 others.",
-  "detail90": "Critical operational constraints are flagged at 1 airports right now. Base airports (focus): London Luton (LTN/EGGW) — HIGH: mist; visibility down to 1 km, cloud base around 100 ft | Zvartnots (EVN/UDYZ) — HIGH: cloud base around 0 ft | Naples (NAP/LIRN) — HIGH: cloud base around 0 ft | Podgorica Airport / Podgorica Golubovci Airbase (TGD/LYPG) — HIGH: cloud base around 0 ft. Worst affected now: Keflavik (KEF/BIKF) — CRIT: mist; strong gusts risk; cloud base around 700 ft (drivers: mist). Changed since last run: Keflavik (KEF/BIKF), Oslo-Gardermoen (OSL/ENGM), London Luton (LTN/EGGW), Bergen Airport, Flesland (BGO/ENBR), Sandefjord Airport, Torp (TRF/ENTO), Turku (TKU/EFTU), Stockholm Skavsta (NYO/ESKN), Bordeaux–Mérignac (BOD/LFBD), EuroAirport Basel–Mulhouse–Freiburg (BSL/LFSB), Birmingham (BHX/EGBB) and 2 others.",
+  "generatedAt": "2026-03-09T13:12:26.957Z",
+  "headline20": "Critical operational constraints are flagged at 2 airports right now.",
+  "management45": "Critical operational constraints are flagged at 2 airports right now. No engine anti-ice operations are currently flagged. Across base airports: 5 high, 6 medium, 28 normal. Key bases needing attention include London Luton (LTN/EGGW), London Gatwick (LGW/EGKK) and Zvartnots (EVN/UDYZ); plus 2 other bases. 6 additional base airports are at medium severity and should be monitored closely. At base airports, the dominant pattern is thunderstorm / convective risk, mist and low cloud base  — most notably around London Luton (LTN/EGGW), Zvartnots (EVN/UDYZ) and Naples (NAP/LIRN). Network hotspots: Keflavik (KEF/BIKF), Turku (TKU/EFTU). Primary drivers: mist, low‑visibility takeoff restrictions and RVR limitations. Expected impact is reduced runway capacity with higher delay and diversion risk, especially where visibility/RVR and cloud base are very low. Since the last update, 12 airports changed status, led by Keflavik (KEF/BIKF), Turku (TKU/EFTU), Birmingham (BHX/EGBB) and 9 others.",
+  "detail90": "Critical operational constraints are flagged at 2 airports right now. Base airports (focus): London Luton (LTN/EGGW) — HIGH: mist; visibility down to 1 km, cloud base around 100 ft | London Gatwick (LGW/EGKK) — HIGH: mist; visibility down to 1.2 km, cloud base around 300 ft | Zvartnots (EVN/UDYZ) — HIGH: cloud base around 0 ft | Naples (NAP/LIRN) — HIGH: cloud base around 0 ft | Podgorica Airport / Podgorica Golubovci Airbase (TGD/LYPG) — HIGH: cloud base around 0 ft. Worst affected now: Keflavik (KEF/BIKF) — CRIT: mist; strong gusts risk; cloud base around 700 ft (drivers: mist) | Turku (TKU/EFTU) — CRIT: freezing fog; visibility down to 500 m, cloud base around 100 ft; below approach minima (current METAR) (drivers: low-visibility takeoff restrictions, runway visual range (RVR) constraints, approach minima limits). Changed since last run: Keflavik (KEF/BIKF), Turku (TKU/EFTU), Birmingham (BHX/EGBB), London Luton (LTN/EGGW), Oslo-Gardermoen (OSL/ENGM), Bergen Airport, Flesland (BGO/ENBR), Bordeaux–Mérignac (BOD/LFBD), Beauvais Tillé (BVA/LFOB), EuroAirport Basel–Mulhouse–Freiburg (BSL/LFSB), Heydar Aliyev (GYD/UBBB) and 2 others.",
   "base": [
     {
       "icao": "EGGW",
@@ -15,7 +15,7 @@
       "icao": "EGKK",
       "iata": "LGW",
       "name": "London Gatwick Airport",
-      "alert": "MED",
+      "alert": "HIGH",
       "summary": "mist; visibility down to 1.2 km, cloud base around 300 ft"
     },
     {
@@ -305,12 +305,119 @@
       ]
     },
     {
+      "icao": "EFTU",
+      "iata": "TKU",
+      "name": "Turku Airport",
+      "alert": "CRIT",
+      "critSrc": "M",
+      "summary": "freezing fog; visibility down to 500 m, cloud base around 100 ft; below approach minima (current METAR)",
+      "triggers": [
+        {
+          "label": "LVTO (<550)",
+          "cls": "tag--lvto",
+          "src": "T"
+        },
+        {
+          "label": "RVR REQ (<800)",
+          "cls": "tag--warn",
+          "src": "T"
+        },
+        {
+          "label": "MINIMA CRIT",
+          "cls": "tag--stop",
+          "src": "M",
+          "tip": "METAR minima CRIT (BEST) · CIG 100<200"
+        },
+        {
+          "label": "MINIMA CRIT",
+          "cls": "tag--stop",
+          "src": "T",
+          "tip": "TAF minima CRIT (BEST) · VIS/RVR 500<550"
+        },
+        {
+          "label": "VIS≤800",
+          "cls": "tag--vis",
+          "src": "T"
+        },
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "M"
+        },
+        {
+          "label": "FZFG",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "icao": "EGBB",
+      "iata": "BHX",
+      "name": "Birmingham Airport",
+      "alert": "HIGH",
+      "critSrc": null,
+      "summary": "mist; visibility down to 1.2 km, cloud base around 200 ft",
+      "triggers": [
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "MT"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "icao": "EGGW",
+      "iata": "LTN",
+      "name": "London Luton Airport",
+      "alert": "HIGH",
+      "critSrc": null,
+      "summary": "mist; visibility down to 1 km, cloud base around 100 ft",
+      "triggers": [
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "MT"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
       "icao": "ENGM",
       "iata": "OSL",
       "name": "Oslo-Gardermoen International Airport",
       "alert": "HIGH",
       "critSrc": null,
-      "summary": "freezing fog; visibility down to 400 m, RVR down to 550 m, cloud base around 200 ft",
+      "summary": "freezing fog; visibility down to 400 m, RVR down to 600 m, cloud base around 100 ft",
       "triggers": [
         {
           "label": "LVTO (<550)",
@@ -345,7 +452,7 @@
         {
           "label": "BR",
           "cls": "tag--wx",
-          "src": "T"
+          "src": "MT"
         }
       ]
     },
@@ -390,31 +497,6 @@
         },
         {
           "label": "BR",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "icao": "EGGW",
-      "iata": "LTN",
-      "name": "London Luton Airport",
-      "alert": "HIGH",
-      "critSrc": null,
-      "summary": "mist; visibility down to 1 km, cloud base around 100 ft",
-      "triggers": [
-        {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "MT"
-        },
-        {
-          "label": "BR",
-          "cls": "tag--wx",
-          "src": "MT"
-        },
-        {
-          "label": "RA",
           "cls": "tag--wx",
           "src": "T"
         }
@@ -518,72 +600,6 @@
       ]
     },
     {
-      "icao": "GCTS",
-      "iata": "TFS",
-      "name": "Tenerife Sur Airport",
-      "alert": "HIGH",
-      "critSrc": null,
-      "summary": "strong gusts risk; cloud base around 0 ft",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "MT"
-        }
-      ]
-    },
-    {
-      "icao": "EFTU",
-      "iata": "TKU",
-      "name": "Turku Airport",
-      "alert": "HIGH",
-      "critSrc": null,
-      "summary": "freezing fog; visibility down to 500 m, cloud base around 300 ft; forecast below approach minima at times",
-      "triggers": [
-        {
-          "label": "LVTO (<550)",
-          "cls": "tag--lvto",
-          "src": "T"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "MINIMA CRIT",
-          "cls": "tag--stop",
-          "src": "T",
-          "tip": "TAF minima CRIT (BEST) · VIS/RVR 500<550"
-        },
-        {
-          "label": "VIS≤800",
-          "cls": "tag--vis",
-          "src": "T"
-        },
-        {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "M"
-        },
-        {
-          "label": "FZFG",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "BR",
-          "cls": "tag--wx",
-          "src": "MT"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
       "icao": "ESKN",
       "iata": "NYO",
       "name": "Stockholm Skavsta Airport",
@@ -619,6 +635,31 @@
         },
         {
           "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "icao": "LEBL",
+      "iata": "BCN",
+      "name": "Josep Tarradellas Barcelona-El Prat Airport",
+      "alert": "HIGH",
+      "critSrc": null,
+      "summary": "strong gusts risk",
+      "triggers": [
+        {
+          "label": "GUST≥25KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "RA",
           "cls": "tag--wx",
           "src": "T"
         }
@@ -670,27 +711,12 @@
       ]
     },
     {
-      "icao": "LFSB",
-      "iata": "BSL",
-      "name": "EuroAirport Basel–Mulhouse–Freiburg",
+      "icao": "LFLS",
+      "iata": "GNB",
+      "name": "Grenoble Alpes Isère Airport",
       "alert": "HIGH",
       "critSrc": null,
       "summary": "thunderstorm / convective risk",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "MT"
-        }
-      ]
-    },
-    {
-      "icao": "UBBB",
-      "iata": "GYD",
-      "name": "Heydar Aliyev International Airport",
-      "alert": "HIGH",
-      "critSrc": null,
-      "summary": "cloud base around 700 ft",
       "triggers": [
         {
           "label": "TS/CB",
@@ -708,19 +734,19 @@
       "icao": "EGKK",
       "iata": "LGW",
       "name": "London Gatwick Airport",
-      "alert": "MED",
+      "alert": "HIGH",
       "critSrc": null,
       "summary": "mist; visibility down to 1.2 km, cloud base around 300 ft",
       "triggers": [
         {
           "label": "CIG<500",
           "cls": "tag--cig",
-          "src": "T"
+          "src": "MT"
         },
         {
           "label": "BR",
           "cls": "tag--wx",
-          "src": "T"
+          "src": "MT"
         },
         {
           "label": "RA",
@@ -913,7 +939,12 @@
       "alert": "CRIT"
     },
     {
-      "icao": "ENGM",
+      "icao": "EFTU",
+      "type": "CHANGE",
+      "alert": "CRIT"
+    },
+    {
+      "icao": "EGBB",
       "type": "CHANGE",
       "alert": "HIGH"
     },
@@ -923,22 +954,12 @@
       "alert": "HIGH"
     },
     {
+      "icao": "ENGM",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
       "icao": "ENBR",
-      "type": "CHANGE",
-      "alert": "HIGH"
-    },
-    {
-      "icao": "ENTO",
-      "type": "CHANGE",
-      "alert": "HIGH"
-    },
-    {
-      "icao": "EFTU",
-      "type": "CHANGE",
-      "alert": "HIGH"
-    },
-    {
-      "icao": "ESKN",
       "type": "CHANGE",
       "alert": "HIGH"
     },
@@ -948,12 +969,17 @@
       "alert": "HIGH"
     },
     {
+      "icao": "LFOB",
+      "type": "CHANGE",
+      "alert": "HIGH"
+    },
+    {
       "icao": "LFSB",
       "type": "CHANGE",
       "alert": "HIGH"
     },
     {
-      "icao": "EGBB",
+      "icao": "UBBB",
       "type": "CHANGE",
       "alert": "HIGH"
     },
