@@ -1,6 +1,1306 @@
 {
-  "generatedAt": "2026-03-14T19:07:40.565Z",
+  "generatedAt": "2026-03-14T19:33:56.560Z",
   "events": [
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EDJA",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 1100
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 700
+          }
+        }
+      },
+      "alert": "CRIT",
+      "triggers": [
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "T"
+        },
+        {
+          "label": "SN",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "ESKN",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 800
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": true,
+            "onlyBest": true,
+            "effVis": 5000,
+            "cig": 300
+          }
+        },
+        "triggers": {
+          "from": [
+            {
+              "label": "MINIMA LIMIT",
+              "cls": "tag--warn",
+              "src": "T",
+              "tip": "TAF minima LIMIT (ALT) · CIG 200<390; VIS/RVR 1200<1400"
+            },
+            {
+              "label": "CIG<500",
+              "cls": "tag--cig",
+              "src": "T"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "SN",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "RA",
+              "cls": "tag--wx",
+              "src": "T"
+            }
+          ],
+          "to": [
+            {
+              "label": "MINIMA LIMIT",
+              "cls": "tag--warn",
+              "src": "M",
+              "tip": "METAR minima LIMIT (ALT) · CIG 300<390"
+            },
+            {
+              "label": "MINIMA LIMIT",
+              "cls": "tag--warn",
+              "src": "T",
+              "tip": "TAF minima LIMIT (ALT) · CIG 200<390; VIS/RVR 1200<1400"
+            },
+            {
+              "label": "CIG<500",
+              "cls": "tag--cig",
+              "src": "MT"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "SN",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "RA",
+              "cls": "tag--wx",
+              "src": "MT"
+            }
+          ]
+        }
+      },
+      "alert": "CRIT",
+      "triggers": [
+        {
+          "label": "MINIMA LIMIT",
+          "cls": "tag--warn",
+          "src": "M",
+          "tip": "METAR minima LIMIT (ALT) · CIG 300<390"
+        },
+        {
+          "label": "MINIMA LIMIT",
+          "cls": "tag--warn",
+          "src": "T",
+          "tip": "TAF minima LIMIT (ALT) · CIG 200<390; VIS/RVR 1200<1400"
+        },
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "MT"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "SN",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "ENTO",
+      "type": "CHANGE",
+      "changes": {
+        "alert": {
+          "from": "CRIT",
+          "to": "HIGH"
+        },
+        "critSrc": {
+          "from": "M",
+          "to": null
+        },
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": true,
+            "onlyBest": true,
+            "effVis": 450,
+            "cig": 100
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": true,
+            "onlyBest": true,
+            "effVis": 300,
+            "cig": 300
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "LVTO (<550)",
+          "cls": "tag--lvto",
+          "src": "T"
+        },
+        {
+          "label": "RVR REQ (<800)",
+          "cls": "tag--warn",
+          "src": "T"
+        },
+        {
+          "label": "MINIMA LIMIT",
+          "cls": "tag--warn",
+          "src": "M",
+          "tip": "METAR minima LIMIT (ALT) · VIS/RVR 300<550"
+        },
+        {
+          "label": "MINIMA LIMIT",
+          "cls": "tag--warn",
+          "src": "T",
+          "tip": "TAF minima LIMIT (ALT) · CIG 100<200; VIS/RVR 400<550"
+        },
+        {
+          "label": "VIS≤800",
+          "cls": "tag--vis",
+          "src": "MT"
+        },
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "MT"
+        },
+        {
+          "label": "FG",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EHBK",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 1700
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 1300
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥25KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "FG",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EHEH",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 1600,
+            "cig": null
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 4000,
+            "cig": 4400
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥25KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "ENBR",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 1200,
+            "cig": 2400
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 1200,
+            "cig": 1200
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "ENZV",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": null
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 9000,
+            "cig": null
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "MT"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EPSC",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 700
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 400
+          }
+        },
+        "triggers": {
+          "from": [
+            {
+              "label": "TS/CB",
+              "cls": "tag--wx",
+              "src": "M"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "RA",
+              "cls": "tag--wx",
+              "src": "MT"
+            }
+          ],
+          "to": [
+            {
+              "label": "CIG<500",
+              "cls": "tag--cig",
+              "src": "M"
+            },
+            {
+              "label": "TS/CB",
+              "cls": "tag--wx",
+              "src": "M"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "RA",
+              "cls": "tag--wx",
+              "src": "MT"
+            }
+          ]
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "M"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "M"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EKBI",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 9000,
+            "cig": 600
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 600
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "LVP (<400)",
+          "cls": "tag--warn",
+          "src": "T"
+        },
+        {
+          "label": "RVR REQ (<800)",
+          "cls": "tag--warn",
+          "src": "T"
+        },
+        {
+          "label": "VIS≤800",
+          "cls": "tag--vis",
+          "src": "T"
+        },
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "FG",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "BIKF",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 12000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 9300
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "SN",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EBCI",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": null
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 3000
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥25KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "FG",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EKCH",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 8800
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 8300
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "ENAL",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": null
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 5900
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LFLL",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 5300
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 12000
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LFLS",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 5000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 1300
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "SN",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LIMJ",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 6000,
+            "cig": 2600
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 7000,
+            "cig": 2600
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "MINIMA LIMIT",
+          "cls": "tag--warn",
+          "src": "T",
+          "tip": "TAF minima LIMIT (ALT) · CIG 1000<1040"
+        },
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LIPX",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 5000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 1500
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "GUST≥30KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "UBBB",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": null
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 5000
+          }
+        }
+      },
+      "alert": "HIGH",
+      "triggers": [
+        {
+          "label": "TS/CB",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EDDK",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 1200
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 3500
+          }
+        }
+      },
+      "alert": "MED",
+      "triggers": [
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EDFH",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 2000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 1600
+          }
+        }
+      },
+      "alert": "MED",
+      "triggers": [
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EDLW",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 9000,
+            "cig": 800
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 7000,
+            "cig": 500
+          }
+        },
+        "triggers": {
+          "from": [
+            {
+              "label": "CIG<500",
+              "cls": "tag--cig",
+              "src": "T"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "T"
+            },
+            {
+              "label": "RA",
+              "cls": "tag--wx",
+              "src": "M"
+            }
+          ],
+          "to": [
+            {
+              "label": "CIG<500",
+              "cls": "tag--cig",
+              "src": "T"
+            },
+            {
+              "label": "BR",
+              "cls": "tag--wx",
+              "src": "T"
+            }
+          ]
+        }
+      },
+      "alert": "MED",
+      "triggers": [
+        {
+          "label": "CIG<500",
+          "cls": "tag--cig",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "EGPD",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 4200
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": null
+          }
+        }
+      },
+      "alert": "MED",
+      "triggers": [
+        {
+          "label": "GUST≥25KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LIMC",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 4000,
+            "cig": 1500
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 4000,
+            "cig": 3000
+          }
+        }
+      },
+      "alert": "MED",
+      "triggers": [
+        {
+          "label": "GUST≥25KT",
+          "cls": "tag--gust",
+          "src": "T"
+        },
+        {
+          "label": "BR",
+          "cls": "tag--wx",
+          "src": "M"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LIPY",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 18000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": null
+          }
+        }
+      },
+      "alert": "MED",
+      "triggers": [
+        {
+          "label": "FG",
+          "cls": "tag--wx",
+          "src": "T"
+        },
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LIMF",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 6000,
+            "cig": 1000
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 8000,
+            "cig": 3000
+          }
+        }
+      },
+      "alert": "MED",
+      "triggers": [
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "MT"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LIPQ",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 9200
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 9300
+          }
+        }
+      },
+      "alert": "OK",
+      "triggers": [
+        {
+          "label": "RA",
+          "cls": "tag--wx",
+          "src": "T"
+        }
+      ]
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "ENTC",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 2600,
+            "cig": 4900
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 2600,
+            "cig": null
+          }
+        }
+      },
+      "alert": "OK",
+      "triggers": []
+    },
+    {
+      "ts": "2026-03-14T19:33:56.560Z",
+      "icao": "LIRZ",
+      "type": "CHANGE",
+      "changes": {
+        "minimaNow": {
+          "from": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 4400
+          },
+          "to": {
+            "belowBest": false,
+            "belowAlt": false,
+            "onlyBest": false,
+            "effVis": 10000,
+            "cig": 3800
+          }
+        }
+      },
+      "alert": "OK",
+      "triggers": []
+    },
     {
       "ts": "2026-03-14T19:07:40.565Z",
       "icao": "EDJA",
@@ -8439,1798 +9739,6 @@
         },
         {
           "label": "BR",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "MT"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "UDYZ",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 4000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 9000,
-            "cig": 3600
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 3000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 6000,
-            "cig": 2000
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "MT"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "MT"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "EKBI",
-      "type": "CHANGE",
-      "changes": {
-        "triggers": {
-          "from": [
-            {
-              "label": "LVP (<400)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "LVP (<400)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "LVP (<400)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "VIS≤800",
-          "cls": "tag--vis",
-          "src": "T"
-        },
-        {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "FG",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "BR",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "ESGG",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 9000,
-            "cig": 400
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 400,
-            "cig": 200
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": true,
-            "onlyBest": true,
-            "effVis": 200,
-            "cig": 200
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "LVTO (<550)",
-              "cls": "tag--lvto",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "LVP (<400)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "T",
-              "tip": "TAF minima LIMIT (ALT) · VIS/RVR 200<300"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "MT"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "LVP (<400)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "MINIMA LIMIT",
-          "cls": "tag--warn",
-          "src": "T",
-          "tip": "TAF minima LIMIT (ALT) · VIS/RVR 200<300"
-        },
-        {
-          "label": "VIS≤800",
-          "cls": "tag--vis",
-          "src": "T"
-        },
-        {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "MT"
-        },
-        {
-          "label": "FG",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "BR",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "ESMS",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 2200
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 2100
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "LVTO (<550)",
-              "cls": "tag--lvto",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "T",
-              "tip": "TAF minima LIMIT (ALT) · VIS/RVR 500<550"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "LVTO (<550)",
-              "cls": "tag--lvto",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "T",
-              "tip": "TAF minima LIMIT (ALT) · VIS/RVR 500<550"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "CIG<500",
-              "cls": "tag--cig",
-              "src": "T"
-            },
-            {
-              "label": "FG",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "BR",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "LVTO (<550)",
-          "cls": "tag--lvto",
-          "src": "T"
-        },
-        {
-          "label": "RVR REQ (<800)",
-          "cls": "tag--warn",
-          "src": "T"
-        },
-        {
-          "label": "MINIMA LIMIT",
-          "cls": "tag--warn",
-          "src": "T",
-          "tip": "TAF minima LIMIT (ALT) · VIS/RVR 500<550"
-        },
-        {
-          "label": "VIS≤800",
-          "cls": "tag--vis",
-          "src": "T"
-        },
-        {
-          "label": "CIG<500",
-          "cls": "tag--cig",
-          "src": "T"
-        },
-        {
-          "label": "FG",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "BR",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "BIKF",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 16000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 14000
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "SN",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "EETN",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "MED",
-          "to": "HIGH"
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "EKCH",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 10000
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "ENTC",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 2600,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 2600,
-            "cig": 4000
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "EPMO",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "MED",
-          "to": "HIGH"
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "EPWA",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "MED",
-          "to": "HIGH"
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "HESX",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": null,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 6000,
-            "cig": null
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": true,
-            "belowAlt": true,
-            "onlyBest": false,
-            "effVis": 500,
-            "cig": 2500
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 1000,
-            "cig": 2500
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "LVTO (<550)",
-              "cls": "tag--lvto",
-              "src": "T"
-            },
-            {
-              "label": "RVR REQ (<800)",
-              "cls": "tag--warn",
-              "src": "T"
-            },
-            {
-              "label": "MINIMA CRIT",
-              "cls": "tag--stop",
-              "src": "T",
-              "tip": "TAF minima CRIT (BEST) · VIS/RVR 500<550"
-            },
-            {
-              "label": "VIS≤800",
-              "cls": "tag--vis",
-              "src": "T"
-            },
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LCLK",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 7000,
-            "cig": 4200
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": null
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LEVC",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "OK",
-          "to": "HIGH"
-        },
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 6700
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": null
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 5000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 6000
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LFMN",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 7300
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 26000
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LFOB",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 5600
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 4600
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LFSB",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": 9400
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 9600
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": 5000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 5000
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LICA",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "MED",
-          "to": "HIGH"
-        },
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 9200
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 6800
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LICC",
-      "type": "CHANGE",
-      "changes": {
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": null
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LICJ",
-      "type": "CHANGE",
-      "changes": {
-        "triggers": {
-          "from": [
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥25KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LIME",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 3500
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 4000
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 3000,
-            "cig": 4000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": 4000
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "MT"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LIMJ",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 6000,
-            "cig": 2500
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 8000,
-            "cig": 2800
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": 1500
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": true,
-            "onlyBest": true,
-            "effVis": 4000,
-            "cig": 1000
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ],
-          "to": [
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "T",
-              "tip": "TAF minima LIMIT (ALT) · CIG 1000<1040"
-            },
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "MINIMA LIMIT",
-          "cls": "tag--warn",
-          "src": "T",
-          "tip": "TAF minima LIMIT (ALT) · CIG 1000<1040"
-        },
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "MT"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LIPX",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "MED",
-          "to": "HIGH"
-        },
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 4000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 4500
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 8000,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": 6000
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ],
-          "to": [
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "MT"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥30KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "MT"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LIRF",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "OK",
-          "to": "HIGH"
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": null
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 4000,
-            "cig": 1400
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "GUST≥25KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "GUST≥25KT",
-          "cls": "tag--gust",
-          "src": "T"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LIRP",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "OK",
-          "to": "HIGH"
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 3000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 5000
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "LLBG",
-      "type": "CHANGE",
-      "changes": {
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 3000,
-            "cig": 2000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 8000,
-            "cig": 2000
-          }
-        },
-        "triggers": {
-          "from": [
-            {
-              "label": "GUST≥30KT",
-              "cls": "tag--gust",
-              "src": "T"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ],
-          "to": [
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "OEMA",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "OK",
-          "to": "HIGH"
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 3000,
-            "cig": 5000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": true,
-            "onlyBest": true,
-            "effVis": 2000,
-            "cig": 5000
-          }
-        },
-        "triggers": {
-          "from": [],
-          "to": [
-            {
-              "label": "MINIMA LIMIT",
-              "cls": "tag--warn",
-              "src": "T",
-              "tip": "TAF minima LIMIT (ALT) · VIS/RVR 2000<2300"
-            },
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            },
-            {
-              "label": "RA",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "MINIMA LIMIT",
-          "cls": "tag--warn",
-          "src": "T",
-          "tip": "TAF minima LIMIT (ALT) · VIS/RVR 2000<2300"
-        },
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        },
-        {
-          "label": "RA",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "UBBB",
-      "type": "CHANGE",
-      "changes": {
-        "alert": {
-          "from": "OK",
-          "to": "HIGH"
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 3000
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 2000
-          }
-        },
-        "triggers": {
-          "from": [],
-          "to": [
-            {
-              "label": "TS/CB",
-              "cls": "tag--wx",
-              "src": "T"
-            }
-          ]
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "TS/CB",
-          "cls": "tag--wx",
-          "src": "T"
-        }
-      ]
-    },
-    {
-      "ts": "2026-03-14T17:34:06.810Z",
-      "icao": "EDNY",
-      "type": "CHANGE",
-      "changes": {
-        "minimaNow": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 1700
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 10000,
-            "cig": 2000
-          }
-        },
-        "minimaTaf": {
-          "from": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 3500,
-            "cig": 800
-          },
-          "to": {
-            "belowBest": false,
-            "belowAlt": false,
-            "onlyBest": false,
-            "effVis": 2500,
-            "cig": 800
-          }
-        }
-      },
-      "alert": "HIGH",
-      "triggers": [
-        {
-          "label": "SN",
           "cls": "tag--wx",
           "src": "T"
         },
